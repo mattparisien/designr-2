@@ -21,6 +21,10 @@ interface TemplateElement {
     fontWeight?: string;
     color?: string;
     backgroundColor?: string;
+    shapeType?: 'rectangle' | 'circle' | 'triangle' | 'line';
+    radius?: number;
+    strokeWidth?: number;
+    stroke?: string;
   };
 }
 
@@ -301,6 +305,63 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
         textObject.originalFontSize = scaledFontSize;
 
         canvas.add(textObject);
+      } else if (element.type === 'shape') {
+        const shapeType = element.style?.shapeType;
+        let shapeObject: fabric.Object | null = null;
+
+        if (shapeType === 'rectangle') {
+          shapeObject = new fabric.Rect({
+            left: element.x * scale,
+            top: element.y * scale,
+            width: element.width * scale,
+            height: element.height * scale,
+            fill: element.style?.color || '#3B82F6',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: element.style?.strokeWidth || 0,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        } else if (shapeType === 'circle') {
+          shapeObject = new fabric.Circle({
+            left: element.x * scale,
+            top: element.y * scale,
+            radius: (element.style?.radius || element.width / 2) * scale,
+            fill: element.style?.color || '#6B7280',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: element.style?.strokeWidth || 0,
+            cornerColor: '#6B7280',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        } else if (shapeType === 'triangle') {
+          shapeObject = new fabric.Triangle({
+            left: element.x * scale,
+            top: element.y * scale,
+            width: element.width * scale,
+            height: element.height * scale,
+            fill: element.style?.color || '#3B82F6',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: element.style?.strokeWidth || 0,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        } else if (shapeType === 'line') {
+          shapeObject = new fabric.Line([0, 0, element.width * scale, 0], {
+            left: element.x * scale,
+            top: element.y * scale,
+            stroke: element.style?.stroke || element.style?.color || '#3B82F6',
+            strokeWidth: element.style?.strokeWidth || 3,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        }
+
+        if (shapeObject) {
+          canvas.add(shapeObject);
+        }
       }
     });
 
@@ -345,10 +406,77 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
               color: textObj.fill as string,
               backgroundColor: textObj.backgroundColor as string,
             },
-        };
-      }
-      return null;
-    }).filter(Boolean) as TemplateElement[];
+          };
+        } else if (obj.type === 'rect') {
+          const rectObj = obj as fabric.Rect;
+          return {
+            type: 'shape' as const,
+            content: '', // Shapes don't have content
+            x: (rectObj.left || 0) / scale,
+            y: (rectObj.top || 0) / scale,
+            width: (rectObj.width || 0) / scale,
+            height: (rectObj.height || 0) / scale,
+            style: {
+              shapeType: 'rectangle' as const,
+              color: rectObj.fill as string,
+              stroke: rectObj.stroke as string,
+              strokeWidth: rectObj.strokeWidth || 0,
+            },
+          };
+        } else if (obj.type === 'circle') {
+          const circleObj = obj as fabric.Circle;
+          const diameter = (circleObj.radius || 0) * 2;
+          return {
+            type: 'shape' as const,
+            content: '', // Shapes don't have content
+            x: (circleObj.left || 0) / scale,
+            y: (circleObj.top || 0) / scale,
+            width: diameter / scale,
+            height: diameter / scale,
+            style: {
+              shapeType: 'circle' as const,
+              color: circleObj.fill as string,
+              stroke: circleObj.stroke as string,
+              strokeWidth: circleObj.strokeWidth || 0,
+              radius: (circleObj.radius || 0) / scale,
+            },
+          };
+        } else if (obj.type === 'triangle') {
+          const triangleObj = obj as fabric.Triangle;
+          return {
+            type: 'shape' as const,
+            content: '', // Shapes don't have content
+            x: (triangleObj.left || 0) / scale,
+            y: (triangleObj.top || 0) / scale,
+            width: (triangleObj.width || 0) / scale,
+            height: (triangleObj.height || 0) / scale,
+            style: {
+              shapeType: 'triangle' as const,
+              color: triangleObj.fill as string,
+              stroke: triangleObj.stroke as string,
+              strokeWidth: triangleObj.strokeWidth || 0,
+            },
+          };
+        } else if (obj.type === 'line') {
+          const lineObj = obj as fabric.Line;
+          return {
+            type: 'shape' as const,
+            content: '', // Shapes don't have content
+            x: (lineObj.left || 0) / scale,
+            y: (lineObj.top || 0) / scale,
+            width: (lineObj.width || 0) / scale,
+            height: (lineObj.height || 0) / scale,
+            style: {
+              shapeType: 'line' as const,
+              color: lineObj.stroke as string,
+              stroke: lineObj.stroke as string,
+              strokeWidth: lineObj.strokeWidth || 3,
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as TemplateElement[];
   }, [canvas, originalWidth, originalHeight]);
 
   // Method to load custom font
@@ -368,75 +496,128 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
   const resizeCanvas = useCallback((newWidth: number, newHeight: number, newOriginalWidth: number, newOriginalHeight: number) => {
     if (!canvas) return;
 
-    // Store current objects
-    const currentObjects = canvas.getObjects();
+    // Export current template data before resizing
+    const currentElements = exportTemplate();
     
-    // Calculate scale factors
-    const oldScaleX = canvas.width! / originalWidth;
-    const oldScaleY = canvas.height! / originalHeight;
-    const oldScale = Math.min(oldScaleX, oldScaleY);
-    
-    const newScaleX = newWidth / newOriginalWidth;
-    const newScaleY = newHeight / newOriginalHeight;
-    const newScale = Math.min(newScaleX, newScaleY);
-    
-    const scaleFactor = newScale / oldScale;
-
     // Update canvas dimensions
     canvas.setDimensions({ width: newWidth, height: newHeight });
     
-    // Scale all objects
-    currentObjects.forEach((obj) => {
-      if (obj.selectable !== false) { // Skip non-selectable objects like background
-        // Scale position and size
-        obj.set({
-          left: (obj.left || 0) * scaleFactor,
-          top: (obj.top || 0) * scaleFactor,
-          scaleX: (obj.scaleX || 1) * scaleFactor,
-          scaleY: (obj.scaleY || 1) * scaleFactor,
-        });
+    // Clear and reload template with new dimensions
+    canvas.clear();
+    addBackground('#ffffff');
+    
+    // Calculate scale factors for elements
+    const scaleX = newOriginalWidth / originalWidth;
+    const scaleY = newOriginalHeight / originalHeight;
+    
+    // Scale all elements to new original dimensions
+    const scaledElements = currentElements.map((element) => ({
+      ...element,
+      x: element.x * scaleX,
+      y: element.y * scaleY,
+      width: element.width * scaleX,
+      height: element.height * scaleY,
+      style: {
+        ...element.style,
+        fontSize: element.style?.fontSize 
+          ? `${Math.round(parseInt(element.style.fontSize) * Math.min(scaleX, scaleY))}px`
+          : undefined,
+        radius: element.style?.radius 
+          ? element.style.radius * Math.min(scaleX, scaleY)
+          : undefined,
+        strokeWidth: element.style?.strokeWidth 
+          ? element.style.strokeWidth * Math.min(scaleX, scaleY)
+          : undefined,
+      },
+    }));
+    
+    // Calculate display scale based on new canvas size vs new original size
+    const displayScaleX = newWidth / newOriginalWidth;
+    const displayScaleY = newHeight / newOriginalHeight;
+    const displayScale = Math.min(displayScaleX, displayScaleY);
+    
+    // Load elements with display scaling
+    scaledElements.forEach((element) => {
+      if (element.type === 'text') {
+        const originalFontSize = parseInt(element.style?.fontSize || '16');
+        const scaledFontSize = Math.max(8, Math.round(originalFontSize * displayScale));
         
-        // Special handling for text objects to scale font size
-        if (obj.type === 'textbox') {
-          const textObj = obj as fabric.Textbox & { originalFontSize?: number };
-          const currentFontSize = textObj.fontSize || 16;
-          const newFontSize = Math.max(8, Math.round(currentFontSize * scaleFactor));
-          
-          textObj.set({
-            fontSize: newFontSize,
-            width: (textObj.width || 0) * scaleFactor,
+        const textObject = new fabric.Textbox(element.content, {
+          left: element.x * displayScale,
+          top: element.y * displayScale,
+          width: element.width * displayScale,
+          fontSize: scaledFontSize,
+          fontFamily: element.style?.fontFamily || 'Arial',
+          fontWeight: element.style?.fontWeight || 'normal',
+          fill: element.style?.color || '#000000',
+          backgroundColor: element.style?.backgroundColor || 'transparent',
+          textAlign: 'center',
+        }) as fabric.Textbox & { originalFontSize?: number };
+
+        textObject.originalFontSize = scaledFontSize;
+        canvas.add(textObject);
+      } else if (element.type === 'shape') {
+        const shapeType = element.style?.shapeType;
+        let shapeObject: fabric.Object | null = null;
+
+        if (shapeType === 'rectangle') {
+          shapeObject = new fabric.Rect({
+            left: element.x * displayScale,
+            top: element.y * displayScale,
+            width: element.width * displayScale,
+            height: element.height * displayScale,
+            fill: element.style?.color || '#3B82F6',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
           });
-          
-          // Update original font size for future scaling
-          if (textObj.originalFontSize) {
-            textObj.originalFontSize = newFontSize;
-          }
-          
-          // Recalculate text dimensions
-          textObj.initDimensions();
+        } else if (shapeType === 'circle') {
+          shapeObject = new fabric.Circle({
+            left: element.x * displayScale,
+            top: element.y * displayScale,
+            radius: (element.style?.radius || element.width / 2) * displayScale,
+            fill: element.style?.color || '#6B7280',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
+            cornerColor: '#6B7280',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        } else if (shapeType === 'triangle') {
+          shapeObject = new fabric.Triangle({
+            left: element.x * displayScale,
+            top: element.y * displayScale,
+            width: element.width * displayScale,
+            height: element.height * displayScale,
+            fill: element.style?.color || '#3B82F6',
+            stroke: element.style?.stroke || undefined,
+            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
+        } else if (shapeType === 'line') {
+          shapeObject = new fabric.Line([0, 0, element.width * displayScale, 0], {
+            left: element.x * displayScale,
+            top: element.y * displayScale,
+            stroke: element.style?.stroke || element.style?.color || '#3B82F6',
+            strokeWidth: (element.style?.strokeWidth || 3) * displayScale,
+            cornerColor: '#3B82F6',
+            cornerStyle: 'rect',
+            transparentCorners: false,
+          });
         }
-        
-        obj.setCoords();
+
+        if (shapeObject) {
+          canvas.add(shapeObject);
+        }
       }
     });
     
-    // Update background if it exists
-    const background = currentObjects.find(obj => 
-      obj.left === 0 && 
-      obj.top === 0 && 
-      !obj.selectable
-    );
-    
-    if (background) {
-      background.set({
-        width: newWidth,
-        height: newHeight,
-      });
-      background.setCoords();
-    }
-    
     canvas.renderAll();
-  }, [canvas, originalWidth, originalHeight]);
+  }, [canvas, originalWidth, originalHeight, exportTemplate, addBackground]);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
