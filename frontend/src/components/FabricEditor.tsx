@@ -49,13 +49,13 @@ export interface FabricEditorRef {
   canvas: fabric.Canvas | null;
 }
 
-const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({ 
-  width, 
-  height, 
+const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
+  width,
+  height,
   originalWidth = 1080,
   originalHeight = 1080,
-  onObjectSelected, 
-  onObjectModified 
+  onObjectSelected,
+  onObjectModified
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
@@ -118,35 +118,57 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
 
     const handleObjectScaling = (e: FabricEvent) => {
       const target = e.target;
-      if (target && target.type === 'textbox') {
+      if (!target) return;
+
+      /* ---------- TEXTBOX (you already had this) ---------- */
+      if (target.type === 'textbox') {
         const textObj = target as fabric.Textbox & { originalFontSize?: number };
-        
-        // Store original font size if not already stored
         if (!textObj.originalFontSize) {
           textObj.originalFontSize = textObj.fontSize || 16;
         }
-        
-        // Calculate new font size based on scaling
-        const scaleX = textObj.scaleX || 1;
-        const scaleY = textObj.scaleY || 1;
-        // Use the larger of the two scale factors for font scaling
-        const scaleFactor = Math.max(scaleX, scaleY);
-        
-        const newFontSize = Math.max(8, Math.round((textObj.originalFontSize as number) * scaleFactor));
-        
-        // Update font size and reset scale to 1 to avoid double scaling
-        textObj.set({
-          fontSize: newFontSize,
-          scaleX: 1,
-          scaleY: 1
-        });
-        
-        // Recalculate text box dimensions
+        const scaleFactor = Math.max(textObj.scaleX || 1, textObj.scaleY || 1);
+        const newFontSize = Math.max(8, Math.round(textObj.originalFontSize * scaleFactor));
+        textObj.set({ fontSize: newFontSize, scaleX: 1, scaleY: 1 });
         textObj.initDimensions();
-        textObj.setCoords();
-        canvas.renderAll();
       }
+
+      /* ---------- RECT / TRIANGLE ---------- */
+      else if (target.type === 'rect' || target.type === 'triangle') {
+        target.set({
+          width: target.getScaledWidth(),
+          height: target.getScaledHeight(),
+          scaleX: 1,
+          scaleY: 1,
+        });
+      }
+
+      /* ---------- CIRCLE ---------- */
+      else if (target.type === 'circle') {
+        const c = target as fabric.Circle;
+        c.set({
+          radius: c.getScaledWidth() / 2,   // new diameter / 2
+          scaleX: 1,
+          scaleY: 1,
+        });
+      }
+
+      /* ---------- LINE ---------- */
+      else if (target.type === 'line') {
+        const ln = target as fabric.Line;
+        ln.set({
+          x2: ln.x2! * (ln.scaleX || 1),
+          y2: ln.y2! * (ln.scaleY || 1),
+          scaleX: 1,
+          scaleY: 1,
+        });
+      }
+
+      /* ---------- fall-through: any other type ---------- */
+
+      target.setCoords();
+      canvas.renderAll();
     };
+
 
     canvas.on('selection:created', handleSelectionCreated);
     canvas.on('selection:updated', handleSelectionUpdated);
@@ -208,13 +230,13 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
     const activeObject = canvas.getActiveObject();
     if (activeObject) {
       activeObject.set(properties);
-      
+
       // If fontSize is being updated and this is a textbox, update originalFontSize too
       if (activeObject.type === 'textbox' && 'fontSize' in properties) {
         const textObj = activeObject as fabric.Textbox & { originalFontSize?: number };
         textObj.originalFontSize = properties.fontSize as number;
       }
-      
+
       activeObject.setCoords(); // Update object coordinates
       canvas.renderAll(); // Force re-render
       canvas.fire('object:modified', { target: activeObject }); // Trigger modified event
@@ -238,10 +260,10 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
 
     // Remove existing background if any (check all objects for background-like properties)
     const objects = canvas.getObjects();
-    const existingBackground = objects.find(obj => 
-      obj.left === 0 && 
-      obj.top === 0 && 
-      obj.width === canvas.width && 
+    const existingBackground = objects.find(obj =>
+      obj.left === 0 &&
+      obj.top === 0 &&
+      obj.width === canvas.width &&
       obj.height === canvas.height &&
       !obj.selectable
     );
@@ -266,7 +288,7 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
     canvas.add(background);
     canvas.sendObjectToBack(background);
     canvas.renderAll();
-    
+
     return background;
   }, [canvas]);
 
@@ -288,7 +310,7 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
       if (element.type === 'text') {
         const originalFontSize = parseInt(element.style?.fontSize || '16');
         const scaledFontSize = Math.max(8, Math.round(originalFontSize * scale)); // Ensure minimum font size
-        
+
         const textObject = new fabric.Textbox(element.content, {
           left: element.x * scale,
           top: element.y * scale,
@@ -382,9 +404,9 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
       .filter((obj: fabric.Object) => {
         // Skip objects that look like backgrounds (full canvas size, non-selectable)
         return !(
-          obj.left === 0 && 
-          obj.top === 0 && 
-          obj.width === canvas.width && 
+          obj.left === 0 &&
+          obj.top === 0 &&
+          obj.width === canvas.width &&
           obj.height === canvas.height &&
           !obj.selectable
         );
@@ -492,133 +514,100 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(({
     }
   }, []);
 
-  // Method to resize canvas and update dimensions
-  const resizeCanvas = useCallback((newWidth: number, newHeight: number, newOriginalWidth: number, newOriginalHeight: number) => {
-    if (!canvas) return;
+  // 1. Remember the last canvas size so oldScale reflects reality next time
+  const lastCanvasSize = useRef({ w: width, h: height });
 
-    // Export current template data before resizing
-    const currentElements = exportTemplate();
-    
-    // Update canvas dimensions
-    canvas.setDimensions({ width: newWidth, height: newHeight });
-    
-    // Clear and reload template with new dimensions
-    canvas.clear();
-    addBackground('#ffffff');
-    
-    // Calculate scale factors for elements
-    const scaleX = newOriginalWidth / originalWidth;
-    const scaleY = newOriginalHeight / originalHeight;
-    
-    // Scale all elements to new original dimensions
-    const scaledElements = currentElements.map((element) => ({
-      ...element,
-      x: element.x * scaleX,
-      y: element.y * scaleY,
-      width: element.width * scaleX,
-      height: element.height * scaleY,
-      style: {
-        ...element.style,
-        fontSize: element.style?.fontSize 
-          ? `${Math.round(parseInt(element.style.fontSize) * Math.min(scaleX, scaleY))}px`
-          : undefined,
-        radius: element.style?.radius 
-          ? element.style.radius * Math.min(scaleX, scaleY)
-          : undefined,
-        strokeWidth: element.style?.strokeWidth 
-          ? element.style.strokeWidth * Math.min(scaleX, scaleY)
-          : undefined,
-      },
-    }));
-    
-    // Calculate display scale based on new canvas size vs new original size
-    const displayScaleX = newWidth / newOriginalWidth;
-    const displayScaleY = newHeight / newOriginalHeight;
-    const displayScale = Math.min(displayScaleX, displayScaleY);
-    
-    // Load elements with display scaling
-    scaledElements.forEach((element) => {
-      if (element.type === 'text') {
-        const originalFontSize = parseInt(element.style?.fontSize || '16');
-        const scaledFontSize = Math.max(8, Math.round(originalFontSize * displayScale));
-        
-        const textObject = new fabric.Textbox(element.content, {
-          left: element.x * displayScale,
-          top: element.y * displayScale,
-          width: element.width * displayScale,
-          fontSize: scaledFontSize,
-          fontFamily: element.style?.fontFamily || 'Arial',
-          fontWeight: element.style?.fontWeight || 'normal',
-          fill: element.style?.color || '#000000',
-          backgroundColor: element.style?.backgroundColor || 'transparent',
-          textAlign: 'center',
-        }) as fabric.Textbox & { originalFontSize?: number };
+  // 🔹 Put this just before the resizeCanvas declaration
+  const commitObjectScale = (obj: fabric.Object) => {
+    if (obj.scaleX === 1 && obj.scaleY === 1) return;          // nothing to do
 
-        textObject.originalFontSize = scaledFontSize;
-        canvas.add(textObject);
-      } else if (element.type === 'shape') {
-        const shapeType = element.style?.shapeType;
-        let shapeObject: fabric.Object | null = null;
+    if (obj.type === 'rect' || obj.type === 'triangle') {
+      obj.set({
+        width: obj.getScaledWidth(),
+        height: obj.getScaledHeight(),
+      });
+    } else if (obj.type === 'circle') {
+      const c = obj as fabric.Circle;
+      c.set({ radius: c.getScaledWidth() / 2 });
+    } else if (obj.type === 'line') {
+      const ln = obj as fabric.Line;
+      ln.set({
+        x2: ln.x2! * (ln.scaleX || 1),
+        y2: ln.y2! * (ln.scaleY || 1),
+      });
+    } else if (obj.type === 'textbox') {
+      const tb = obj as fabric.Textbox;
+      tb.set({
+        fontSize: (tb.fontSize || 16) * (obj.scaleY || 1),      // keep aspect
+        width: tb.getScaledWidth(),
+      });
+    }
 
-        if (shapeType === 'rectangle') {
-          shapeObject = new fabric.Rect({
-            left: element.x * displayScale,
-            top: element.y * displayScale,
-            width: element.width * displayScale,
-            height: element.height * displayScale,
-            fill: element.style?.color || '#3B82F6',
-            stroke: element.style?.stroke || undefined,
-            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
-            cornerColor: '#3B82F6',
-            cornerStyle: 'rect',
-            transparentCorners: false,
-          });
-        } else if (shapeType === 'circle') {
-          shapeObject = new fabric.Circle({
-            left: element.x * displayScale,
-            top: element.y * displayScale,
-            radius: (element.style?.radius || element.width / 2) * displayScale,
-            fill: element.style?.color || '#6B7280',
-            stroke: element.style?.stroke || undefined,
-            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
-            cornerColor: '#6B7280',
-            cornerStyle: 'rect',
-            transparentCorners: false,
-          });
-        } else if (shapeType === 'triangle') {
-          shapeObject = new fabric.Triangle({
-            left: element.x * displayScale,
-            top: element.y * displayScale,
-            width: element.width * displayScale,
-            height: element.height * displayScale,
-            fill: element.style?.color || '#3B82F6',
-            stroke: element.style?.stroke || undefined,
-            strokeWidth: (element.style?.strokeWidth || 0) * displayScale,
-            cornerColor: '#3B82F6',
-            cornerStyle: 'rect',
-            transparentCorners: false,
-          });
-        } else if (shapeType === 'line') {
-          shapeObject = new fabric.Line([0, 0, element.width * displayScale, 0], {
-            left: element.x * displayScale,
-            top: element.y * displayScale,
-            stroke: element.style?.stroke || element.style?.color || '#3B82F6',
-            strokeWidth: (element.style?.strokeWidth || 3) * displayScale,
-            cornerColor: '#3B82F6',
-            cornerStyle: 'rect',
-            transparentCorners: false,
-          });
-        }
+    // reset the scale so future transforms start from 1
+    obj.set({ scaleX: 1, scaleY: 1 });
+    obj.setCoords();
+  };
 
-        if (shapeObject) {
-          canvas.add(shapeObject);
-        }
-      }
-    });
-    
-    canvas.renderAll();
-  }, [canvas, originalWidth, originalHeight, exportTemplate, addBackground]);
+  const resizeCanvas = useCallback(
+    (newW: number, newH: number) => {
+      if (!canvas) return;
 
+      const { w: oldW, h: oldH } = lastCanvasSize.current;
+      const scaleFactor = Math.min(newW / oldW, newH / oldH);
+
+      canvas.setDimensions({ width: newW, height: newH });
+
+      canvas.getObjects().forEach(obj => {
+        if (obj.selectable === false) return;          // skip the background
+
+        // move the object
+        obj.set({
+          left: (obj.left || 0) * scaleFactor,
+          top: (obj.top || 0) * scaleFactor,
+        });
+
+        // bake the visual scale into intrinsic size
+        obj.set({
+          scaleX: (obj.scaleX || 1) * scaleFactor,
+          scaleY: (obj.scaleY || 1) * scaleFactor
+        });
+        commitObjectScale(obj);
+      });
+
+      // canvas.getObjects().forEach(obj => {
+      //   if (obj.selectable === false) return;         // skip background
+
+      //   obj.left = (obj.left || 0) * scaleFactor;
+      //   obj.top = (obj.top || 0) * scaleFactor;
+
+      //   if (obj.type === 'rect' || obj.type === 'triangle') {
+      //     obj.set({
+      //       width: obj.width! * scaleFactor,
+      //       height: obj.height! * scaleFactor
+      //     });
+      //   } else if (obj.type === 'circle') {
+      //     (obj as fabric.Circle).set({ radius: (obj as fabric.Circle).radius! * scaleFactor });
+      //   } else if (obj.type === 'line') {
+      //     const line = obj as fabric.Line;
+      //     line.set({ x2: line.x2! * scaleFactor, y2: line.y2! * scaleFactor });
+      //   } else if (obj.type === 'textbox') {
+      //     const text = obj as fabric.Textbox;
+      //     text.set({
+      //       fontSize: text.fontSize! * scaleFactor,
+      //       width: text.width! * scaleFactor
+      //     });
+      //   }
+
+      //   obj.setCoords();
+      // });
+
+
+
+      lastCanvasSize.current = { w: newW, h: newH };
+      canvas.requestRenderAll();
+    },
+    [canvas]
+  );
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
     addText,
