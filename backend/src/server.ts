@@ -12,6 +12,7 @@ import aiRoutes from './routes/ai';
 import exportRoutes from './routes/export';
 import stripeRoutes from './routes/stripe';
 import telemetryRoutes from './routes/telemetry';
+import fontRoutes from './routes/fonts';
 
 // Load environment variables
 dotenv.config({ path: '.env' });
@@ -44,6 +45,9 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/design-tool')
   .then(() => console.log('MongoDB connected'))
@@ -57,6 +61,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/telemetry', telemetryRoutes);
+app.use('/api/fonts', fontRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -64,7 +69,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response) => {
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

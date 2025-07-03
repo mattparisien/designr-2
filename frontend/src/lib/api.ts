@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 // Types for API data
 interface ElementStyle {
@@ -265,6 +265,42 @@ export class ApiClient {
     return this.request('/telemetry/track', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Font management
+  async uploadFont(fontFile: File, fontFamily: string, isPublic: boolean = false) {
+    const formData = new FormData();
+    formData.append('font', fontFile);
+    formData.append('fontFamily', fontFamily);
+    formData.append('isPublic', isPublic.toString());
+
+    const response = await fetch(`${this.baseUrl}/fonts/upload`, {
+      method: 'POST',
+      headers: {
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        // Don't set Content-Type header for FormData, let browser set it with boundary
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Font upload failed');
+    }
+
+    return response.json();
+  }
+
+  async getFonts() {
+    return this.request('/fonts', {
+      method: 'GET',
+    });
+  }
+
+  async deleteFont(fontId: string) {
+    return this.request(`/fonts/${fontId}`, {
+      method: 'DELETE',
     });
   }
 }

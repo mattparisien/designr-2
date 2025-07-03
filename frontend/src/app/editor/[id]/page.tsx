@@ -21,10 +21,34 @@ import {
   Upload,
   X,
   Search,
+  Plus,
 } from "lucide-react"
 import { ApiClient } from "../../../lib/api"
 import FabricEditor, { type FabricEditorRef } from "../../../components/FabricEditor"
 import type * as fabric from "fabric"
+
+interface Brand {
+  _id: string
+  name: string
+  logoUrl?: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor?: string
+  vibe: "playful" | "elegant" | "bold" | "minimal" | "professional"
+  voice: string
+  personality: string
+  targetAudience: string
+  toneGuidelines: string
+  keyValues: string
+  communicationStyle: string
+  industry?: string
+  tagline?: string
+  doNotUse?: string
+  preferredWords: string[]
+  avoidedWords: string[]
+  createdAt: string
+  updatedAt: string
+}
 
 interface BrandData {
   name: string
@@ -68,6 +92,8 @@ export default function EditorPage() {
   const params = useParams()
   const templateId = params.id as string
   const apiClient = useMemo(() => new ApiClient(), [])
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null)
   const [brandData, setBrandData] = useState<BrandData | null>(null)
   const [templateData, setTemplateData] = useState<TemplateData | null>(null)
   const [aiContent, setAiContent] = useState({
@@ -85,10 +111,70 @@ export default function EditorPage() {
     "Georgia",
     "Verdana",
   ])
+  const [backendFonts, setBackendFonts] = useState<Array<{
+    id: string
+    name: string
+    fontFamily: string
+    fileUrl: string
+    isOwner: boolean
+  }>>([])
+  const [isUploadingFont, setIsUploadingFont] = useState(false)
   const [showFontPanel, setShowFontPanel] = useState(false)
   const [resizeSearchTerm, setResizeSearchTerm] = useState("")
+  const [showVariationsPanel, setShowVariationsPanel] = useState(false)
+  const [isGeneratingVariations, setIsGeneratingVariations] = useState(false)
+  const [themeVariations, setThemeVariations] = useState<Array<{
+    id: string
+    name: string
+    primaryColor: string
+    secondaryColor: string
+    backgroundColor: string
+    description: string
+  }>>([])
+
 
   const fabricEditorRef = useRef<FabricEditorRef>(null)
+
+  // Load fonts from backend
+  const loadFonts = useCallback(async () => {
+    try {
+      const response = await apiClient.getFonts()
+      if (response.success && response.fonts) {
+        setBackendFonts(response.fonts)
+        
+        // Add backend fonts to the font family list
+        const backendFontFamilies = response.fonts.map((font: { fontFamily: string }) => font.fontFamily)
+        const systemFonts = ["Arial", "Helvetica", "Times New Roman", "Georgia", "Verdana"]
+        const allFonts = [...systemFonts, ...backendFontFamilies]
+        setUploadedFonts([...new Set(allFonts)]) // Remove duplicates
+      }
+    } catch (error) {
+      console.error('Failed to load fonts:', error)
+    }
+  }, [apiClient])
+
+  // Pre-load backend fonts when editor is ready
+  useEffect(() => {
+    if (backendFonts.length > 0) {
+      const preloadFonts = async () => {
+        // Wait a bit to ensure the editor is ready
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        if (fabricEditorRef.current) {
+          for (const font of backendFonts) {
+            const fontUrl = `${process.env.NEXT_PUBLIC_CDN_URL || 'http://localhost:5001'}${font.fileUrl}`
+            try {
+              await fabricEditorRef.current.loadFont(font.fontFamily, fontUrl)
+              console.log(`Pre-loaded font: ${font.fontFamily}`)
+            } catch (error) {
+              console.error(`Failed to pre-load font ${font.fontFamily}:`, error)
+            }
+          }
+        }
+      }
+      preloadFonts()
+    }
+  }, [backendFonts])
 
   useEffect(() => {
     // Check if user is authenticated
@@ -101,63 +187,159 @@ export default function EditorPage() {
     // Set token in API client
     apiClient.setToken(token)
 
-    // Load brand data
-    const storedBrandData = localStorage.getItem("brandData")
-    let loadedBrandData = null
-    if (storedBrandData) {
-      loadedBrandData = JSON.parse(storedBrandData)
-      setBrandData(loadedBrandData)
+    // Load brands from API
+    const loadBrands = async () => {
+      try {
+        const response = await apiClient.getBrands()
+        if (response.success && response.brands) {
+          setBrands(response.brands)
+          
+          // Set first brand as selected if available, or use localStorage fallback
+          const storedBrandData = localStorage.getItem("brandData")
+          if (response.brands.length > 0) {
+            const firstBrand = response.brands[0]
+            setSelectedBrand(firstBrand)
+            setBrandData({
+              name: firstBrand.name,
+              primaryColor: firstBrand.primaryColor,
+              secondaryColor: firstBrand.secondaryColor,
+              vibe: firstBrand.vibe,
+              voice: firstBrand.voice,
+              personality: firstBrand.personality,
+              targetAudience: firstBrand.targetAudience,
+              toneGuidelines: firstBrand.toneGuidelines,
+              keyValues: firstBrand.keyValues,
+              communicationStyle: firstBrand.communicationStyle,
+            })
+          } else if (storedBrandData) {
+            // Fallback to localStorage if no brands exist
+            const loadedBrandData = JSON.parse(storedBrandData)
+            setBrandData(loadedBrandData)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load brands:', error)
+        // Fallback to localStorage if API fails
+        const storedBrandData = localStorage.getItem("brandData")
+        if (storedBrandData) {
+          const loadedBrandData = JSON.parse(storedBrandData)
+          setBrandData(loadedBrandData)
+        }
+      }
     }
 
-    // Mock template data - in a real app, this would come from your API
-    setTemplateData({
-      id: Number.parseInt(templateId),
-      name: `Template ${templateId}`,
-      width: 1080,
-      height: 1080,
-      elements: [
-        {
-          type: "text",
-          content: "Your Amazing Headline",
-          x: 40,
-          y: 200,
-          width: 1000,
-          height: 100,
-          style: {
-            fontSize: "48px",
-            fontWeight: "bold",
-            color: loadedBrandData?.primaryColor || "#000000",
+    loadBrands()
+    loadFonts()
+  }, [templateId, router, apiClient, loadFonts])
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem("authToken")
+    if (!token) {
+      router.push("/auth/login")
+      return
+    }
+
+    // Set token in API client
+    apiClient.setToken(token)
+
+    // Load brands from API
+    const loadBrands = async () => {
+      try {
+        const response = await apiClient.getBrands()
+        if (response.success && response.brands) {
+          setBrands(response.brands)
+          
+          // Set first brand as selected if available, or use localStorage fallback
+          const storedBrandData = localStorage.getItem("brandData")
+          if (response.brands.length > 0) {
+            const firstBrand = response.brands[0]
+            setSelectedBrand(firstBrand)
+            setBrandData({
+              name: firstBrand.name,
+              primaryColor: firstBrand.primaryColor,
+              secondaryColor: firstBrand.secondaryColor,
+              vibe: firstBrand.vibe,
+              voice: firstBrand.voice,
+              personality: firstBrand.personality,
+              targetAudience: firstBrand.targetAudience,
+              toneGuidelines: firstBrand.toneGuidelines,
+              keyValues: firstBrand.keyValues,
+              communicationStyle: firstBrand.communicationStyle,
+            })
+          } else if (storedBrandData) {
+            // Fallback to localStorage if no brands exist
+            const loadedBrandData = JSON.parse(storedBrandData)
+            setBrandData(loadedBrandData)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load brands:', error)
+        // Fallback to localStorage if API fails
+        const storedBrandData = localStorage.getItem("brandData")
+        if (storedBrandData) {
+          const loadedBrandData = JSON.parse(storedBrandData)
+          setBrandData(loadedBrandData)
+        }
+      }
+    }
+
+    loadBrands()
+    loadFonts()
+  }, [templateId, router, apiClient, loadFonts])
+
+  // Set template data when brand data is loaded
+  useEffect(() => {
+    if (brandData) {
+      setTemplateData({
+        id: Number.parseInt(templateId),
+        name: `Template ${templateId}`,
+        width: 1080,
+        height: 1080,
+        elements: [
+          {
+            type: "text",
+            content: "Your Amazing Headline",
+            x: 40,
+            y: 200,
+            width: 1000,
+            height: 100,
+            style: {
+              fontSize: "48px",
+              fontWeight: "bold",
+              color: brandData.primaryColor || "#000000",
+            },
           },
-        },
-        {
-          type: "text",
-          content: "Compelling copy that converts your audience",
-          x: 40,
-          y: 320,
-          width: 1000,
-          height: 80,
-          style: {
-            fontSize: "24px",
-            color: loadedBrandData?.secondaryColor || "#666666",
+          {
+            type: "text",
+            content: "Compelling copy that converts your audience",
+            x: 40,
+            y: 320,
+            width: 1000,
+            height: 80,
+            style: {
+              fontSize: "24px",
+              color: brandData.secondaryColor || "#666666",
+            },
           },
-        },
-        {
-          type: "text",
-          content: "Get Started",
-          x: 440,
-          y: 850,
-          width: 200,
-          height: 60,
-          style: {
-            fontSize: "18px",
-            fontWeight: "bold",
-            color: "#ffffff",
-            backgroundColor: loadedBrandData?.primaryColor || "#3B82F6",
+          {
+            type: "text",
+            content: "Get Started",
+            x: 440,
+            y: 850,
+            width: 200,
+            height: 60,
+            style: {
+              fontSize: "18px",
+              fontWeight: "bold",
+              color: "#ffffff",
+              backgroundColor: brandData.primaryColor || "#3B82F6",
+            },
           },
-        },
-      ],
-    })
-  }, [templateId, router, apiClient])
+        ],
+      })
+    }
+  }, [brandData, templateId])
 
   const handleAIGenerate = async () => {
     if (!aiPrompt.trim()) return
@@ -250,22 +432,50 @@ export default function EditorPage() {
       return
     }
 
-    try {
-      const fontUrl = URL.createObjectURL(file)
-      const fontName = file.name.split(".")[0]
+    // Extract font family name from filename
+    const fontFamilyName = file.name.split(".")[0].replace(/[-_]/g, " ")
 
-      if (fabricEditorRef.current) {
-        const success = await fabricEditorRef.current.loadFont(fontName, fontUrl)
-        if (success) {
-          setUploadedFonts((prev) => [...prev, fontName])
-          alert(`Font "${fontName}" uploaded successfully!`)
-        } else {
-          alert("Failed to load font. Please try again.")
+    setIsUploadingFont(true)
+    try {
+      const response = await apiClient.uploadFont(file, fontFamilyName, false)
+      
+      if (response.success) {
+        // Add the new font to the local state
+        setUploadedFonts((prev) => [...prev, response.font.fontFamily])
+        setBackendFonts((prev) => [...prev, {
+          id: response.font.id,
+          name: response.font.name,
+          fontFamily: response.font.fontFamily,
+          fileUrl: response.font.fileUrl,
+          isOwner: true
+        }])
+        
+        alert(`Font "${response.font.fontFamily}" uploaded successfully!`)
+        
+        // Load the font for immediate use
+        if (fabricEditorRef.current) {
+          const fontUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}${response.font.fileUrl}`
+          await fabricEditorRef.current.loadFont(response.font.fontFamily, fontUrl)
+          
+          // Auto-apply the font to the currently selected text object
+          if (selectedFabricObject && selectedFabricObject.type === "textbox") {
+            fabricEditorRef.current.updateSelectedObject({ fontFamily: response.font.fontFamily })
+            // Update the selected object to trigger re-render
+            const activeObj = fabricEditorRef.current.canvas?.getActiveObject()
+            if (activeObj) {
+              setSelectedFabricObject(null)
+              setTimeout(() => setSelectedFabricObject(activeObj), 0)
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Font upload error:", error)
       alert("Failed to upload font. Please try again.")
+    } finally {
+      setIsUploadingFont(false)
+      // Clear the input
+      event.target.value = ""
     }
   }
 
@@ -280,6 +490,47 @@ export default function EditorPage() {
     const updatedElements = fabricEditorRef.current.exportTemplate()
     setTemplateData({ ...templateData, elements: updatedElements })
   }, [templateData])
+
+  // Apply a brand to the canvas
+  const applyBrand = (brand: Brand) => {
+    setSelectedBrand(brand)
+    setBrandData({
+      name: brand.name,
+      primaryColor: brand.primaryColor,
+      secondaryColor: brand.secondaryColor,
+      vibe: brand.vibe,
+      voice: brand.voice,
+      personality: brand.personality,
+      targetAudience: brand.targetAudience,
+      toneGuidelines: brand.toneGuidelines,
+      keyValues: brand.keyValues,
+      communicationStyle: brand.communicationStyle,
+    })
+
+    // Update template colors if template exists
+    if (templateData && fabricEditorRef.current) {
+      const updatedElements = templateData.elements.map((element) => {
+        if (element.type === "text" && element.style) {
+          return {
+            ...element,
+            style: {
+              ...element.style,
+              color: element.style.color === brandData?.primaryColor ? brand.primaryColor : 
+                     element.style.color === brandData?.secondaryColor ? brand.secondaryColor : 
+                     element.style.color,
+              backgroundColor: element.style.backgroundColor === brandData?.primaryColor ? brand.primaryColor : 
+                              element.style.backgroundColor === brandData?.secondaryColor ? brand.secondaryColor : 
+                              element.style.backgroundColor,
+            },
+          }
+        }
+        return element
+      })
+
+      setTemplateData({ ...templateData, elements: updatedElements })
+      fabricEditorRef.current.loadTemplate(updatedElements)
+    }
+  }
 
   // Enhanced social media format presets organized by categories
   const socialMediaFormats = {
@@ -458,8 +709,12 @@ export default function EditorPage() {
         multiplier: 2,
       })
 
+      const brandName = selectedBrand?.name || brandData?.name || "design"
+      const templateName = templateData?.name || "template"
+      const filename = `${brandName}_${templateName}_${Date.now()}.png`
+
       const link = document.createElement("a")
-      link.download = `${templateData?.name || "design"}.png`
+      link.download = filename
       link.href = dataURL
       document.body.appendChild(link)
       link.click()
@@ -510,6 +765,7 @@ export default function EditorPage() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [showResizePanel])
+
 
   if (!brandData || !templateData) {
     return (
@@ -569,6 +825,38 @@ export default function EditorPage() {
                 <Type className="w-4 h-4" />
                 <span>Fonts</span>
               </button>
+
+              {/* Quick Font Upload */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".woff,.woff2,.ttf,.otf"
+                  onChange={handleFontUpload}
+                  className="hidden"
+                  id="header-font-upload"
+                  disabled={isUploadingFont}
+                />
+                <label
+                  htmlFor="header-font-upload"
+                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-2xl font-semibold transition-all duration-300 cursor-pointer tracking-wide ${
+                    isUploadingFont
+                      ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                      : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60 shadow-sm hover:shadow-md"
+                  }`}
+                >
+                  {isUploadingFont ? (
+                    <>
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span className="hidden lg:inline">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      <span className="hidden lg:inline">Upload Font</span>
+                    </>
+                  )}
+                </label>
+              </div>
             </div>
 
             {/* Right Actions */}
@@ -781,29 +1069,120 @@ export default function EditorPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 tracking-tight">Brand Identity</h3>
-                  <p className="text-sm text-slate-500 font-medium tracking-wide">Colors & Style</p>
+                  <p className="text-sm text-slate-500 font-medium tracking-wide">Select & Apply Brand</p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60">
-                <label className="block text-sm font-semibold text-slate-700 mb-4 tracking-wide">Brand Colors</label>
-                <div className="flex gap-4">
-                  <div className="group cursor-pointer">
-                    <div
-                      className="w-16 h-16 rounded-2xl border-2 border-slate-200 group-hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md"
-                      style={{ backgroundColor: brandData.primaryColor }}
-                    ></div>
-                    <p className="text-xs text-center mt-2 text-slate-500 font-medium tracking-wide">Primary</p>
+              {/* Current Brand Display */}
+              {brandData && (
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-semibold text-slate-700 tracking-wide">Current Brand</label>
+                    <span className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl font-semibold tracking-wide">
+                      {brandData.name}
+                    </span>
                   </div>
-                  <div className="group cursor-pointer">
-                    <div
-                      className="w-16 h-16 rounded-2xl border-2 border-slate-200 group-hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md"
-                      style={{ backgroundColor: brandData.secondaryColor }}
-                    ></div>
-                    <p className="text-xs text-center mt-2 text-slate-500 font-medium tracking-wide">Secondary</p>
+                  <div className="flex gap-4">
+                    <div className="group cursor-pointer">
+                      <div
+                        className="w-16 h-16 rounded-2xl border-2 border-slate-200 group-hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md"
+                        style={{ backgroundColor: brandData.primaryColor }}
+                      ></div>
+                      <p className="text-xs text-center mt-2 text-slate-500 font-medium tracking-wide">Primary</p>
+                    </div>
+                    <div className="group cursor-pointer">
+                      <div
+                        className="w-16 h-16 rounded-2xl border-2 border-slate-200 group-hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md"
+                        style={{ backgroundColor: brandData.secondaryColor }}
+                      ></div>
+                      <p className="text-xs text-center mt-2 text-slate-500 font-medium tracking-wide">Secondary</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Available Brands */}
+              {brands.length > 0 && (
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60">
+                  <label className="block text-sm font-semibold text-slate-700 mb-4 tracking-wide">
+                    Available Brands ({brands.length})
+                  </label>
+                  <div className="space-y-3 max-h-48 overflow-y-auto">
+                    {brands.map((brand) => (
+                      <div
+                        key={brand._id}
+                        className={`p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+                          selectedBrand?._id === brand._id
+                            ? "border-indigo-300 bg-indigo-50"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex gap-2">
+                              <div
+                                className="w-6 h-6 rounded-lg border border-slate-200 shadow-sm"
+                                style={{ backgroundColor: brand.primaryColor }}
+                              ></div>
+                              <div
+                                className="w-6 h-6 rounded-lg border border-slate-200 shadow-sm"
+                                style={{ backgroundColor: brand.secondaryColor }}
+                              ></div>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-semibold text-slate-900 tracking-tight">{brand.name}</h4>
+                              <p className="text-xs text-slate-500 font-medium tracking-wide capitalize">{brand.vibe}</p>
+                            </div>
+                          </div>
+                          {selectedBrand?._id === brand._id && (
+                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg font-semibold tracking-wide">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => applyBrand(brand)}
+                          className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 ${
+                            selectedBrand?._id === brand._id
+                              ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          }`}
+                        >
+                          {selectedBrand?._id === brand._id ? "Applied" : "Apply Brand"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => router.push("/brands")}
+                    className="w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 tracking-wide flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create New Brand
+                  </button>
+                </div>
+              )}
+
+              {/* No brands message */}
+              {brands.length === 0 && (
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60 text-center">
+                  <div className="w-16 h-16 bg-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Palette className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2 tracking-tight">No Brands Found</h4>
+                  <p className="text-xs text-slate-500 mb-4 font-medium tracking-wide">
+                    Create your first brand to get started
+                  </p>
+                  <button
+                    onClick={() => router.push("/brands")}
+                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 tracking-wide flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Your First Brand
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Content Preview */}
@@ -963,21 +1342,85 @@ export default function EditorPage() {
                         <label className="block text-xs font-semibold text-slate-600 mb-2 tracking-wide">
                           Font Family
                         </label>
-                        <select
-                          value={(selectedFabricObject as fabric.Textbox).fontFamily || "Arial"}
-                          onChange={(e) => {
-                            if (fabricEditorRef.current) {
-                              fabricEditorRef.current.updateSelectedObject({ fontFamily: e.target.value })
-                            }
-                          }}
-                          className="w-full px-4 py-3 bg-white border border-slate-200/60 rounded-2xl text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
-                        >
-                          {uploadedFonts.map((font) => (
-                            <option key={font} value={font} style={{ fontFamily: font }}>
-                              {font}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="space-y-3">
+                          <select
+                            value={(selectedFabricObject as fabric.Textbox).fontFamily || "Arial"}
+                            onChange={async (e) => {
+                              const selectedFont = e.target.value
+                              
+                              if (fabricEditorRef.current) {
+                                // Check if this is a custom font from backend
+                                const customFont = backendFonts.find(font => font.fontFamily === selectedFont)
+                                
+                                if (customFont) {
+                                  // Load the custom font first
+                                  const fontUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}${customFont.fileUrl}`
+                                  try {
+                                    await fabricEditorRef.current.loadFont(customFont.fontFamily, fontUrl)
+                                    console.log(`Loaded custom font: ${customFont.fontFamily}`)
+                                  } catch (error) {
+                                    console.error(`Failed to load custom font ${customFont.fontFamily}:`, error)
+                                  }
+                                }
+                                
+                                // Apply the font to the selected object
+                                fabricEditorRef.current.updateSelectedObject({ fontFamily: selectedFont })
+                                
+                                // Update the selected object to trigger re-render
+                                const activeObj = fabricEditorRef.current.canvas?.getActiveObject()
+                                if (activeObj) {
+                                  setSelectedFabricObject(null)
+                                  setTimeout(() => setSelectedFabricObject(activeObj), 0)
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-3 bg-white border border-slate-200/60 rounded-2xl text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
+                          >
+                            {uploadedFonts.map((font) => (
+                              <option key={font} value={font} style={{ fontFamily: font }}>
+                                {font}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          {/* Quick Upload Font Button */}
+                          <div className="flex gap-2">
+                            <input
+                              type="file"
+                              accept=".woff,.woff2,.ttf,.otf"
+                              onChange={handleFontUpload}
+                              className="hidden"
+                              id="quick-font-upload"
+                              disabled={isUploadingFont}
+                            />
+                            <label
+                              htmlFor="quick-font-upload"
+                              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer text-center ${
+                                isUploadingFont
+                                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                  : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
+                              }`}
+                            >
+                              {isUploadingFont ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <RotateCcw className="w-3 h-3 animate-spin" />
+                                  Uploading...
+                                </span>
+                              ) : (
+                                <span className="flex items-center justify-center gap-2">
+                                  <Upload className="w-3 h-3" />
+                                  Upload Font
+                                </span>
+                              )}
+                            </label>
+                            <button
+                              onClick={() => setShowFontPanel(true)}
+                              className="px-3 py-2 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                            >
+                              Manage
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1203,14 +1646,25 @@ export default function EditorPage() {
                     onChange={handleFontUpload}
                     className="hidden"
                     id="font-upload"
+                    disabled={isUploadingFont}
                   />
                   <label
                     htmlFor="font-upload"
-                    className="cursor-pointer text-slate-600 hover:text-slate-800 transition-colors duration-300"
+                    className={`cursor-pointer transition-colors duration-300 ${
+                      isUploadingFont 
+                        ? "text-slate-400 cursor-not-allowed" 
+                        : "text-slate-600 hover:text-slate-800"
+                    }`}
                   >
                     <div className="space-y-4">
-                      <Upload className="w-10 h-10 mx-auto text-slate-400" />
-                      <div className="text-sm font-semibold tracking-wide">Click to upload font file</div>
+                      {isUploadingFont ? (
+                        <RotateCcw className="w-10 h-10 mx-auto text-slate-400 animate-spin" />
+                      ) : (
+                        <Upload className="w-10 h-10 mx-auto text-slate-400" />
+                      )}
+                      <div className="text-sm font-semibold tracking-wide">
+                        {isUploadingFont ? "Uploading..." : "Click to upload font file"}
+                      </div>
                       <div className="text-xs text-slate-500 font-medium tracking-wide">
                         Supports .woff, .woff2, .ttf, .otf
                       </div>
@@ -1223,16 +1677,63 @@ export default function EditorPage() {
                 <label className="block text-sm font-semibold text-slate-700 mb-4 tracking-wide">
                   Available Fonts ({uploadedFonts.length})
                 </label>
-                <div className="max-h-48 overflow-y-auto space-y-2">
-                  {uploadedFonts.map((font) => (
-                    <div
-                      key={font}
-                      className="p-4 bg-slate-50 rounded-2xl text-sm border border-slate-200/60 hover:bg-slate-100 transition-all duration-300 font-medium tracking-wide"
-                      style={{ fontFamily: font }}
-                    >
-                      {font}
+                <div className="max-h-64 overflow-y-auto space-y-3">
+                  {/* System Fonts */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">System Fonts</h4>
+                    {["Arial", "Helvetica", "Times New Roman", "Georgia", "Verdana"].map((font) => (
+                      <div
+                        key={font}
+                        className="p-3 bg-slate-50 rounded-xl text-sm border border-slate-200/60 hover:bg-slate-100 transition-all duration-300 font-medium tracking-wide flex items-center justify-between"
+                        style={{ fontFamily: font }}
+                      >
+                        <span>{font}</span>
+                        <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-lg">System</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Backend Fonts */}
+                  {backendFonts.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Custom Fonts</h4>
+                      {backendFonts.map((font) => (
+                        <div
+                          key={font.id}
+                          className="p-3 bg-slate-50 rounded-xl text-sm border border-slate-200/60 hover:bg-slate-100 transition-all duration-300 font-medium tracking-wide"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span style={{ fontFamily: font.fontFamily }}>{font.fontFamily}</span>
+                            <div className="flex items-center gap-2">
+                              {font.isOwner && (
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(`Delete font "${font.fontFamily}"?`)) {
+                                      try {
+                                        await apiClient.deleteFont(font.id)
+                                        setBackendFonts(prev => prev.filter(f => f.id !== font.id))
+                                        setUploadedFonts(prev => prev.filter(f => f !== font.fontFamily))
+                                        alert('Font deleted successfully')
+                                      } catch (error) {
+                                        console.error('Delete font error:', error)
+                                        alert('Failed to delete font')
+                                      }
+                                    }
+                                  }}
+                                  className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-lg hover:bg-red-200 transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg">
+                                {font.isOwner ? "Yours" : "Shared"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
