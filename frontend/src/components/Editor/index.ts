@@ -25,3 +25,39 @@ export interface TemplateData {
     style?: ElementStyle
   }[]
 }
+
+export interface Brand {
+  _id: string
+  name: string
+  logoUrl?: string
+  primaryColor: string
+  secondaryColor: string
+  accentColor?: string
+  vibe: "playful" | "elegant" | "bold" | "minimal" | "professional"
+  voice: string
+  personality: string
+  targetAudience: string
+  toneGuidelines: string
+  keyValues: string
+  communicationStyle: string
+  industry?: string
+  tagline?: string
+  doNotUse?: string
+  preferredWords: string[]
+  avoidedWords: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BrandData {
+  name: string
+  primaryColor: string
+  secondaryColor: string
+  vibe: string
+  voice?: string
+  personality?: string
+  targetAudience?: string
+  toneGuidelines?: string
+  keyValues?: string
+  communicationStyle?: string
+}

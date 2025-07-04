@@ -867,6 +867,8 @@ export default function EditorPage() {
         isUploadingFont={isUploadingFont}
       />
 
+      <EditorMain />
+
       {/* Main Content */}
       <div className="flex h-[calc(100vh-80px)]">
         {/* Icon Sidebar */}
