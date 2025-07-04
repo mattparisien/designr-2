@@ -6,6 +6,7 @@ import { useObjects } from './hooks/useObjects';
 import { useImportExport } from './hooks/useImportExport';
 import { useResize } from './hooks/useResize';
 import { useFonts } from './hooks/useFonts';
+import { TemplateElement } from './types';
 
 // Type definitions
 interface FabricEditorProps {
@@ -13,18 +14,24 @@ interface FabricEditorProps {
   height: number;
 }
 
-interface FabricEditorRef {
-  addText: ReturnType<typeof useObjects>['addText'];
-  addShape: ReturnType<typeof useObjects>['addShape'];
-  updateSelected: ReturnType<typeof useObjects>['updateSelected'];
-  // Add other methods from hooks as needed
+
+export interface FabricEditorRef {
+  addText: (text: string, options?: Record<string, unknown>) => fabric.Textbox | undefined;
+  updateSelectedObject: (properties: Record<string, unknown>) => void;
+  deleteSelected: () => void;
+  loadTemplate: (elements: TemplateElement[]) => void;
+  exportTemplate: () => TemplateElement[];
+  loadFont: (fontName: string, fontUrl: string) => Promise<boolean>;
+  addBackground: (color?: string) => fabric.Rect | undefined;
+  resizeCanvas: (newWidth: number, newHeight: number, newOriginalWidth: number, newOriginalHeight: number) => void;
+  canvas: fabric.Canvas | null;
 }
 
 const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(
   ({ width, height }, ref) => {
-    const objects   = useObjects();
-    const io        = useImportExport();
-    const resize    = useResize(width, height);
+    const objects = useObjects();
+    const io = useImportExport();
+    const resize = useResize(width, height);
     const fontTools = useFonts();
 
     useImperativeHandle(ref, () => ({ ...objects, ...io, ...resize, ...fontTools }), [
