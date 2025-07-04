@@ -1,33 +1,30 @@
-import React, { createContext, useContext, useRef, useEffect } from 'react';
-import * as fabric from 'fabric';
+// FabricCanvas.tsx
+import React, { useEffect, useRef } from 'react';
+import { useFabric } from './FabricProvider';
 
-const FabricCtx = createContext<fabric.Canvas | null>(null);
-export const useFabric = () => useContext(FabricCtx);
+const FabricCanvas: React.FC<{ className?: string }> = ({ className }) => {
+  const canvasEl = useRef<HTMLCanvasElement>(null);
+  const canvas = useFabric();
 
-export const FabricProvider: React.FC<
-  React.PropsWithChildren<{ width: number; height: number }>
-> = ({ width, height, children }) => {
-  const canvasRef = useRef<fabric.Canvas | null>(null);
-  const elRef = useRef<HTMLCanvasElement>(null);
-
-  // 1️⃣ Initialize Fabric when the <canvas> mounts
   useEffect(() => {
-    if (!canvasRef.current && elRef.current) {
-      canvasRef.current = new fabric.Canvas(elRef.current, { width, height });
+    if (canvas && canvasEl.current) {
+      // Fabric’s initialize method is protected in the typings,
+      // so we force-cast here to actually bind the existing instance
+      // to our <canvas> element.
+      //
+      // NOTE: initialize() comes from StaticCanvas under the hood.
+      // If you’d rather re-create the instance, see the earlier examples.
+      // @ts-ignore
+      canvas.initialize(canvasEl.current);
+
+      // Optional: re-render any existing objects
+      canvas.requestRenderAll();
     }
-  }, [width, height]);
 
-  // 2️⃣ Keep size in sync if width/height change
-  useEffect(() => {
-    const c = canvasRef.current;
-    if (c) c.setDimensions({ width, height });
-  }, [width, height]);
+    // We do NOT dispose here — let your provider own the lifecycle.
+  }, [canvas]);
 
-  return (
-    <FabricCtx.Provider value={canvasRef.current}>
-      {/* This is the <canvas> Fabric will draw onto */}
-      <canvas ref={elRef} />
-      {children}
-    </FabricCtx.Provider>
-  );
+  return <canvas ref={canvasEl} className={className} />;
 };
+
+export default FabricCanvas;

@@ -7,6 +7,19 @@ import { useImportExport } from './hooks/useImportExport';
 import { useResize } from './hooks/useResize';
 import { useFonts } from './hooks/useFonts';
 
+// Type definitions
+interface FabricEditorProps {
+  width: number;
+  height: number;
+}
+
+interface FabricEditorRef {
+  addText: ReturnType<typeof useObjects>['addText'];
+  addShape: ReturnType<typeof useObjects>['addShape'];
+  updateSelected: ReturnType<typeof useObjects>['updateSelected'];
+  // Add other methods from hooks as needed
+}
+
 const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(
   ({ width, height }, ref) => {
     const objects   = useObjects();
@@ -30,5 +43,7 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(
     );
   },
 );
+
+FabricEditor.displayName = 'FabricEditor';
 
 export default FabricEditor;

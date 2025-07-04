@@ -15,6 +15,11 @@ export const denormaliseShape = (
   if (el.type !== 'shape') throw new Error('denormaliseShape expects a shape element');
 
   const st = el.style ?? {};
+  const stExtended = st as typeof st & { 
+    fill?: string; 
+    gradient?: GradientConfig; 
+  };
+  
   const base = {
     left: el.x * scale,
     top: el.y * scale,
@@ -23,10 +28,10 @@ export const denormaliseShape = (
     stroke: st.stroke,
     strokeWidth: st.strokeWidth,
     // accept any of the colour aliases
-    color: st.color ?? st.fill ?? st.backgroundColor,
-    fill: st.fill,
+    color: st.color ?? stExtended.fill ?? st.backgroundColor,
+    fill: stExtended.fill,
     backgroundColor: st.backgroundColor,
-    gradient: st.gradient as GradientConfig | undefined,
+    gradient: stExtended.gradient,
   } as Record<string, unknown>;
 
   if (st.shapeType === 'circle' && st.radius) {

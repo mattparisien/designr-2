@@ -44,3 +44,7 @@ export interface GradientConfig {
   /** Array of colour stops, each 0 – 1 */
   colorStops: Array<{ offset: number; color: string }>;
 }
+
+
+export type ShapeKind = 'rectangle' | 'circle' | 'triangle' | 'line';
+export type ShapeOptions = Record<string, unknown>;
