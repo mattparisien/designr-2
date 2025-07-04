@@ -1,8 +1,8 @@
 
-import FabricEditor from "../FabricEditor";
+import FabricEditor from "./FabricEditor/index";
 
 const EditorMain = () => {
-    return <main className="flex h-[calc(100vh-80px)]">
+    return <main className="flex w-full h-screen pl-20 pt-20 overflow-hidden">
         <FabricEditor width={1080} height={1080} />
     </main>
 }

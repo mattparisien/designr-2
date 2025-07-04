@@ -61,3 +61,8 @@ export interface BrandData {
   keyValues?: string
   communicationStyle?: string
 }
+
+export interface AIContent {
+  headline: string
+  bodyText: string
+}

@@ -1,11 +1,41 @@
-import { Palette, Settings, Type, Layers } from "lucide-react";
+import * as fabric from "fabric";
+import { Circle, ImagePlus, Layers, Palette, Plus, RotateCcw, Settings, Square, Triangle, Type, Upload, Wand2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AIContent, Brand, BrandData } from ".";
+import { FabricEditorRef } from "../FabricEditor";
+
 
 interface EditorSidebarProps {
     toggleSidebarSection: (section: string) => void,
     selectedFabricObject: fabric.Object | null,
+    selectedBrand: Brand | null,
     activeSidebarSection: string | null,
     setActiveSidebarSection: (section: string | null) => void,
-    
+    setSidebarOpen: (open: boolean) => void,
+    setShowMagicFill: (show: boolean) => void,
+    sidebarOpen: boolean,
+    fabricEditorRef: React.RefObject<FabricEditorRef | null>,
+    brandData: BrandData | null,
+    brands: Brand[],
+    aiContent: AIContent,
+    setShowFontPanel: (show: boolean) => void,
+    isUploadingFont: boolean,
+    setResizeSearchTerm: (term: string) => void,
+    resizeSearchTerm: string,
+    handleResize: (width: number, height: number) => void,
+    handleCustomResize: (width: number, height: number) => void,
+    handleExport: () => void,
+    handleFontUpload: (event: React.ChangeEvent<HTMLInputElement>) => void,
+    applyBrand: (brand: Brand) => void,
+    setSelectedFabricObject: (object: fabric.Object | null) => void,
+    uploadedFonts?: string[],
+    backendFonts?: Array<{
+        id: string
+        name: string
+        fontFamily: string
+        fileUrl: string
+        isOwner: boolean
+    }>
 }
 
 const EditorSidebar = (props: EditorSidebarProps) => {
@@ -14,14 +44,30 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         toggleSidebarSection,
         selectedFabricObject: selectedFabricObject,
         activeSidebarSection,
+        aiContent,
+        setShowMagicFill,
         setActiveSidebarSection,
-
+        applyBrand,
+        setSidebarOpen,
+        sidebarOpen,
+        fabricEditorRef,
+        selectedBrand,
+        brandData,
+        brands,
+        setShowFontPanel,
+        isUploadingFont,
+        handleFontUpload,
+        uploadedFonts,
+        backendFonts,
+        setSelectedFabricObject
     } = props;
+
+    const router = useRouter();
 
     return (
         <>
             {/* Icon Sidebar */}
-            <div className="w-20 bg-white border-r border-slate-200/60 flex flex-col items-center py-6 sidebar-icon">
+            <div className="h-[calc(100vh-theme(spacing.20))] fixed top-20 w-20 bg-white border-r border-slate-200/60 flex flex-col items-center py-6 sidebar-icon">
                 <div className="flex flex-col gap-4">
                     {/* Brand Icon */}
                     <button
@@ -89,7 +135,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
 
             {/* Expandable Sidebar Content */}
             {sidebarOpen && (
-                <div className="w-96 bg-white border-r border-slate-200/60 overflow-y-auto sidebar-content transition-all duration-300 ease-in-out">
+                <div className="w-96 h-[calc(100vh-80px)] absolute left-20 top-20 bg-white border-r border-slate-200/60 overflow-y-auto sidebar-content transition-all duration-300 ease-in-out z-[999]">
                     <div className="p-8 space-y-8">
                         {/* Close Button */}
                         <div className="flex justify-end">
@@ -675,7 +721,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
 
                                                             if (fabricEditorRef.current) {
                                                                 // Check if this is a custom font from backend
-                                                                const customFont = backendFonts.find(font => font.fontFamily === selectedFont)
+                                                                const customFont = backendFonts?.find((font: { fontFamily: string }) => font.fontFamily === selectedFont)
 
                                                                 if (customFont) {
                                                                     // Load the custom font first
@@ -701,7 +747,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                                                         }}
                                                         className="w-full px-4 py-3 bg-white border border-slate-200/60 rounded-2xl text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
                                                     >
-                                                        {uploadedFonts.map((font) => (
+                                                        {uploadedFonts?.map((font) => (
                                                             <option key={font} value={font} style={{ fontFamily: font }}>
                                                                 {font}
                                                             </option>

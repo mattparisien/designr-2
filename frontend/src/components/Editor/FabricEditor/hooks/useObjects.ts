@@ -17,8 +17,6 @@ const defaults = {
     }
 };
 
-
-
 export const useObjects = () => {
     const canvas = useFabric();
 
@@ -57,10 +55,10 @@ export const useObjects = () => {
         (props: Record<string, unknown>) => {
 
             if (!canvas) return;
-            
+
             const obj = canvas.getActiveObject();
             if (!obj) return;
-            
+
             // Inline property normalization to avoid type issues
             const updatedProperties = { ...props };
 
@@ -88,7 +86,7 @@ export const useObjects = () => {
                     delete updatedProperties.color;
                 }
             }
-            
+
             obj.set(updatedProperties);
             canvas.requestRenderAll();
             canvas.fire('object:modified', { target: obj });

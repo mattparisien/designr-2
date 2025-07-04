@@ -24,7 +24,7 @@ const EditorHeader = (props: EditorHeaderProps) => {
     const { templateData, showResizePanel, isUploadingFont, resizeSearchTerm, handleResize, handleCustomResize, setResizeSearchTerm, setShowFontPanel, setShowMagicFill, setShowResizePanel, handleExport, handleFontUpload } = props;
     const router = useRouter()
 
-    return < header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60" >
+    return <header className="fixed h-20 top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60" >
         <div className="max-w-[1800px] mx-auto px-8" >
             <div className="flex items-center justify-between h-20" >
                 {/* Left Section */}
