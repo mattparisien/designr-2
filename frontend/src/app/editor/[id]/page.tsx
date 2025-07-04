@@ -2,35 +2,36 @@
 
 import type React from "react"
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react"
-import { useRouter, useParams } from "next/navigation"
+import EditorHeader from "@/components/Editor/Header"
+import * as fabric from "fabric"
 import {
   ArrowLeft,
-  Wand2,
-  RotateCcw,
-  Download,
-  Maximize,
-  Sparkles,
-  Type,
-  Palette,
-  Settings,
-  Eye,
-  ZoomIn,
-  ZoomOut,
-  MoreHorizontal,
-  Upload,
-  X,
-  Search,
-  Plus,
-  Square,
   Circle,
-  Triangle,
+  Download,
+  Eye,
   ImagePlus,
   Layers,
+  Maximize,
+  MoreHorizontal,
+  Palette,
+  Plus,
+  RotateCcw,
+  Search,
+  Settings,
+  Sparkles,
+  Square,
+  Triangle,
+  Type,
+  Upload,
+  Wand2,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import FabricEditor, { FabricEditorRef } from "../../../components/FabricEditor"
 import { ApiClient } from "../../../lib/api"
-import FabricEditor, { type FabricEditorRef } from "../../../components/FabricEditor"
-import * as fabric from "fabric"
 
 interface Brand {
   _id: string
@@ -154,7 +155,7 @@ export default function EditorPage() {
       const response = await apiClient.getFonts()
       if (response.success && response.fonts) {
         setBackendFonts(response.fonts)
-        
+
         // Add backend fonts to the font family list
         const backendFontFamilies = response.fonts.map((font: { fontFamily: string }) => font.fontFamily)
         const systemFonts = ["Arial", "Helvetica", "Times New Roman", "Georgia", "Verdana"]
@@ -172,7 +173,7 @@ export default function EditorPage() {
       const preloadFonts = async () => {
         // Wait a bit to ensure the editor is ready
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         if (fabricEditorRef.current) {
           for (const font of backendFonts) {
             const fontUrl = `${process.env.NEXT_PUBLIC_CDN_URL || 'http://localhost:5001'}${font.fileUrl}`
@@ -206,7 +207,7 @@ export default function EditorPage() {
         const response = await apiClient.getBrands()
         if (response.success && response.brands) {
           setBrands(response.brands)
-          
+
           // Set first brand as selected if available, or use localStorage fallback
           const storedBrandData = localStorage.getItem("brandData")
           if (response.brands.length > 0) {
@@ -262,7 +263,7 @@ export default function EditorPage() {
         const response = await apiClient.getBrands()
         if (response.success && response.brands) {
           setBrands(response.brands)
-          
+
           // Set first brand as selected if available, or use localStorage fallback
           const storedBrandData = localStorage.getItem("brandData")
           if (response.brands.length > 0) {
@@ -451,7 +452,7 @@ export default function EditorPage() {
     setIsUploadingFont(true)
     try {
       const response = await apiClient.uploadFont(file, fontFamilyName, false)
-      
+
       if (response.success) {
         // Add the new font to the local state
         setUploadedFonts((prev) => [...prev, response.font.fontFamily])
@@ -462,14 +463,14 @@ export default function EditorPage() {
           fileUrl: response.font.fileUrl,
           isOwner: true
         }])
-        
+
         alert(`Font "${response.font.fontFamily}" uploaded successfully!`)
-        
+
         // Load the font for immediate use
         if (fabricEditorRef.current) {
           const fontUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}${response.font.fileUrl}`
           await fabricEditorRef.current.loadFont(response.font.fontFamily, fontUrl)
-          
+
           // Auto-apply the font to the currently selected text object
           if (selectedFabricObject && selectedFabricObject.type === "textbox") {
             fabricEditorRef.current.updateSelectedObject({ fontFamily: response.font.fontFamily })
@@ -495,7 +496,7 @@ export default function EditorPage() {
   // Fabric.js event handlers
   const handleFabricObjectSelected = useCallback((obj: fabric.Object | null) => {
     setSelectedFabricObject(obj)
-    
+
     // Auto-open element properties when an object is selected
     if (obj) {
       setActiveSidebarSection('element')
@@ -507,7 +508,9 @@ export default function EditorPage() {
     if (!templateData || !fabricEditorRef.current) return
 
     const updatedElements = fabricEditorRef.current.exportTemplate()
-    setTemplateData({ ...templateData, elements: updatedElements })
+    if (updatedElements) {
+      setTemplateData({ ...templateData, elements: updatedElements })
+    }
   }, [templateData])
 
   // Apply a brand to the canvas
@@ -534,12 +537,12 @@ export default function EditorPage() {
             ...element,
             style: {
               ...element.style,
-              color: element.style.color === brandData?.primaryColor ? brand.primaryColor : 
-                     element.style.color === brandData?.secondaryColor ? brand.secondaryColor : 
-                     element.style.color,
-              backgroundColor: element.style.backgroundColor === brandData?.primaryColor ? brand.primaryColor : 
-                              element.style.backgroundColor === brandData?.secondaryColor ? brand.secondaryColor : 
-                              element.style.backgroundColor,
+              color: element.style.color === brandData?.primaryColor ? brand.primaryColor :
+                element.style.color === brandData?.secondaryColor ? brand.secondaryColor :
+                  element.style.color,
+              backgroundColor: element.style.backgroundColor === brandData?.primaryColor ? brand.primaryColor :
+                element.style.backgroundColor === brandData?.secondaryColor ? brand.secondaryColor :
+                  element.style.backgroundColor,
             },
           }
         }
@@ -653,21 +656,8 @@ export default function EditorPage() {
 
     setTemplateData(updatedTemplate)
 
-    // Calculate new canvas display dimensions
-    const maxWidth = 500
-    const maxHeight = 500
-    const aspectRatio = newWidth / newHeight
-
-    let canvasWidth = maxWidth
-    let canvasHeight = maxWidth / aspectRatio
-
-    if (canvasHeight > maxHeight) {
-      canvasHeight = maxHeight
-      canvasWidth = maxHeight * aspectRatio
-    }
-
-    // Use the enhanced resizeCanvas method
-    fabricEditorRef.current.resizeCanvas(Math.round(canvasWidth), Math.round(canvasHeight), newWidth, newHeight)
+    // Update the editor dimensions to match the new template size
+    fabricEditorRef.current.resizeCanvas(newWidth, newHeight, templateData.width, templateData.height)
 
     setShowResizePanel(false)
 
@@ -698,21 +688,8 @@ export default function EditorPage() {
 
     setTemplateData(updatedTemplate)
 
-    // Calculate new canvas display dimensions
-    const maxWidth = 500
-    const maxHeight = 500
-    const aspectRatio = width / height
-
-    let canvasWidth = maxWidth
-    let canvasHeight = maxWidth / aspectRatio
-
-    if (canvasHeight > maxHeight) {
-      canvasHeight = maxHeight
-      canvasWidth = maxHeight * aspectRatio
-    }
-
-    // Use the enhanced resizeCanvas method
-    fabricEditorRef.current.resizeCanvas(Math.round(canvasWidth), Math.round(canvasHeight), width, height)
+    // Update the editor dimensions to match the new template size
+    fabricEditorRef.current.resizeCanvas(width, height, templateData.width, templateData.height)
 
     setShowResizePanel(false)
 
@@ -767,6 +744,45 @@ export default function EditorPage() {
       fabricEditorRef.current.loadTemplate(templateData.elements)
     }
   }, [templateData])
+
+  // Set up canvas event listeners for object selection and modification
+  useEffect(() => {
+    if (!fabricEditorRef.current?.canvas) return
+
+    const canvas = fabricEditorRef.current.canvas
+
+    const handleSelectionCreated = (e: any) => {
+      const selected = e.selected?.[0]
+      handleFabricObjectSelected(selected || null)
+    }
+
+    const handleSelectionUpdated = (e: any) => {
+      const selected = e.selected?.[0]
+      handleFabricObjectSelected(selected || null)
+    }
+
+    const handleSelectionCleared = () => {
+      handleFabricObjectSelected(null)
+    }
+
+    const handleObjectModified = () => {
+      handleFabricObjectModified()
+    }
+
+    // Add event listeners
+    canvas.on('selection:created', handleSelectionCreated)
+    canvas.on('selection:updated', handleSelectionUpdated)
+    canvas.on('selection:cleared', handleSelectionCleared)
+    canvas.on('object:modified', handleObjectModified)
+
+    // Cleanup
+    return () => {
+      canvas.off('selection:created', handleSelectionCreated)
+      canvas.off('selection:updated', handleSelectionUpdated)
+      canvas.off('selection:cleared', handleSelectionCleared)
+      canvas.off('object:modified', handleObjectModified)
+    }
+  }, [handleFabricObjectSelected, handleFabricObjectModified, fabricEditorRef.current?.canvas])
 
   // Close resize panel when clicking outside
   useEffect(() => {
@@ -836,277 +852,20 @@ export default function EditorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
-        <div className="max-w-[1800px] mx-auto px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Left Section */}
-            <div className="flex items-center gap-8">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 transition-all duration-300"
-              >
-                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
-                <span className="text-sm font-medium tracking-wide">Back to Dashboard</span>
-              </button>
-
-              <div className="w-px h-8 bg-slate-200"></div>
-
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">{templateData.name}</h1>
-                <p className="text-sm text-slate-500 font-medium tracking-wide">
-                  {templateData.width}×{templateData.height}px
-                </p>
-              </div>
-            </div>
-
-            {/* Center Actions */}
-            <div className="hidden md:flex items-center gap-4">
-              <button
-                onClick={() => setShowMagicFill(true)}
-                className="group relative bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-700 flex items-center gap-3 shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 tracking-wide"
-              >
-                <Wand2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
-                <span>AI Magic Fill</span>
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 blur-xl opacity-20"></div>
-              </button>
-
-              <button
-                onClick={() => setShowFontPanel(true)}
-                className="bg-white border border-slate-200/60 text-slate-700 px-5 py-3 rounded-2xl font-semibold hover:bg-slate-50 hover:border-slate-300/60 flex items-center gap-3 transition-all duration-300 shadow-sm hover:shadow-md tracking-wide"
-              >
-                <Type className="w-4 h-4" />
-                <span>Fonts</span>
-              </button>
-
-              {/* Quick Font Upload */}
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".woff,.woff2,.ttf,.otf"
-                  onChange={handleFontUpload}
-                  className="hidden"
-                  id="header-font-upload"
-                  disabled={isUploadingFont}
-                />
-                <label
-                  htmlFor="header-font-upload"
-                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-2xl font-semibold transition-all duration-300 cursor-pointer tracking-wide ${
-                    isUploadingFont
-                      ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
-                      : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60 shadow-sm hover:shadow-md"
-                  }`}
-                >
-                  {isUploadingFont ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span className="hidden lg:inline">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      <span className="hidden lg:inline">Upload Font</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-3">
-                <div className="relative resize-dropdown">
-                  <button
-                    onClick={() => setShowResizePanel(!showResizePanel)}
-                    className="bg-blue-50 text-blue-600 px-4 py-3 rounded-2xl hover:bg-blue-100 flex items-center gap-3 transition-all duration-300 border border-blue-200/60 font-semibold tracking-wide"
-                  >
-                    <Maximize className="w-4 h-4" />
-                    <span>Resize</span>
-                  </button>
-
-                  {/* Enhanced Resize Dropdown */}
-                  {showResizePanel && (
-                    <div className="absolute top-16 right-0 bg-white border border-slate-200/60 rounded-3xl shadow-2xl shadow-slate-900/10 w-96 z-50">
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-bold text-slate-900 tracking-tight">Resize Canvas</h3>
-                          <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl font-medium tracking-wide">
-                            {templateData ? `${templateData.width}×${templateData.height}` : ""}
-                          </span>
-                        </div>
-
-                        {/* Search Input */}
-                        <div className="mb-6">
-                          <div className="relative">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                            <input
-                              type="text"
-                              placeholder="Search formats... (try: story, post, thumbnail)"
-                              value={resizeSearchTerm}
-                              onChange={(e) => setResizeSearchTerm(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200/60 rounded-2xl text-slate-900 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
-                            />
-                          </div>
-
-                          {resizeSearchTerm === "" && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {["story", "post", "thumbnail", "reel", "pin"].map((suggestion) => (
-                                <button
-                                  key={suggestion}
-                                  onClick={() => setResizeSearchTerm(suggestion)}
-                                  className="px-3 py-1.5 text-xs bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 hover:text-slate-800 transition-all duration-200 font-medium tracking-wide"
-                                >
-                                  {suggestion}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-6 max-h-96 overflow-y-auto">
-                          {/* Group formats by category and filter by search term */}
-                          {Object.entries(
-                            Object.entries(socialMediaFormats)
-                              .filter(
-                                ([key, format]) =>
-                                  resizeSearchTerm === "" ||
-                                  format.name.toLowerCase().includes(resizeSearchTerm.toLowerCase()) ||
-                                  format.category.toLowerCase().includes(resizeSearchTerm.toLowerCase()) ||
-                                  key.toLowerCase().includes(resizeSearchTerm.toLowerCase()),
-                              )
-                              .reduce(
-                                (
-                                  groups: Record<
-                                    string,
-                                    Array<[string, { width: number; height: number; name: string; category: string }]>
-                                  >,
-                                  [key, format],
-                                ) => {
-                                  const category = format.category
-                                  if (!groups[category]) groups[category] = []
-                                  groups[category].push([key, format])
-                                  return groups
-                                },
-                                {},
-                              ),
-                          ).map(([category, formats]) => (
-                            <div key={category} className="space-y-3">
-                              <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-                                {category} ({formats.length})
-                              </h4>
-                              <div className="space-y-2">
-                                {formats.map(([key, format]) => {
-                                  const isCurrentSize =
-                                    templateData &&
-                                    templateData.width === format.width &&
-                                    templateData.height === format.height
-
-                                  return (
-                                    <button
-                                      key={key}
-                                      onClick={() => handleResize(key)}
-                                      className={`w-full text-left p-4 rounded-2xl transition-all duration-300 group ${
-                                        isCurrentSize
-                                          ? "bg-indigo-50 border-2 border-indigo-200"
-                                          : "hover:bg-slate-50 border-2 border-transparent hover:border-slate-200"
-                                      }`}
-                                    >
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex-1 min-w-0">
-                                          <span
-                                            className={`text-sm font-semibold block truncate tracking-tight ${
-                                              isCurrentSize
-                                                ? "text-indigo-700"
-                                                : "text-slate-900 group-hover:text-indigo-600"
-                                            }`}
-                                          >
-                                            {format.name}
-                                          </span>
-                                          <span className="text-xs text-slate-500 block mt-1 font-medium tracking-wide">
-                                            {format.width}×{format.height}px •{" "}
-                                            {(format.width / format.height).toFixed(2)} ratio
-                                          </span>
-                                        </div>
-                                        {isCurrentSize && (
-                                          <span className="text-xs text-indigo-600 bg-indigo-100 px-3 py-1.5 rounded-xl ml-3 flex-shrink-0 font-semibold tracking-wide">
-                                            Current
-                                          </span>
-                                        )}
-                                      </div>
-                                    </button>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Custom Size Option */}
-                          <div className="border-t border-slate-200 pt-6 mt-6">
-                            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Custom</h4>
-                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-xs font-semibold text-slate-600 mb-2 tracking-wide">
-                                    Width
-                                  </label>
-                                  <input
-                                    type="number"
-                                    placeholder="1920"
-                                    className="w-full px-3 py-2.5 bg-white border border-slate-200/60 rounded-xl text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
-                                    id="custom-width"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-semibold text-slate-600 mb-2 tracking-wide">
-                                    Height
-                                  </label>
-                                  <input
-                                    type="number"
-                                    placeholder="1080"
-                                    className="w-full px-3 py-2.5 bg-white border border-slate-200/60 rounded-xl text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all duration-300 font-medium tracking-wide"
-                                    id="custom-height"
-                                  />
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  const width = Number.parseInt(
-                                    (document.getElementById("custom-width") as HTMLInputElement)?.value || "1920",
-                                  )
-                                  const height = Number.parseInt(
-                                    (document.getElementById("custom-height") as HTMLInputElement)?.value || "1080",
-                                  )
-                                  if (width > 0 && height > 0) {
-                                    handleCustomResize(width, height)
-                                  }
-                                }}
-                                className="w-full mt-4 bg-indigo-500 text-white py-3 rounded-2xl hover:bg-indigo-600 transition-all duration-300 text-sm font-semibold tracking-wide shadow-lg shadow-indigo-500/25"
-                              >
-                                Apply Custom Size
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleExport}
-                  className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-2xl hover:bg-emerald-100 flex items-center gap-3 transition-all duration-300 border border-emerald-200/60 font-semibold tracking-wide"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export</span>
-                </button>
-              </div>
-
-              <button className="lg:hidden bg-slate-100 p-3 rounded-2xl hover:bg-slate-200 transition-all duration-300">
-                <MoreHorizontal className="w-5 h-5 text-slate-600" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <EditorHeader
+        templateData={templateData}
+        setShowFontPanel={setShowFontPanel}
+        setShowMagicFill={setShowMagicFill}
+        handleFontUpload={handleFontUpload}
+        showResizePanel={showResizePanel}
+        setShowResizePanel={setShowResizePanel}
+        handleResize={handleResize}
+        handleCustomResize={handleCustomResize}
+        handleExport={handleExport}
+        resizeSearchTerm={resizeSearchTerm}
+        setResizeSearchTerm={setResizeSearchTerm}
+        isUploadingFont={isUploadingFont}
+      />
 
       {/* Main Content */}
       <div className="flex h-[calc(100vh-80px)]">
@@ -1116,11 +875,10 @@ export default function EditorPage() {
             {/* Brand Icon */}
             <button
               onClick={() => toggleSidebarSection('brand')}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                activeSidebarSection === 'brand'
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-              }`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${activeSidebarSection === 'brand'
+                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                }`}
               title="Brand Identity"
             >
               <Palette className="w-6 h-6" />
@@ -1129,11 +887,10 @@ export default function EditorPage() {
             {/* Content Icon */}
             <button
               onClick={() => toggleSidebarSection('content')}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                activeSidebarSection === 'content'
-                  ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-              }`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${activeSidebarSection === 'content'
+                ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                }`}
               title="Content & AI"
             >
               <Type className="w-6 h-6" />
@@ -1142,11 +899,10 @@ export default function EditorPage() {
             {/* Canvas Icon */}
             <button
               onClick={() => toggleSidebarSection('canvas')}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                activeSidebarSection === 'canvas'
-                  ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-              }`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${activeSidebarSection === 'canvas'
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                }`}
               title="Canvas Settings"
             >
               <Settings className="w-6 h-6" />
@@ -1155,11 +911,10 @@ export default function EditorPage() {
             {/* Elements Icon */}
             <button
               onClick={() => toggleSidebarSection('elements')}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                activeSidebarSection === 'elements'
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-              }`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${activeSidebarSection === 'elements'
+                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                }`}
               title="Add Elements"
             >
               <Layers className="w-6 h-6" />
@@ -1169,11 +924,10 @@ export default function EditorPage() {
             {selectedFabricObject && (
               <button
                 onClick={() => toggleSidebarSection('element')}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                  activeSidebarSection === 'element'
-                    ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-                }`}
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${activeSidebarSection === 'element'
+                  ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+                  }`}
                 title="Element Properties"
               >
                 <Settings className="w-6 h-6" />
@@ -1249,11 +1003,10 @@ export default function EditorPage() {
                         {brands.map((brand) => (
                           <div
                             key={brand._id}
-                            className={`p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
-                              selectedBrand?._id === brand._id
-                                ? "border-indigo-300 bg-indigo-50"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                            }`}
+                            className={`p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${selectedBrand?._id === brand._id
+                              ? "border-indigo-300 bg-indigo-50"
+                              : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                              }`}
                           >
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
@@ -1280,18 +1033,17 @@ export default function EditorPage() {
                             </div>
                             <button
                               onClick={() => applyBrand(brand)}
-                              className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 ${
-                                selectedBrand?._id === brand._id
-                                  ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                              }`}
+                              className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 ${selectedBrand?._id === brand._id
+                                ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                }`}
                             >
                               {selectedBrand?._id === brand._id ? "Applied" : "Apply Brand"}
                             </button>
                           </div>
                         ))}
                       </div>
-                      
+
                       <button
                         onClick={() => router.push("/brands")}
                         className="w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 tracking-wide flex items-center justify-center gap-2"
@@ -1451,7 +1203,7 @@ export default function EditorPage() {
                           <p className="text-xs text-slate-500 font-medium tracking-wide">Click to add editable text</p>
                         </div>
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (fabricEditorRef.current) {
@@ -1507,7 +1259,7 @@ export default function EditorPage() {
                         </div>
                         <span className="text-xs font-semibold text-slate-900 tracking-tight">Rectangle</span>
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (fabricEditorRef.current?.canvas) {
@@ -1532,7 +1284,7 @@ export default function EditorPage() {
                         </div>
                         <span className="text-xs font-semibold text-slate-900 tracking-tight">Circle</span>
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (fabricEditorRef.current?.canvas) {
@@ -1558,7 +1310,7 @@ export default function EditorPage() {
                         </div>
                         <span className="text-xs font-semibold text-slate-900 tracking-tight">Triangle</span>
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (fabricEditorRef.current?.canvas) {
@@ -1672,7 +1424,7 @@ export default function EditorPage() {
                         </div>
                         <span className="text-sm font-semibold text-slate-900 tracking-tight">Duplicate Selected</span>
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (fabricEditorRef.current) {
@@ -1769,11 +1521,11 @@ export default function EditorPage() {
                               value={(selectedFabricObject as fabric.Textbox).fontFamily || "Arial"}
                               onChange={async (e) => {
                                 const selectedFont = e.target.value
-                                
+
                                 if (fabricEditorRef.current) {
                                   // Check if this is a custom font from backend
                                   const customFont = backendFonts.find(font => font.fontFamily === selectedFont)
-                                  
+
                                   if (customFont) {
                                     // Load the custom font first
                                     const fontUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}${customFont.fileUrl}`
@@ -1784,10 +1536,10 @@ export default function EditorPage() {
                                       console.error(`Failed to load custom font ${customFont.fontFamily}:`, error)
                                     }
                                   }
-                                  
+
                                   // Apply the font to the selected object
                                   fabricEditorRef.current.updateSelectedObject({ fontFamily: selectedFont })
-                                  
+
                                   // Update the selected object to trigger re-render
                                   const activeObj = fabricEditorRef.current.canvas?.getActiveObject()
                                   if (activeObj) {
@@ -1804,7 +1556,7 @@ export default function EditorPage() {
                                 </option>
                               ))}
                             </select>
-                            
+
                             {/* Quick Upload Font Button */}
                             <div className="flex gap-2">
                               <input
@@ -1817,11 +1569,10 @@ export default function EditorPage() {
                               />
                               <label
                                 htmlFor="quick-font-upload"
-                                className={`flex-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer text-center ${
-                                  isUploadingFont
-                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
-                                }`}
+                                className={`flex-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer text-center ${isUploadingFont
+                                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                  : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
+                                  }`}
                               >
                                 {isUploadingFont ? (
                                   <span className="flex items-center justify-center gap-2">
@@ -1949,10 +1700,6 @@ export default function EditorPage() {
                   <FabricEditor
                     width={dimensions.width}
                     height={dimensions.height}
-                    originalWidth={templateData.width}
-                    originalHeight={templateData.height}
-                    onObjectSelected={handleFabricObjectSelected}
-                    onObjectModified={handleFabricObjectModified}
                     ref={fabricEditorRef}
                   />
                 )
@@ -2073,11 +1820,10 @@ export default function EditorPage() {
                   />
                   <label
                     htmlFor="font-upload"
-                    className={`cursor-pointer transition-colors duration-300 ${
-                      isUploadingFont 
-                        ? "text-slate-400 cursor-not-allowed" 
-                        : "text-slate-600 hover:text-slate-800"
-                    }`}
+                    className={`cursor-pointer transition-colors duration-300 ${isUploadingFont
+                      ? "text-slate-400 cursor-not-allowed"
+                      : "text-slate-600 hover:text-slate-800"
+                      }`}
                   >
                     <div className="space-y-4">
                       {isUploadingFont ? (

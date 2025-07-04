@@ -1,12 +1,13 @@
 // index.tsx
-import { forwardRef, useImperativeHandle } from 'react';
-import { FabricProvider } from './FabricProvider';
+import { forwardRef, useImperativeHandle, useCallback } from 'react';
+import * as fabric from 'fabric';
+import { FabricProvider, useFabric } from './FabricProvider';
 import FabricCanvas from './FabricCanvas';
 import { useObjects } from './hooks/useObjects';
 import { useImportExport } from './hooks/useImportExport';
 import { useResize } from './hooks/useResize';
 import { useFonts } from './hooks/useFonts';
-import { TemplateElement } from './types';
+import { TemplateElement, ShapeKind } from './types';
 
 // Type definitions
 interface FabricEditorProps {
@@ -16,15 +17,20 @@ interface FabricEditorProps {
 
 
 export interface FabricEditorRef {
-  addText: (text: string, options?: Record<string, unknown>) => fabric.Textbox | undefined;
-  updateSelectedObject: (properties: Record<string, unknown>) => void;
-  deleteSelected: () => void;
+  addText: (text: string, options?: Record<string, unknown>) => unknown;
+  addShape: (kind: ShapeKind, options?: Record<string, unknown>) => unknown;
+  updateSelected: (properties: Record<string, unknown>) => void;
   loadTemplate: (elements: TemplateElement[]) => void;
-  exportTemplate: () => TemplateElement[];
+  exportTemplate: () => TemplateElement[] | undefined;
   loadFont: (fontName: string, fontUrl: string) => Promise<boolean>;
-  addBackground: (color?: string) => fabric.Rect | undefined;
-  resizeCanvas: (newWidth: number, newHeight: number, newOriginalWidth: number, newOriginalHeight: number) => void;
+  resize: (newWidth: number, newHeight: number) => void;
+  // Additional methods for compatibility
+  addBackground: (color?: string) => unknown;
+  deleteSelected: () => void;
   canvas: fabric.Canvas | null;
+  // Legacy method aliases
+  updateSelectedObject: (properties: Record<string, unknown>) => void;
+  resizeCanvas: (newWidth: number, newHeight: number, originalWidth?: number, originalHeight?: number) => void;
 }
 
 const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(
@@ -33,12 +39,74 @@ const FabricEditor = forwardRef<FabricEditorRef, FabricEditorProps>(
     const io = useImportExport();
     const resize = useResize(width, height);
     const fontTools = useFonts();
+    const canvas = useFabric();
 
-    useImperativeHandle(ref, () => ({ ...objects, ...io, ...resize, ...fontTools }), [
+    // Additional methods for compatibility
+    const addBackground = useCallback((color = '#ffffff') => {
+      if (!canvas) return;
+      
+      // Remove existing background
+      const existing = canvas.getObjects().find((obj: fabric.Object) => obj.selectable === false);
+      if (existing) canvas.remove(existing);
+      
+      // Add new background
+      const rect = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: canvas.width,
+        height: canvas.height,
+        fill: color,
+        selectable: false,
+        evented: false,
+        excludeFromExport: false,
+      });
+      
+      canvas.add(rect);
+      canvas.sendObjectToBack(rect);
+      canvas.requestRenderAll();
+      return rect;
+    }, [canvas]);
+
+    const deleteSelected = useCallback(() => {
+      if (!canvas) return;
+      const activeObject = canvas.getActiveObject();
+      if (activeObject) {
+        canvas.remove(activeObject);
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+      }
+    }, [canvas]);
+
+    // Legacy method aliases
+    const updateSelectedObject = useCallback((properties: Record<string, unknown>) => {
+      objects.updateSelected(properties);
+    }, [objects]);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const resizeCanvas = useCallback((newWidth: number, newHeight: number, originalWidth?: number, originalHeight?: number) => {
+      resize(newWidth, newHeight);
+    }, [resize]);
+
+    useImperativeHandle(ref, () => ({ 
+      ...objects, 
+      ...io, 
+      resize, 
+      ...fontTools,
+      addBackground,
+      deleteSelected,
+      canvas,
+      updateSelectedObject,
+      resizeCanvas,
+    }), [
       objects,
       io,
       resize,
       fontTools,
+      canvas,
+      addBackground,
+      deleteSelected,
+      updateSelectedObject,
+      resizeCanvas,
     ]);
 
     return (

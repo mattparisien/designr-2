@@ -14,8 +14,7 @@ const FabricCanvas: React.FC<{ className?: string }> = ({ className }) => {
       //
       // NOTE: initialize() comes from StaticCanvas under the hood.
       // If you’d rather re-create the instance, see the earlier examples.
-      // @ts-ignore
-      canvas.initialize(canvasEl.current);
+      // canvas.initialize(canvasEl.current);
 
       // Optional: re-render any existing objects
       canvas.requestRenderAll();
