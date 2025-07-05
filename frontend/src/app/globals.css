@@ -3,6 +3,59 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+
+  --bg-primary: #fff;
+  --bg-secondary: #e8e8e8;
+  --bg-tertiary: #f3f3f3;
+  --bg-scrim: #0d0d0d80;
+  --bg-elevated-primary: #fff;
+  --bg-elevated-secondary: #f9f9f9;
+  --bg-status-warning: #fff5f0;
+  --bg-status-error: #fff0f0;
+  --border-default: #0d0d0d1a;
+  --border-heavy: #0d0d0d26;
+  --border-light: #0d0d0d0d;
+  --border-status-warning: #ffe7d9;
+  --border-status-error: #ffe1e0;
+  --text-primary: #0d0d0d;
+  --text-secondary: #5d5d5d;
+  --text-tertiary: #8f8f8f;
+  --text-inverted: #fff;
+  --text-inverted-static: #fff;
+  --text-accent: #66b5ff;
+  --text-status-warning: #e25507;
+  --text-status-error: #e02e2a;
+  --icon-primary: #0d0d0d;
+  --icon-secondary: #5d5d5d;
+  --icon-tertiary: #8f8f8f;
+  --icon-inverted: #fff;
+  --icon-inverted-static: #fff;
+  --icon-accent: #0285ff;
+  --icon-status-warning: #e25507;
+  --icon-status-error: #e02e2a;
+  --interactive-bg-primary-default: #0d0d0d;
+  --interactive-bg-primary-hover: #0d0d0dcc;
+  --interactive-bg-primary-press: #0d0d0de5;
+  --interactive-bg-primary-inactive: #0d0d0d;
+  --interactive-bg-primary-selected: #0d0d0d;
+  --interactive-bg-secondary-default: #0d0d0d00;
+  --interactive-bg-secondary-hover: #0d0d0d05;
+  --interactive-bg-secondary-press: #0d0d0d0d;
+  --interactive-bg-secondary-inactive: #0d0d0d00;
+  --interactive-bg-secondary-selected: #0d0d0d0d;
+  --interactive-bg-tertiary-default: #fff;
+  --interactive-bg-tertiary-hover: #f9f9f9;
+  --interactive-bg-tertiary-press: #f3f3f3;
+  --interactive-bg-tertiary-inactive: #fff;
+  --interactive-bg-tertiary-selected: #fff;
+  --interactive-bg-accent-default: #e5f3ff;
+  --interactive-bg-accent-hover: #cce6ff;
+  --interactive-bg-accent-muted-hover: #f5faff;
+  --interactive-bg-accent-press: #99ceff;
+  --interactive-bg-accent-muted-press: #e7f4ff;
+  --interactive-bg-accent-inactive: #e5f3ff;
+
 }
 
 @media (prefers-color-scheme: dark) {
