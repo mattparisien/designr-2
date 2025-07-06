@@ -6,6 +6,7 @@ import { calculateViewportRect } from "../../../lib/utils/canvas";
 import { mergeRefs } from "@/lib/utils";
 import classNames from "classnames";
 import { forwardRef, memo, useCallback, useEffect, useRef } from "react";
+import styles from "../../Editor.module.css";
 
 
 interface ElementControlsProps {
@@ -430,8 +431,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     return (
         <div
             ref={mergeRefs(elementRef, ref)}
-            className={classNames("z-editor-canvas-controls", {
-                "is-highlighted relative": isSelected || isHovering
+            className={classNames("z-editor-canvas-controls relative", {
+                [styles.borderActive]: isSelected || isHovering
             })} 
             data-element-id={element.id}
             style={{
@@ -705,14 +706,14 @@ const Handles = memo(({
         )}
 
         {/* Selection indicator that shows which element is selected with a subtle gradient border */}
-        <div
+        {/* <div
             className="absolute inset-0 pointer-events-none"
             style={{
                 border: '2px solid var(--interactive-border-editor)',
                 borderRadius: '2px',
                 background: 'transparent'
             }}
-        />
+        /> */}
 
         {/* Wide invisible resize zones */}
         <div
