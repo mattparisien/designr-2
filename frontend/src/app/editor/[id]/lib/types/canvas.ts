@@ -150,13 +150,13 @@ export interface CanvasContextType {
 
   // Utility
   isElementSelected: (id: string) => boolean,
-  
+
   // Text styling
   handleTextColorChange: (color: string) => void
-  
+
   // Shape styling
   handleBackgroundColorChange: (color: string) => void
-  
+
   // Canvas styling
   handleCanvasBackgroundColorChange: (color: string) => void
 

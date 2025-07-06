@@ -135,10 +135,10 @@ export function CanvasElement({
 
   // Show element action bar when this element is selected
   useEffect(() => {
-    if (isSelected && isEditMode) {
-      // Position the action bar at the top center of the element
-      const centerX = element.x + element.width / 2;
-      const topY = element.y;
+    if (isSelected && isEditMode && element.rect) {
+      // Position the action bar at the top center of the element using viewport coordinates
+      const centerX = element.rect.x + element.rect.width / 2;
+      const topY = element.rect.y;
 
       showElementActionBar(element.id, { x: centerX, y: topY });
     } else {
