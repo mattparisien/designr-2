@@ -1,12 +1,18 @@
-.isHighlighted{
-    @apply before:content-[''] before:absolute before:inset-0 
-     before:pointer-events-none before:z-[-1];
+.isHighlighted {
+    position: relative;
 }
 
-.isHighlighted:before {
-    /* Use clamp to set min and max border thickness */
+.isHighlighted::before {
+    content: '';
+    position: absolute;
+    /* Position outward by half the border width to match the canvas border positioning */
+    inset: calc(-1 * clamp(1px, calc(1px / var(--canvas-scale, 1)), 2px));
+    pointer-events: none;
+    z-index: 999999;
+    border-radius: var(--radius-editor-canvas);
+    /* Use clamp to set min and max border thickness - match canvas border width of 2px */
     border-width: clamp(2px, calc(2px / var(--canvas-scale, 1)), 4px);
-    border-color: "var(--border-accenty)";
+    border-color: var(--interactive-border-editor);
     border-style: solid;
     transform-origin: center;
     box-sizing: border-box;

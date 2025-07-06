@@ -9,7 +9,7 @@ import classNames from "classnames"
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, forwardRef, ForwardRefRenderFunction } from "react"
 import { type EditorState } from "../../lib/stores/useEditorStore"
 import { type CanvasState } from "../../lib/stores/useCanvasStore"
-import styles from "../Editor.module.css";
+import styles from "../Editor.module.css"
 
 type CanvasProps = {
   zoom: number;
@@ -227,8 +227,6 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
     setIsHoveringChild(false)
   }, [])
 
-  const isBorderActive = isCanvasSelected;
-
   // Get background color from current page
   const canvasBackgroundColor = currentPage?.background?.type === 'color'
     ? currentPage.background.value
@@ -237,8 +235,10 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
   return (
     <div
       ref={handleRef}
-      className={classNames("canvas-container flex items-center justify-center p-1 z-50 relative overflow-hidden",
-        isBorderActive && styles.isHighlighted
+      className={classNames("canvas-container flex items-center justify-center p-1 z-50 relative overflow-hidden rounded-[var(--radius-editor-canvas)]",
+        {
+          [styles.isHighlighted]: isCanvasHovering && !isHoveringChild,
+        }
       )}
       data-canvas
       style={{
@@ -246,8 +246,7 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
         height: canvasSize.height,
         flexShrink: 0, // Add flex-shrink to prevent squeezing by flex parents
         cursor: isEditMode ? "default" : "default",
-        borderRadius: "1rem",
-        borderColor: "var(--border-elevated-editor)",
+        borderColor: (isCanvasHovering && !isHoveringChild) ? "transparent" : "var(--border-elevated-editor)",
         borderWidth: "2px",
         borderStyle: "solid",
         transform: `scale(${scale})`,

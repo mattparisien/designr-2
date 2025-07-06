@@ -60,7 +60,10 @@
   --border-elevated-editor: var(--border-heavy);
   --interactive-border-editor: var(--border-accent);
   --bg-elevated-editor: var(--bg-elevated-primary);
+
   --radius-elevated-editor: 0.9rem;
+  --radius-editor-canvas: 1rem;
+
   --z-editor-main: 1000;
   --z-editor-toolbar: 1001;
   --z-editor-sidebar: 1002;

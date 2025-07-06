@@ -137,7 +137,7 @@ export function TextEditor({
     const sel = window.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
-  }, [isEditable]);
+  }, [isEditable, localContent]);
 
   /* ----------------------------------------------------------------
      Recalculate and report height on style changes (not during editing)
@@ -157,11 +157,11 @@ export function TextEditor({
     fontSize: `${fontSize}px`,
     fontFamily,
     whiteSpace: "normal",
-    lineHeight: 1.2,
+    lineHeight: 1.2, // Keep consistent with editorStyles
     overflow: "hidden",
     width: "100%",
     minHeight: "1em",
-    padding: 0,
+    padding: 0, // Keep consistent - no padding in base
     boxSizing: "border-box",
     direction: "ltr",
     textAlign: textAlign,
@@ -171,12 +171,12 @@ export function TextEditor({
     color: textColor,
   };
 
-  // Styles for the editor
+  // Styles for the editor - keep consistent with baseStyle
   const editorStyles = {
     width: "100%",
     height: "100%",
     outline: "none",
-    lineHeight: 1.5, // Increased line height to match the measuring function
+    lineHeight: 1.2, // Match baseStyle
     fontSize: `${fontSize}px`,
     fontFamily,
     fontWeight: isBold ? "bold" : "normal",
@@ -184,12 +184,17 @@ export function TextEditor({
     textDecoration: `${isUnderlined ? "underline" : ""} ${isStrikethrough ? "line-through" : ""}`.trim() || "none",
     textAlign,
     color: textColor,
-    padding: "4px", // Add padding to match the measuring function
+    padding: 0, // Match baseStyle - no padding
+    margin: 0, // Ensure no margin
+    border: "none", // Remove any border
     wordBreak: "break-word",
     whiteSpace: "pre-wrap",
     overflowWrap: "break-word",
     position: "relative",
     zIndex: 0,
+    // Constrain selection highlight within bounds
+    overflow: "hidden", // Hide any overflow from selection
+    display: "block", // Ensure block display
   } as const;
 
   /* ----------------------------------------------------------------

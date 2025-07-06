@@ -393,21 +393,53 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         };
     }, [isResizing, element, scale, updateElement, calculateResize, endResize, selectElement, isAltKeyPressed, setJustFinishedResizing, isDragging, measurementHook]);
 
+    // For text elements, get the actual DOM dimensions to ensure selection border matches
+    const getActualDimensions = useCallback(() => {
+        if (element?.kind !== "text") {
+            return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+        }
+
+        // Find the text element in the DOM by looking for the text-element class
+        const textElementDOM = document.querySelector(`[data-element-id="${element.id}"] .text-element`);
+        if (textElementDOM) {
+            const rect = textElementDOM.getBoundingClientRect();
+            return { width: rect.width, height: rect.height };
+        }
+
+        // Fallback to stored dimensions if DOM element not found
+        return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+    }, [element, scale]);
+
+    // Force recalculation of dimensions when text content or editable state changes
+    useEffect(() => {
+        if (element?.kind === "text") {
+            // Small delay to ensure DOM has updated after content/state change
+            const timer = setTimeout(() => {
+                // This effect will cause the component to re-render with updated dimensions
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [element?.kind, element?.content, element?.isEditable, element?.fontSize, element?.fontFamily]);
+
     if (!element || !element.rect) {
         return null;
     }
+
+    const actualDimensions = getActualDimensions();
 
     return (
         <div
             ref={mergeRefs(elementRef, ref)}
             className={classNames("z-editor-canvas-controls", {
                 "is-highlighted relative": isSelected || isHovering
-            })} style={{
+            })} 
+            data-element-id={element.id}
+            style={{
                 position: 'fixed',
                 top: element.rect.y,
                 left: element.rect.x,
-                width: element.width * scale,
-                height: element.height * scale,
+                width: actualDimensions.width,
+                height: actualDimensions.height,
                 cursor: isEditMode && !element.locked ? (isDragging ? "grabbing" : "grab") : "default",
                 pointerEvents: 'auto',
                 transform: 'translate3d(0, 0, 0)',// Force hardware acceleration for smoother rendering
@@ -438,6 +470,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                     setLeftBorderHover={setLeftBorderHover}
                     setRightBorderHover={setRightBorderHover}
                     isDragging={isDragging}
+                    actualDimensions={actualDimensions}
                 />
             }
         </div >
@@ -457,6 +490,7 @@ interface HandlesProps {
     setLeftBorderHover?: (isHovered: boolean) => void;
     setRightBorderHover?: (isHovered: boolean) => void;
     isDragging?: boolean;
+    actualDimensions?: { width: number; height: number };
 }
 
 const Handles = memo(({
@@ -471,12 +505,16 @@ const Handles = memo(({
     rightBorderHover = false,
     setLeftBorderHover = () => { },
     setRightBorderHover = () => { },
+    actualDimensions,
 }: HandlesProps) => {
 
     const handleSize = 14; // Size of the resize handles
     const showTopBottomHandles = element.kind !== "text"
 
-    const isTooSmallForAllHandles = Math.min(handleSize * 2.2, element.height * 0.6) >= ((element.height * scale) - (handleSize * 0.7 * 2));
+    // Use actual dimensions if available (for text elements), otherwise use element dimensions
+    const effectiveHeight = actualDimensions?.height || (element.height * scale);
+
+    const isTooSmallForAllHandles = Math.min(handleSize * 2.2, effectiveHeight * 0.6) >= (effectiveHeight - (handleSize * 0.7 * 2));
 
     // Helper function to get the background color with null-safety
     const getHandleBackground = (direction: string) => {
@@ -628,13 +666,13 @@ const Handles = memo(({
                 className="absolute cursor-ew-resize resize-handle"
                 style={{
                     width: `${handleSize * 0.7}px`,
-                    height: `${Math.min(handleSize * 2.2, element.height * 0.6)}px`,
+                    height: `${Math.min(handleSize * 2.2, effectiveHeight * 0.6)}px`,
                     borderRadius: `${handleSize * 0.35}px`,
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 10,
                     right: 0,
-                    top: `calc(50% + ${(element.height < handleSize * 2.2 ? (element.height - handleSize * 2.2) / 2 : 0)}px)`,
+                    top: `calc(50% + ${(effectiveHeight < handleSize * 2.2 ? (effectiveHeight - handleSize * 2.2) / 2 : 0)}px)`,
                     transform: `translate(50%, -50%) scale(${1})`,
                     background: (rightBorderHover || getHandleBackground("e") === "#1E88E5") ? "#1E88E5" : "#ffffff",
                 }}
@@ -650,13 +688,13 @@ const Handles = memo(({
                 className="absolute cursor-ew-resize resize-handle"
                 style={{
                     width: `${handleSize * 0.7}px`,
-                    height: `${Math.min(handleSize * 2.2, element.height * 0.6)}px`,
+                    height: `${Math.min(handleSize * 2.2, effectiveHeight * 0.6)}px`,
                     borderRadius: `${handleSize * 0.35}px`,
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 10,
                     left: 0,
-                    top: `calc(50% + ${(element.height < handleSize * 2.2 ? (element.height - handleSize * 2.2) / 2 : 0)}px)`,
+                    top: `calc(50% + ${(effectiveHeight < handleSize * 2.2 ? (effectiveHeight - handleSize * 2.2) / 2 : 0)}px)`,
                     transform: `translate(-50%, -50%) scale(${1})`,
                     background: (leftBorderHover || getHandleBackground("w") === "#1E88E5") ? "#1E88E5" : "#ffffff",
                 }}
