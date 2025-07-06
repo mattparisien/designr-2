@@ -23,6 +23,22 @@ module.exports = {
         "status-warning": "var(--bg-status-warning)",
         "status-error": "var(--bg-status-error)",
         
+        // Text colors at root level for text- classes
+        "text-primary": "var(--text-primary)",
+        "text-secondary": "var(--text-secondary)",
+        "text-tertiary": "var(--text-tertiary)",
+        "text-inverted": "var(--text-inverted)",
+        "text-accent": "var(--text-accent)",
+        
+        // Border colors at root level for border- classes  
+        "border-default": "var(--border-default)",
+        "border-heavy": "var(--border-heavy)",
+        "border-light": "var(--border-light)",
+        
+        // Interactive colors at root level
+        "interactive-secondary-hover": "var(--interactive-bg-secondary-hover)",
+        "interactive-accent": "var(--interactive-bg-accent-default)",
+        
         // Design system colors with namespaces for compatibility
         bg: {
           primary: "var(--bg-primary)",

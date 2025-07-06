@@ -2,6 +2,7 @@
 
 
 import { Sidebar } from "@/components/ui"
+import Editor from "./components/Editor"
 
 // interface Brand {
 //   _id: string
@@ -820,7 +821,7 @@ export default function EditorPage() {
   //   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <>
       {/* interface SidebarSection {
       title: string
       items: SidebarItem[]
@@ -871,6 +872,9 @@ export default function EditorPage() {
         ]}
 
       />
-    </div>
+      <main className="absolute top-0 left-0 pl-[var(--sidebar-width)] w-full h-full overflow-hidden">
+        <Editor />
+      </main>
+    </>
   )
 }
