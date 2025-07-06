@@ -445,7 +445,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 pointerEvents: 'auto',
                 transform: 'translate3d(0, 0, 0)',// Force hardware acceleration for smoother rendering
                 zIndex: element.kind === "text" ? 1 : 0, // Ensure text elements are always on top
-            }}
+                '--canvas-border-radius': '0.4rem', // Smaller radius for elements vs canvas
+            } as React.CSSProperties}
             onClick={e => handleClick(e, element, (id: string) => {
                 if (element.kind === "text") {
                     updateElement(id, { isEditable: true })

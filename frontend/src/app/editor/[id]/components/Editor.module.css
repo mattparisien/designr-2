@@ -1,6 +1,7 @@
 /* Canvas border shared variables */
 :root {
     --canvas-border-width: 2px;
+    --canvas-border-radius: var(--radius-editor-canvas); /* Default to the global canvas radius */
 }
 
 .borderDefault {
@@ -14,7 +15,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    border-radius: var(--radius-editor-canvas);
+    border-radius: var(--canvas-border-radius);
     /* Use clamp to set min and max border thickness - match canvas border width of 2px */
     border-width: var(--canvas-border-width);
     border-color: var(--border-elevated-editor);
@@ -34,7 +35,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 999999;
-    border-radius: var(--radius-editor-canvas);
+    border-radius: var(--canvas-border-radius);
     /* Use clamp to set min and max border thickness - match canvas border width of 2px */
     border-width: var(--canvas-border-width);
     border-color: var(--interactive-border-editor);
