@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Element as CanvasElement } from "../../lib/types/canvas";
 import { CopyIcon, LockIcon, TrashIcon } from 'lucide-react';
 import { forwardRef, ForwardRefRenderFunction } from 'react';
-import Toolbar from '../Toolbar';
+import { Toolbar, ToolbarButton } from '../Toolbar';
 
 type ActionBarPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -43,17 +43,17 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
             }}
 
         >
-            <Button variant="ghost" size="sm" onClick={onLock} title={element.locked ? "Unlock" : "Lock"} className="h-7 w-7 rounded-xl">
-                <LockIcon size={14} className={element.locked ? "text-blue-500" : "text-gray-700"} />
-            </Button>
+            <ToolbarButton onClick={onLock} title={element.locked ? "Unlock" : "Lock"}>
+                <LockIcon className="w-4 h-4" />
+            </ToolbarButton>
 
-            <Button variant="ghost" size="sm" onClick={onDuplicate} title="Duplicate" className="h-7 w-7 rounded-xl">
-                <CopyIcon size={14} />
-            </Button>
+            <ToolbarButton onClick={onDuplicate} title="Duplicate">
+                <CopyIcon className="w-4 h-4" />
+            </ToolbarButton>
 
-            <Button variant="ghost" size="sm" onClick={onDelete} title="Delete" className="h-7 w-7 rounded-xl hover:text-gray-900">
-                <TrashIcon size={14} />
-            </Button>
+            <ToolbarButton onClick={onDelete} title="Delete">
+                <TrashIcon className='w-4 h-4' />
+            </ToolbarButton>
         </Toolbar>
     );
 };

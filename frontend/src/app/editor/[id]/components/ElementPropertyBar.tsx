@@ -28,43 +28,9 @@ import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useC
 import useEditorStore from "../lib/stores/useEditorStore"
 import { useFonts } from "@/lib/hooks/useFonts"
 import { FontUpload } from "@/components/ui/font-upload"
-import Toolbar from "./Toolbar"
+import { Toolbar, ToolbarButton } from "./Toolbar"
 
-// Common button style classes
-const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-50 transition"
-const BUTTON_ICON_CLASSES = "p-1.5"
-const BUTTON_ACTIVE_CLASSES = ""
-const BUTTON_ROUNDED_XL = "rounded-xl"
-const BUTTON_ROUNDED_LG = "rounded-lg"
 
-// Reusable components
-interface ToolbarButtonProps {
-  onClick: (e: React.MouseEvent) => void
-  isActive?: boolean
-  children: React.ReactNode
-  className?: string
-  title?: string
-  rounded?: 'xl' | 'lg'
-}
-
-const ToolbarButton = ({ onClick, isActive, children, className = "", title, rounded = 'xl' }: ToolbarButtonProps) => {
-  const roundedClass = rounded === 'xl' ? BUTTON_ROUNDED_XL : BUTTON_ROUNDED_LG
-  return (
-    <button
-      className={cn(
-        BUTTON_BASE_CLASSES,
-        BUTTON_ICON_CLASSES,
-        roundedClass,
-        isActive && BUTTON_ACTIVE_CLASSES,
-        className
-      )}
-      onClick={onClick}
-      title={title}
-    >
-      {children}
-    </button>
-  )
-}
 
 const Divider = () => <div className="h-5 w-px bg-gray-200 mx-1"></div>
 
