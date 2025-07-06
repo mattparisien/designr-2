@@ -44,6 +44,7 @@ export function useCanvasElementInteraction() {
   });
 
   const clickCount = useRef<number>(0);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Start drag operation - only prepares for dragging, doesn't set isDragging until mouse moves
@@ -217,11 +218,32 @@ export function useCanvasElementInteraction() {
 
     clickCount.current++;
 
+    // Clear existing timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+
     if (clickCount.current === 2) {
       onDoubleClick(element.id);
       clickCount.current = 0; // Reset after double click
+    } else {
+      // Set timeout to reset click count after double-click window (300ms is standard)
+      clickTimeoutRef.current = setTimeout(() => {
+        clickCount.current = 0;
+      }, 300);
     }
 
+  }, []);
+
+  /**
+   * Reset click count (useful when clicking outside elements)
+   */
+  const resetClickCount = useCallback(() => {
+    clickCount.current = 0;
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
   }, []);
 
   // We've removed the outside click handler from here
@@ -281,6 +303,7 @@ export function useCanvasElementInteraction() {
     handleMouseEnter,
     handleMouseLeave,
     handleClick,
+    resetClickCount,
     setJustFinishedResizing,
     getHandleBg,
     setHandleHoverState,

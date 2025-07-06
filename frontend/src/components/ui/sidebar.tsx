@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { LucideIcon, Plus, Sidebar as SidebarIcon } from "lucide-react"
 import * as React from "react"
 import { useState } from "react"
+import { T } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js"
 
 interface SidebarItem {
     id: string
@@ -22,6 +23,7 @@ interface SidebarSection {
 
 interface SidebarProps {
     sections: SidebarSection[]
+    isDefaultCollapsed?: boolean
     className?: string
     searchPlaceholder?: string
     onItemClick?: (item: SidebarItem) => void
@@ -79,9 +81,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         sections,
         className,
         onItemClick,
-        activeItem
+        activeItem,
+        isDefaultCollapsed = false,
     }, ref) => {
-        const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+        const [isCollapsed, setIsCollapsed] = useState<boolean>(isDefaultCollapsed);
         const [searchQuery, setSearchQuery] = useState<string>("")
 
         const filteredSections = React.useMemo(() => {

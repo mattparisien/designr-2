@@ -3,45 +3,41 @@
 
 import { Sidebar } from "@/components/ui"
 import Editor from "./components/Editor"
+import { Palette, LayoutPanelTop, Shapes, Type } from "lucide-react"
 
 export default function EditorPage() {
   return (
     <>
       <Sidebar
-      className="z-[var(--z-editor-sidebar)]"
+        isDefaultCollapsed
+        className="z-[var(--z-editor-sidebar)]"
         sections={[
           {
-            title: "Brand",
+            title: "General",
             items: [
+              {
+                id: "design",
+                title: "Design",
+                href: "/editor/brand",
+                icon: LayoutPanelTop
+              },
               {
                 id: "brand",
-                title: "Brand Settings",
+                title: "Brands",
                 href: "/editor/brand",
+                icon: Palette
               },
               {
-                id: "apply-brand",
-                title: "Apply Brand",
-                href: "/editor/apply-brand",
+                id: "shape",
+                title: "Shapes",
+                href: "/editor/brand",
+                icon: Shapes
               },
-            ],
-          },
-          {
-            title: "Templates",
-            items: [
               {
-                id: "templates",
-                title: "Templates",
-                href: "/editor/templates",
-              },
-            ],
-          },
-          {
-            title: "AI Tools",
-            items: [
-              {
-                id: "ai-tools",
-                title: "AI Content Generation",
-                href: "/editor/ai-tools",
+                id: "text",
+                title: "Text",
+                href: "/editor/brand",
+                icon: Type
               },
             ],
           },
