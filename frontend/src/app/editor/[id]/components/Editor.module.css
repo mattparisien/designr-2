@@ -1,6 +1,6 @@
 /* Canvas border shared variables */
 :root {
-    --canvas-border-width: clamp(2px, calc(2px / var(--canvas-scale, 1)), 4px);
+    --canvas-border-width: 2px;
 }
 
 .borderDefault {
@@ -13,7 +13,7 @@
     /* Position inward to align with the inner canvas element */
     inset: 0;
     pointer-events: none;
-    z-index: -1;
+    z-index: 1;
     border-radius: var(--radius-editor-canvas);
     /* Use clamp to set min and max border thickness - match canvas border width of 2px */
     border-width: var(--canvas-border-width);
