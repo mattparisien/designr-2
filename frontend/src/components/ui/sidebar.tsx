@@ -102,7 +102,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             <div
                 ref={ref}
                 className={cn(
-                    "inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
+                    "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
                     !isCollapsed ? "w-[var(--sidebar-width)]" : "w-auto",
                     className
                 )}

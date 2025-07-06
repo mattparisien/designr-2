@@ -28,11 +28,12 @@ import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useC
 import useEditorStore from "../lib/stores/useEditorStore"
 import { useFonts } from "@/lib/hooks/useFonts"
 import { FontUpload } from "@/components/ui/font-upload"
+import Toolbar from "./Toolbar"
 
 // Common button style classes
-const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-50 hover:text-brand-blue transition"
+const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-50 transition"
 const BUTTON_ICON_CLASSES = "p-1.5"
-const BUTTON_ACTIVE_CLASSES = "bg-brand-blue-light text-brand-blue"
+const BUTTON_ACTIVE_CLASSES = ""
 const BUTTON_ROUNDED_XL = "rounded-xl"
 const BUTTON_ROUNDED_LG = "rounded-lg"
 
@@ -109,19 +110,9 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const { allFonts, isCustomFont, deleteFontByName } = useFonts();
   const [fontFamily, setFontFamily] = useState(selectedElement?.fontFamily || allFonts[0] || "Inter")
 
-
-  const toolbarRef = useRef<HTMLDivElement>(null)
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Combine internal ref with forwarded ref
-  const handleRef = (node: HTMLDivElement) => {
-    toolbarRef.current = node;
-    if (typeof ref === 'function') {
-      ref(node);
-    } else if (ref) {
-      ref.current = node;
-    }
-  };
+
 
   // Update local state when selected element changes
   useEffect(() => {
@@ -262,18 +253,27 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const isTextElement = selectedElement?.kind === "text";
   const isShapeElement = selectedElement && !isTextElement;
 
+
+  // <div
+  //   ref={handleRef}
+  //   className="absolute left-1/2 -translate-x-1/2 z-40 flex items-center bg-white/95 backdrop-blur-sm rounded-md shadow-toolbar-float px-2.5 py-1.5 gap-1 border border-gray-100 z-editor-popover"
+  //   onMouseEnter={handleToolbarMouseEnter}
+  //   onMouseLeave={handleToolbarMouseLeave}
+  //   onClick={handleToolbarClick}
+  //   data-editor-interactive="true"
+  //   style={{
+  //     height: "var(--editor-propertyBar-height)",
+  //     top: "var(--editor-propertyBar-topOffset)",
+  //   }}
+  // >
   return (
-    <div
-      ref={handleRef}
-      className="absolute left-1/2 -translate-x-1/2 z-40 flex items-center bg-white/95 backdrop-blur-sm rounded-md shadow-toolbar-float px-2.5 py-1.5 gap-1 border border-gray-100 z-editor-popover"
+
+    <Toolbar
       onMouseEnter={handleToolbarMouseEnter}
       onMouseLeave={handleToolbarMouseLeave}
       onClick={handleToolbarClick}
-      data-editor-interactive="true"
-      style={{
-        height: "var(--editor-propertyBar-height)",
-        top: "var(--editor-propertyBar-topOffset)",
-      }}
+      className="top-5"
+      ref={ref}
     >
       {/* Text Element Controls - Show all text-related controls */}
       {isTextElement && (
@@ -305,7 +305,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                   <Upload className="h-4 w-4" />
                   Upload Font
                 </button>
-                
+
                 {/* Font List */}
                 {allFonts.map((font: string) => (
                   <div key={font} className="flex items-center">
@@ -322,7 +322,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                     >
                       {font}
                     </button>
-                    
+
                     {/* Delete button for custom fonts */}
                     {isCustomFont(font) && (
                       <button
@@ -521,7 +521,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
           </PopoverContent>
         </Popover>
       </div>
-    </div>
+    </Toolbar >
+
   )
 }
 

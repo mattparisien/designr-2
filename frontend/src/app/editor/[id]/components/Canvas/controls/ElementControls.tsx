@@ -670,7 +670,7 @@ const Handles = memo(({
         <div
             className="absolute inset-0 pointer-events-none"
             style={{
-                border: '2px solid rgba(30, 136, 229, 0.8)',
+                border: '2px solid var(--interactive-border-editor)',
                 borderRadius: '2px',
                 background: 'transparent'
             }}

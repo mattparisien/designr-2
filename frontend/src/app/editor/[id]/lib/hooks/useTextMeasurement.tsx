@@ -48,14 +48,16 @@ export function useTextMeasurement() {
     measurerRef.current.style.textDecoration =
       `${isUnderlined ? 'underline' : ''} ${isStrikethrough ? 'line-through' : ''}`.trim() || 'none';
     measurerRef.current.style.textAlign = textAlign;
-    measurerRef.current.style.lineHeight = '1.5'; // Better readability
-    measurerRef.current.style.padding = '4px'; // Ensure text has room to breathe
+    measurerRef.current.style.lineHeight = '1.2'; // Match the actual rendered line-height
+    measurerRef.current.style.padding = '0'; // No padding to get exact text height
+    measurerRef.current.style.margin = '0'; // No margin
+    measurerRef.current.style.border = 'none'; // No border
 
     // Set content and measure
     measurerRef.current.innerText = content;
 
-    // Add padding to ensure text isn't cut off
-    return measurerRef.current.scrollHeight + 12;
+    // Return the exact measured height without extra padding
+    return measurerRef.current.scrollHeight;
   }, []);
 
   /**
@@ -91,10 +93,12 @@ export function useTextMeasurement() {
         zIndex: -1,
         pointerEvents: 'none',
         whiteSpace: 'normal',
-        lineHeight: 1.2,
+        lineHeight: '1.2', // Match the measurement line-height
         wordBreak: 'break-word',
         overflow: 'auto',
-        padding: 0,
+        padding: '0', // No padding to match measurement
+        margin: '0', // No margin
+        border: 'none', // No border
         boxSizing: 'border-box',
         minHeight: '1em',
         left: 0,

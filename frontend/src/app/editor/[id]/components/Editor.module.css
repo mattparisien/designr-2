@@ -1,0 +1,13 @@
+.isHighlighted{
+    @apply before:content-[''] before:absolute before:inset-0 
+     before:pointer-events-none before:z-[-1];
+}
+
+.isHighlighted:before {
+    /* Use clamp to set min and max border thickness */
+    border-width: clamp(2px, calc(2px / var(--canvas-scale, 1)), 4px);
+    border-color: "var(--border-accenty)";
+    border-style: solid;
+    transform-origin: center;
+    box-sizing: border-box;
+}

@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import { Element as EditorCanvasElement } from "../../lib/types/canvas";
 import { calculateViewportRect } from "../../lib/utils/canvas";
-import classNames from "classnames";
 import { useCallback, useEffect, useRef } from "react";
 import { useTextMeasurement } from "../../lib/hooks";
 import ElementRenderer from "./renderers/ElementRenderer";
@@ -157,9 +156,7 @@ export function CanvasElement({
       {/* Main element container */}
       <div
         ref={elementRef}
-        className={classNames("absolute", {
-          // This component no longer handles its own highlighting, that's done in ElementControls
-        })}
+        className={"absolute"}
         style={{
           left: element.x,
           top: element.y,

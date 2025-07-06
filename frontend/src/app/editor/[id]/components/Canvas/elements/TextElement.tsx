@@ -78,7 +78,6 @@ export const TextElement = ({
         content={element.content || ""}
         fontSize={element.fontSize}
         fontFamily={element.fontFamily}
-        isSelected={isSelected}
         onChange={handleContentChange}
         onHeightChange={handleHeightChange}
         textAlign={element.textAlign || "center"}

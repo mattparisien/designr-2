@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Element as CanvasElement } from "../../lib/types/canvas";
 import { CopyIcon, LockIcon, TrashIcon } from 'lucide-react';
 import { forwardRef, ForwardRefRenderFunction } from 'react';
+import Toolbar from '../Toolbar';
 
 type ActionBarPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -27,20 +28,20 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
 }, ref) => {
     const isVertical = placement === 'left' || placement === 'right';
     const shouldCenterHorizontally = placement === 'top' || placement === 'bottom';
-    
+
     return (
-        <div
+
+        <Toolbar
             ref={ref}
-            className={`fixed bg-white/95 backdrop-blur-sm rounded-2xl shadow-[0_3px_10px_rgba(0,0,0,0.15)] flex items-center p-1 border border-gray-100 z-50 pointer-events-auto z-editor-popover ${
-                isVertical ? 'flex-col space-y-0.5' : 'space-x-0.5'
-            }`}
+            className={`fixed bg-white/95 rounded-2xl flex items-center p-1 border border-gray-100 z-50 pointer-events-auto z-editor-popover ${isVertical ? 'flex-col space-y-0.5' : 'space-x-0.5'
+                }`}
+            onClick={(e) => e.stopPropagation()}
             style={{
                 left: `${position.left}px`,
                 top: `${position.top}px`,
                 transform: shouldCenterHorizontally ? 'translateX(-50%)' : 'none',
             }}
-            onClick={(e) => e.stopPropagation()}
-            data-editor-interactive="true"
+
         >
             <Button variant="ghost" size="sm" onClick={onLock} title={element.locked ? "Unlock" : "Lock"} className="h-7 w-7 rounded-xl">
                 <LockIcon size={14} className={element.locked ? "text-blue-500" : "text-gray-700"} />
@@ -53,7 +54,7 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
             <Button variant="ghost" size="sm" onClick={onDelete} title="Delete" className="h-7 w-7 rounded-xl hover:text-gray-900">
                 <TrashIcon size={14} />
             </Button>
-        </div>
+        </Toolbar>
     );
 };
 

@@ -36,7 +36,7 @@ export const FONT_FAMILIES = [
 // Canvas constants
 export const DEFAULT_CANVAS_SIZE = {
   name: "Presentation (16:9)",
-  width: 1280,
+  width: 720,
   height: 720
 };
 
