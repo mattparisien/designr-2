@@ -31,6 +31,11 @@ export interface CanvasState extends Omit<CanvasContextType, 'elements' | 'canva
   sendElementBackward: (elementId: string) => void;
   bringElementToFront: (elementId: string) => void;
   sendElementToBack: (elementId: string) => void;
+  // Resize state
+  isResizing: boolean;
+  activeResizeElement: string | null;
+  lastResizeTime: number;
+  setResizeState: (isResizing: boolean, elementId?: string | null) => void;
 }
 
 // Create the canvas store
@@ -63,6 +68,9 @@ const useCanvasStore = create<CanvasState>((set, get) => {
   },
   isDragging: false,
   activeDragElement: null,
+  isResizing: false,
+  activeResizeElement: null,
+  lastResizeTime: 0,
 
   // Alignment guides methods
   setAlignmentGuides: (alignments) => {
@@ -75,6 +83,14 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       activeDragElement: elementId,
       // Clear alignment guides when drag ends
       alignmentGuides: isDragging ? get().alignmentGuides : { horizontal: [], vertical: [] }
+    });
+  },
+
+  setResizeState: (isResizing, elementId = null) => {
+    set({
+      isResizing,
+      activeResizeElement: elementId,
+      lastResizeTime: isResizing ? Date.now() : get().lastResizeTime,
     });
   },
 

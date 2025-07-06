@@ -43,6 +43,8 @@ export function CanvasElement({
   const clearNewElementFlag = useCanvasStore((state) => state.clearNewElementFlag);
   const showElementActionBar = useCanvasStore((state) => state.showElementActionBar);
   const hideElementActionBar = useCanvasStore((state) => state.hideElementActionBar);
+  const isResizing = useCanvasStore((state) => state.isResizing);
+  const activeResizeElement = useCanvasStore((state) => state.activeResizeElement);
 
   // Element ref and text editor key for rerendering
   const elementRef = useRef<HTMLDivElement>(null);
@@ -173,13 +175,13 @@ export function CanvasElement({
       >
         <ElementRenderer
           element={element}
-          isSelected={isSelected}
           textEditorKey={textEditorKey}
           updateElement={updateElement}
           clearNewElementFlag={clearNewElementFlag}
           handleHeightChange={handleHeightChange}
           handleTextAlignChange={handleTextAlignChange}
           isEditMode={isEditMode}
+          isResizing={isResizing && activeResizeElement === element.id}
           onDragStart={handleDragStart}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}

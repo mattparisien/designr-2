@@ -1,14 +1,15 @@
 import { Element as CanvasElement } from "../../../lib/types/canvas";
 import { TextEditor } from "../../TextEditor";
+import useCanvasStore from "../../../lib/stores/useCanvasStore";
 
 interface TextElementProps {
   element: CanvasElement;
-  isSelected: boolean;
   textEditorKey: number;
   updateElement: (id: string, updates: Partial<CanvasElement>) => void;
   clearNewElementFlag: (id: string) => void;
   handleHeightChange: (newHeight: number) => void;
   handleTextAlignChange: (align: "left" | "center" | "right") => void;
+  isResizing?: boolean;
 }
 
 // Calculate text width based on content and font size
@@ -42,31 +43,54 @@ const calculateTextWidth = (content: string, fontSize: number, fontFamily: strin
 
 export const TextElement = ({
   element,
-  isSelected,
   textEditorKey,
   updateElement,
   handleHeightChange,
+  isResizing = false,
 }: TextElementProps) => {
+  // Get resize state from canvas store for additional safety
+  const storeIsResizing = useCanvasStore(state => state.isResizing);
+  const activeResizeElement = useCanvasStore(state => state.activeResizeElement);
+  const lastResizeTime = useCanvasStore(state => state.lastResizeTime);
   
   const handleContentChange = (content: string) => {
-    // Check if element has autofit width mode (default behavior)
-    const shouldAutoFit = true;
+    // Calculate what the auto-fit width would be
+    const calculatedAutoWidth = calculateTextWidth(
+      content, 
+      element.fontSize || 16, 
+      element.fontFamily || 'Arial'
+    );
     
-    if (shouldAutoFit && element.kind === 'text') {
-      // Calculate new width based on content and font size
-      const newWidth = calculateTextWidth(
-        content, 
-        element.fontSize || 16, 
-        element.fontFamily || 'Arial'
-      );
-      
+    // Check if this element is currently being resized
+    const isThisElementResizing = (isResizing || storeIsResizing) && 
+                                  (activeResizeElement === element.id || activeResizeElement === null);
+    
+    // Check if this element was recently resized (within last 2 seconds)
+    const wasRecentlyResized = Date.now() - lastResizeTime < 2000;
+    
+    // If current width is significantly larger than what auto-fit would calculate,
+    // assume it was manually resized and don't auto-fit
+    const isManuallyResized = element.width > calculatedAutoWidth + 50; // 50px threshold
+    
+    // Don't auto-fit if:
+    // 1. Currently resizing
+    // 2. Was recently resized 
+    // 3. Element appears to be manually resized (wider than auto-fit + threshold)
+    // 4. Element is in editable mode (being typed in)
+    const shouldAutoFit = !isThisElementResizing && 
+                          !wasRecentlyResized && 
+                          !isManuallyResized && 
+                          !element.isEditable &&
+                          element.kind === 'text';
+    
+    if (shouldAutoFit) {
       // Update both content and width
       updateElement(element.id, { 
         content, 
-        width: newWidth 
+        width: calculatedAutoWidth 
       });
     } else {
-      // Just update content for fixed width mode
+      // Just update content for fixed width mode, during resize, or when manually resized
       updateElement(element.id, { content });
     }
   };

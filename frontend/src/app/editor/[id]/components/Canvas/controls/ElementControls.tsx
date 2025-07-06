@@ -29,6 +29,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const setAlignmentGuides = useCanvasStore(state => state.setAlignmentGuides);
     const setDragState = useCanvasStore(state => state.setDragState);
     const clearAlignmentGuides = useCanvasStore(state => state.clearAlignmentGuides);
+    const setResizeState = useCanvasStore(state => state.setResizeState);
 
     // Use the interaction hook
     const {
@@ -181,6 +182,15 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             setDragState(false);
         }
     }, [isDragging, isDragInitiated, element.id, setDragState]);
+
+    // Sync isResizing state with canvas store resize state
+    useEffect(() => {
+        if (isResizing) {
+            setResizeState(true, element.id);
+        } else {
+            setResizeState(false);
+        }
+    }, [isResizing, element.id, setResizeState]);
 
     // Use snapping hook at the component level to avoid hook rule violations
     const snapping = useSnapping();
@@ -400,6 +410,11 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
         }
 
+        // During resize operations, always use the stored dimensions to avoid conflicts
+        if (isResizing) {
+            return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+        }
+
         // Find the text element in the DOM by looking for the text-element class
         const textElementDOM = document.querySelector(`[data-element-id="${element.id}"] .text-element`);
         if (textElementDOM) {
@@ -409,7 +424,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
         // Fallback to stored dimensions if DOM element not found
         return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
-    }, [element, scale]);
+    }, [element, scale, isResizing]);
 
     // Force recalculation of dimensions when text content or editable state changes
     useEffect(() => {
@@ -427,12 +442,17 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     }
 
     const actualDimensions = getActualDimensions();
+    
+    // Don't show selection UI when text element is being edited
+    const isTextBeingEdited = element.kind === "text" && element.isEditable;
+    const shouldShowBorder = (isSelected || isHovering); // Always show border when selected/hovering, even when editing
+    const shouldShowHandles = isSelected && !isDragging && !element.locked && !isTextBeingEdited; // Hide handles when editing
 
     return (
         <div
             ref={mergeRefs(elementRef, ref)}
             className={classNames("z-editor-canvas-controls relative", {
-                [styles.borderActive]: isSelected || isHovering
+                [styles.borderActive]: shouldShowBorder
             })} 
             data-element-id={element.id}
             style={{
@@ -441,24 +461,42 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 left: element.rect.x,
                 width: actualDimensions.width,
                 height: actualDimensions.height,
-                cursor: isEditMode && !element.locked ? (isDragging ? "grabbing" : "grab") : "default",
-                pointerEvents: 'auto',
+                cursor: isTextBeingEdited ? "text" : (isEditMode && !element.locked ? (isDragging ? "grabbing" : "grab") : "default"),
+                pointerEvents: isTextBeingEdited ? "none" : "auto",
                 transform: 'translate3d(0, 0, 0)',// Force hardware acceleration for smoother rendering
                 zIndex: element.kind === "text" ? 1 : 0, // Ensure text elements are always on top
                 '--canvas-border-radius': '0.4rem', // Smaller radius for elements vs canvas
             } as React.CSSProperties}
-            onClick={e => handleClick(e, element, (id: string) => {
-                if (element.kind === "text") {
-                    updateElement(id, { isEditable: true })
-                    setIsDragActive(false);
+            onClick={e => {
+                // Don't handle clicks when text is being edited
+                if (isTextBeingEdited) return;
+                
+                handleClick(e, element, (id: string) => {
+                    if (element.kind === "text") {
+                        updateElement(id, { isEditable: true })
+                        setIsDragActive(false);
+                    }
+                }, selectElement)
+            }}
+            onMouseEnter={() => {
+                // Don't handle hover when text is being edited
+                if (!isTextBeingEdited) {
+                    handleMouseEnter(element.id, isEditMode);
                 }
-            }, selectElement)
-            }
-            onMouseEnter={() => handleMouseEnter(element.id, isEditMode)}
-            onMouseLeave={() => handleMouseLeave()}
-            onMouseDown={handleMouseDown}
+            }}
+            onMouseLeave={() => {
+                // Don't handle hover when text is being edited
+                if (!isTextBeingEdited) {
+                    handleMouseLeave();
+                }
+            }}
+            onMouseDown={e => {
+                // Don't handle mouse down when text is being edited
+                if (isTextBeingEdited) return;
+                handleMouseDown(e);
+            }}
         >
-            {isSelected && !isDragging && !element.locked &&
+            {shouldShowHandles &&
                 <Handles
                     isResizing={isResizing}
                     element={element}

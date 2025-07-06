@@ -65,6 +65,7 @@ export function TextEditor({
      ---------------------------------------------------------------- */
   const [localContent, setLocalContent] = useState<string>(content);
   const editorRef = useRef<HTMLDivElement>(null);
+  const hasInitialFocus = useRef<boolean>(false);
   
   // Debounced callbacks for performance
   const debouncedOnChange = useRef<NodeJS.Timeout | null>(null);
@@ -125,18 +126,26 @@ export function TextEditor({
      Focus the editor when switching to edit mode
      ---------------------------------------------------------------- */
   useEffect(() => {
-    if (!isEditable || !editorRef.current) return;
+    if (!isEditable || !editorRef.current) {
+      hasInitialFocus.current = false;
+      return;
+    }
 
-    // Push the latest localContent into the DOM (once) before focus
-    editorRef.current.innerText = localContent;
-    editorRef.current.focus();
+    // Only select all text on the initial focus, not on content updates
+    if (!hasInitialFocus.current) {
+      // Push the latest localContent into the DOM (once) before focus
+      editorRef.current.innerText = localContent;
+      editorRef.current.focus();
 
-    // Select all text only on the very first focus event
-    const range = document.createRange();
-    range.selectNodeContents(editorRef.current);
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
+      // Select all text only on the very first focus event
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      
+      hasInitialFocus.current = true;
+    }
   }, [isEditable, localContent]);
 
   /* ----------------------------------------------------------------

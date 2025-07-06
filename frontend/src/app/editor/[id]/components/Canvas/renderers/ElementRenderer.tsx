@@ -12,13 +12,13 @@ import { TextElement } from "../elements/TextElement";
 // Define interface for ElementRenderer props
 interface ElementRendererProps {
     element: CanvasElement;
-    isSelected: boolean;
     textEditorKey: number;
     updateElement: (id: string, updates: Partial<CanvasElement>) => void;
     clearNewElementFlag: (id: string) => void;
     handleHeightChange: (newHeight: number) => void;
     handleTextAlignChange: (align: "left" | "center" | "right" | "justify") => void;
     isEditMode: boolean;
+    isResizing?: boolean;
     // Optional drag handlers for alignment guides
     onDragStart?: () => void;
     onDrag?: (alignments: { horizontal: number[], vertical: number[] }) => void;
@@ -30,12 +30,12 @@ interface ElementRendererProps {
 
 const ElementRenderer = memo(({
     element,
-    isSelected,
     textEditorKey,
     updateElement,
     clearNewElementFlag,
     handleHeightChange,
     handleTextAlignChange,
+    isResizing = false,
 }: ElementRendererProps) => {
     // Use a simple switch to route to the appropriate component
     switch (element.kind) {
@@ -43,12 +43,12 @@ const ElementRenderer = memo(({
             return (
                 <TextElement
                     element={element}
-                    isSelected={isSelected}
                     textEditorKey={textEditorKey}
                     updateElement={updateElement}
                     clearNewElementFlag={clearNewElementFlag}
                     handleHeightChange={handleHeightChange}
                     handleTextAlignChange={handleTextAlignChange}
+                    isResizing={isResizing}
                 />
             );
         case "shape":
