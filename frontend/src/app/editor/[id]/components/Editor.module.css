@@ -36,8 +36,8 @@
     pointer-events: none;
     z-index: 999999;
     border-radius: var(--canvas-border-radius);
-    /* Use clamp to set min and max border thickness - match canvas border width of 2px */
-    border-width: var(--canvas-border-width);
+    /* Scale border width inversely with canvas scale to maintain visibility when zoomed out */
+    border-width: calc(var(--canvas-border-width) / var(--canvas-scale, 1));
     border-color: var(--interactive-border-editor);
     border-style: solid;
     transform-origin: center;
