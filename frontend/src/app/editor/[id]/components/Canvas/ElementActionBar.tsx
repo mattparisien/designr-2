@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { Element as CanvasElement } from "../../lib/types/canvas";
 import { CopyIcon, LockIcon, TrashIcon } from 'lucide-react';
 import { forwardRef, ForwardRefRenderFunction } from 'react';
@@ -27,19 +26,18 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
     onDelete
 }, ref) => {
     const isVertical = placement === 'left' || placement === 'right';
-    const shouldCenterHorizontally = placement === 'top' || placement === 'bottom';
 
     return (
 
         <Toolbar
             ref={ref}
-            className={`fixed bg-white/95 rounded-2xl flex items-center p-1 border border-gray-100 z-50 pointer-events-auto z-editor-popover ${isVertical ? 'flex-col space-y-0.5' : 'space-x-0.5'
+            className={`fixed bg-white/95 rounded-2xl flex items-center p-1 border border-gray-100 pointer-events-auto ${isVertical ? 'flex-col space-y-0.5' : 'space-x-0.5'
                 }`}
             onClick={(e) => e.stopPropagation()}
             style={{
                 left: `${position.left}px`,
                 top: `${position.top}px`,
-                transform: shouldCenterHorizontally ? 'translateX(-50%)' : 'none',
+                zIndex: 1000,
             }}
 
         >

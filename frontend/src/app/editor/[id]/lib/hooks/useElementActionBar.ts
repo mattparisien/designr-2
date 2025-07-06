@@ -48,21 +48,21 @@ const useElementActionBar = (
 
         // Define possible positions in order of preference
         const positions: Array<{ placement: ActionBarPosition; rect: DOMRect }> = [
-            // Top (preferred) - Let component handle horizontal centering with transform
+            // Top (preferred) - Center the action bar horizontally
             {
                 placement: 'top',
                 rect: new DOMRect(
-                    elementRect.left + (elementRect.width / 2), // Center point of element
+                    elementRect.left + (elementRect.width / 2) - (actionBarSize.width / 2), // Center action bar on element
                     elementRect.top - actionBarSize.height - MARGIN,
                     actionBarSize.width,
                     actionBarSize.height
                 )
             },
-            // Bottom - Let component handle horizontal centering with transform
+            // Bottom - Center the action bar horizontally
             {
                 placement: 'bottom',
                 rect: new DOMRect(
-                    elementRect.left + (elementRect.width / 2), // Center point of element
+                    elementRect.left + (elementRect.width / 2) - (actionBarSize.width / 2), // Center action bar on element
                     elementRect.bottom + MARGIN,
                     actionBarSize.width,
                     actionBarSize.height
@@ -167,7 +167,7 @@ const useElementActionBar = (
         ) {
             updatePosition();
         }
-    }, [element?.x, element?.y, updatePosition]);
+    }, [element, updatePosition]);
 
     useEffect(() => {
         if (!element) return;
@@ -203,12 +203,12 @@ const useElementActionBar = (
             resizeObserver.disconnect();
             mutationObserver.disconnect();
         };
-    }, [updatePosition]);
+    }, [element, updatePosition]);
 
     // Update when action bar dimensions change
     useEffect(() => {
         updatePosition();
-    }, [actionBarRef?.current, updatePosition]);
+    }, [updatePosition]);
 
     return { position: state.position, placement: state.placement };
 };
