@@ -234,35 +234,39 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
 
   return (
     <div
-      ref={handleRef}
-      className={classNames("canvas-container flex items-center justify-center p-1 z-50 relative overflow-hidden rounded-[var(--radius-editor-canvas)]",
+      className={classNames("canvas-border-wrapper relative",
         {
-          [styles.isHighlighted]: isCanvasHovering && !isHoveringChild,
+          [styles.borderDefault]: !(isCanvasHovering && !isHoveringChild),
+          [styles.borderActive]: isCanvasHovering && !isHoveringChild,
         }
       )}
-      data-canvas
       style={{
-        width: canvasSize.width,
-        height: canvasSize.height,
-        flexShrink: 0, // Add flex-shrink to prevent squeezing by flex parents
-        cursor: isEditMode ? "default" : "default",
-        borderColor: (isCanvasHovering && !isHoveringChild) ? "transparent" : "var(--border-elevated-editor)",
-        borderWidth: "2px",
-        borderStyle: "solid",
-        transform: `scale(${scale})`,
-        transformOrigin: "center center",
         // Fix: TypeScript custom property using type assertion
         ['--canvas-scale' as string]: `${scale}`,
-        zIndex: 'var(--editor-canvas-z)',
-        backgroundColor: canvasBackgroundColor
+        transform: `scale(${scale})`,
+        transformOrigin: "center center",
       }}
-      onClick={handleCanvasClick}
       onMouseLeave={handleCanvasMouseLeave}
       onMouseEnter={() => {
         console.log('Canvas mouse enter triggered');
         if (isEditMode) setIsCanvasHovering(true);
       }}
     >
+      <div
+        ref={handleRef}
+        className={classNames("canvas-container flex items-center justify-center p-1 z-50 relative overflow-hidden rounded-[var(--radius-editor-canvas)]"
+        )}
+        data-canvas
+        style={{
+          width: canvasSize.width,
+          height: canvasSize.height,
+          flexShrink: 0, // Add flex-shrink to prevent squeezing by flex parents
+          cursor: isEditMode ? "default" : "default",
+          zIndex: 'var(--editor-canvas-z)',
+          backgroundColor: canvasBackgroundColor
+        }}
+        onClick={handleCanvasClick}
+      >
       {/* Loading indicator - shown when canvas is not loaded */}
       {
         !isLoaded && (
@@ -304,6 +308,7 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
           />
         ))
       }
+      </div>
     </div>
   )
 }
