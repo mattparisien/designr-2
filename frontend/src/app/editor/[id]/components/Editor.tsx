@@ -319,6 +319,9 @@ export default function Editor() {
                 }
             });
 
+            // Reset double-click state by dispatching a custom event
+            window.dispatchEvent(new CustomEvent('resetDoubleClickState'));
+
             if (selectedElementIds.length > 0 || selectedElement !== null) {
                 selectElement(null);
             }
@@ -330,7 +333,7 @@ export default function Editor() {
 
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
-    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel]);
+    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement]);
     return (
         <div
             className="flex flex-1 overflow-hidden flex-col relative"

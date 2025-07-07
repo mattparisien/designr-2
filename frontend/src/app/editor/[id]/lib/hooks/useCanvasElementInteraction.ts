@@ -263,14 +263,21 @@ export function useCanvasElementInteraction() {
       }
     };
 
+    // Listen for reset double-click state event
+    const handleResetDoubleClickState = () => {
+      resetClickCount();
+    };
+
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resetDoubleClickState', handleResetDoubleClickState);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resetDoubleClickState', handleResetDoubleClickState);
     }
-  }, []);
+  }, [resetClickCount]);
 
   // Clean up timers on unmount
   useEffect(() => {

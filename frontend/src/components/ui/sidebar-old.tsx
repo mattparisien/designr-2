@@ -34,52 +34,46 @@ interface MenuButtonProps {
     onClick: () => void,
     isActive: boolean | undefined;
     level: number;
-    label: string;
-    icon?: React.ReactNode;
+    label: string | React.ReactNode;
     widthMode?: "full" | "wrap"
 }
 
 interface MenuIconProps {
-    icon: LucideIcon,
-    width?: string;
-    height?: string;
+    icon: LucideIcon
 }
 
 const MenuIcon = (props: MenuIconProps) => {
 
-    const { icon: Icon, width, height } = props;
+    const { icon: Icon } = props;
 
 
     return <Icon style={{
-        width: width || "0.98rem",
-        height: height || '0.98rem'
+        width: "0.98rem",
+        height: '0.98rem'
     }} />;
 
 }
 
 const MenuButton = (props: MenuButtonProps) => {
 
-    const { onClick, isActive, level, icon, label, widthMode = "full" } = props;
+    const { onClick, isActive, level, label, widthMode = "full" } = props;
 
-    return <div className="flex flex-col items-center justify-center">
-        <Button
-            variant="ghost"
-            onClick={onClick}
-            className={cn(
-                "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-                "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
-                isActive
-                    ? "bg-[var(--interactive-bg-accent-default)] text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)]",
-                level > 0 && "ml-4")}
-            style={{ paddingLeft: `${12 + level * 16}px` }}
-        >
-            {icon}
-        </Button>
-        <div className="text-xs text-[var(--text-secondary)] mt-1">
-            {label}
-        </div>
-    </div>
+    return <Button
+        variant="ghost"
+        onClick={onClick}
+        className={cn(
+            "justify-start rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
+            isActive
+                ? "bg-[var(--interactive-bg-accent-default)] text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)]",
+            level > 0 && "ml-4",
+            widthMode == "full" && "w-full"
+        )}
+        style={{ paddingLeft: `${12 + level * 16}px` }}
+    >
+        {label}
+    </Button>
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
@@ -112,7 +106,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 ref={ref}
                 className={cn(
                     "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
-                    !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
+                    !isCollapsed ? "w-[var(--sidebar-width)]" : "w-auto",
                     className
                 )}
                 style={{
@@ -130,7 +124,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                                 <MenuButton
                                     isActive={false}
                                     onClick={() => setIsCollapsed(isCollapsed => !isCollapsed)}
-                                    icon={<MenuIcon icon={SidebarIcon} />}
+                                    label={<MenuIcon icon={SidebarIcon} />}
                                     widthMode="wrap"
                                     level={0}
                                 />
@@ -146,7 +140,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 </h3> */}
 
                                 {/* Section Items */}
-                                <div className="space-y-5">
+                                <div className="space-y-1">
                                     {section.items.map((item) => (
                                         <SidebarItem
                                             isCollapsed={isCollapsed}
@@ -197,25 +191,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
     const Icon = <MenuIcon icon={item.icon || Plus} />
 
-    const CollapsedMenuButton = () => (
-        <div className="flex flex-col items-center">
-            <span className="mb-4">
-                <MenuIcon icon={item.icon || Plus} width="1.5rem" height="1.2rem" />
-            </span>
-            <span className="text-xs">
-                {item.title}
-            </span>
-        </div>
-    )
-
     return (
         <div>
             <MenuButton
                 onClick={handleClick}
                 level={level}
-                label={item.title}
-                icon={<MenuIcon icon={item.icon || Plus} width="1.2rem" height="1.2rem" />}
-                // label={isCollapsed ? <CollapsedMenuButton /> : <div className="flex space-x-2 items-center "><span>{Icon}</span><span>{item.title}</span></div>}
+                label={isCollapsed ? Icon : <div className="flex space-x-2 items-center "><span>{Icon}</span><span>{item.title}</span></div>}
                 isActive={isActive}
             />
             {/* Render children if expanded */}
