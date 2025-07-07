@@ -70,7 +70,7 @@ const MenuButton = (props: MenuButtonProps) => {
                 "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
                 isActive
                     ? "bg-[var(--interactive-bg-accent-default)] text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)]",
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                 level > 0 && "ml-4")}
             style={{ paddingLeft: `${12 + level * 16}px` }}
         >
