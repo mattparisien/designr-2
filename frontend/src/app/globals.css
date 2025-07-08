@@ -69,7 +69,7 @@
   --z-editor-sidebar: 1002;
 
   --sidebar-width: 15rem;
-  --sidebar-width-collapsed: 4rem;
+  --sidebar-width-collapsed: 4.5rem;
 }
 
 @media (prefers-color-scheme: dark) {

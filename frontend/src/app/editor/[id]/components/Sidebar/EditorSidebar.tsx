@@ -13,7 +13,7 @@ interface EditorSidebarProps {
 const EditorSidebar = (props: EditorSidebarProps) => {
 
     const { } = props;
-    const [activeItem, setActiveItem] = useState<string | null>(null);
+    const [activeItem, setActiveItem] = useState<SidebarItem | null>(null);
 
     const sidebarWrapper = useRef(null);
     const sidebar = useEditorStore((state) => state.sidebar);
@@ -21,7 +21,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
     const closeSidebar = useEditorStore((state) => state.closeSidebar);
     const setSidebarWidth = useEditorStore((state) => state.setSidebarWidth);
     const isSidebarOpen = useEditorStore((state) => state.sidebar.isOpen);
-    // Define the sections and items for the sidebar
+    
 
     const sections = [
         {
@@ -55,18 +55,19 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         },
     ];
 
+
     const getSidebarWidth = (): number => {
         const sidebarWidth = sidebarWrapper.current?.getBoundingClientRect().width || 0;
         return sidebarWidth;
     }
 
     const handleItemClick = useCallback((item: SidebarItem) => {
-        if (item.id === activeItem) {
+        if (item.id === activeItem?.id) {
             closeSidebar();
             setActiveItem(null);
         } else {
             openSidebar(item.id);
-            setActiveItem(item.id);
+            setActiveItem(item);
         }
 
     }, [activeItem, openSidebar, closeSidebar])
@@ -86,7 +87,11 @@ const EditorSidebar = (props: EditorSidebarProps) => {
             onItemClick={handleItemClick}
         />
         {sidebar.isOpen && <SidebarShell>
-            <div></div>
+            <div className="px-4">
+                <div className="pt-8 px-4">
+                <h2 className="font-bold text-lg">{activeItem?.title}</h2>
+                </div>
+            </div>
             {/* <div className="w-[var(--sidebar-width)] h-screen z-[var(--z-editor-sidebar)]" style={{
                 backgroundColor: "var(--bg-elevated-secondary)"
             }}> */}
