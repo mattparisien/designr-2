@@ -99,7 +99,11 @@ const convertFrontendPageToAPI = (frontendPage: Page): APIPage => {
 export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   designId: string | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
-
+  sidebar: {
+    width: number | null;
+    isOpen: boolean;
+    activeItemId: string | null;
+  }
   // Sidebar panel state
   sidebarPanel: {
     isOpen: boolean;
@@ -110,6 +114,10 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   // Sidebar panel actions
   openSidebarPanel: (itemId: string) => void;
   closeSidebarPanel: () => void;
+
+  openSidebar: (itemId: string) => void;
+  closeSidebar: () => void;
+  setSidebarWidth: (width: number | null) => void;
 }
 
 // Create the editor store
@@ -119,6 +127,11 @@ const useEditorStore = create<EditorState>((set, get) => ({
   isDesignSaved: true,
   isSaving: false,
   designId: null,
+  sidebar: {
+    width: null,
+    isOpen: false,
+    activeItemId: null,
+  },
 
   // Editor mode
   isEditMode: true,
@@ -137,20 +150,15 @@ const useEditorStore = create<EditorState>((set, get) => ({
   currentPageId: `page-${Date.now()}`,
   currentPageIndex: 0,
 
+
   // Sidebar panel state
   sidebarPanel: {
     isOpen: false,
     activeItemId: null,
     content: null,
   },
-
-  // Toggle between edit and view mode
   toggleEditMode: () => set(state => ({ isEditMode: !state.isEditMode })),
-
-  // Document management functions
   renameDesign: (name: string) => set({ designName: name, isDesignSaved: false }),
-
-  // Page management functions
   addPage: () => {
     const state = get();
     const currentPageCanvasSize = state.pages.find(page => page.id === state.currentPageId)?.canvasSize || DEFAULT_CANVAS_SIZE;
@@ -170,7 +178,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       isDesignSaved: false
     }));
   },
-
   deletePage: (id: string) => {
     const state = get();
 
@@ -202,7 +209,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       isDesignSaved: false
     });
   },
-
   goToPage: (id: string) => {
     const state = get();
     const pageIndex = state.pages.findIndex(page => page.id === id);
@@ -214,7 +220,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       });
     }
   },
-
   goToNextPage: () => {
     const state = get();
 
@@ -226,7 +231,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       });
     }
   },
-
   goToPreviousPage: () => {
     const state = get();
 
@@ -238,7 +242,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       });
     }
   },
-
   duplicateCurrentPage: () => {
     const state = get();
     const currentPage = state.pages.find(page => page.id === state.currentPageId);
@@ -253,10 +256,10 @@ const useEditorStore = create<EditorState>((set, get) => ({
         canvas: { ...currentPage.canvas },
         background: currentPage.background ? { ...currentPage.background } : { type: 'color', value: '#ffffff' },
         elements: duplicatedElements,
-        canvasSize: currentPage.canvasSize ? { ...currentPage.canvasSize } : { 
-          name: 'Custom', 
-          width: currentPage.canvas.width, 
-          height: currentPage.canvas.height 
+        canvasSize: currentPage.canvasSize ? { ...currentPage.canvasSize } : {
+          name: 'Custom',
+          width: currentPage.canvas.width,
+          height: currentPage.canvas.height
         }
       };
 
@@ -275,8 +278,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       });
     }
   },
-
-  // Page content updates
   updatePageElements: (pageId: string, elements: Element[]) => {
     set(state => ({
       pages: state.pages.map(page =>
@@ -287,22 +288,20 @@ const useEditorStore = create<EditorState>((set, get) => ({
       isDesignSaved: false
     }));
   },
-
   updatePageCanvasSize: (pageId: string, canvasSize: CanvasSize) => {
     set(state => ({
       pages: state.pages.map(page =>
         page.id === pageId
-          ? { 
-              ...page, 
-              canvas: { width: canvasSize.width, height: canvasSize.height },
-              canvasSize // Keep for backward compatibility
-            }
+          ? {
+            ...page,
+            canvas: { width: canvasSize.width, height: canvasSize.height },
+            canvasSize // Keep for backward compatibility
+          }
           : page
       ),
       isDesignSaved: false
     }));
   },
-
   updatePageBackground: (pageId: string, background: { type: 'color' | 'image' | 'gradient', value?: string }) => {
     set(state => ({
       pages: state.pages.map(page =>
@@ -313,8 +312,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       isDesignSaved: false
     }));
   },
-
-  // Save the design
   saveDesign: async () => {
     const state = get();
 
@@ -352,7 +349,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       console.log('Saving design:', state.designName, 'with ID:', idToUse);
 
       // Call the API to update the design
-    //   await projectsAPI.update(idToUse, designData);
+      //   await projectsAPI.update(idToUse, designData);
 
       console.log('Design saved successfully:', state.designName);
       set({
@@ -367,8 +364,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       set({ isSaving: false });
     }
   },
-
-  // Function to capture canvas screenshot
   captureCanvasScreenshot: async (): Promise<string | undefined> => {
     return new Promise((resolve) => {
       try {
@@ -430,8 +425,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       }
     });
   },
-
-  // Sidebar panel actions
   openSidebarPanel: (itemId: string) =>
     set(state => ({
       sidebarPanel: {
@@ -449,7 +442,33 @@ const useEditorStore = create<EditorState>((set, get) => ({
         activeItemId: null,
         content: undefined,
       },
-    }))
+    })),
+  openSidebar(itemId) {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        isOpen: true,
+        activeItemId: itemId
+      },
+    }));
+  },
+  closeSidebar() {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        isOpen: false,
+        activeItemId: null,
+      },
+    }));
+  },
+  setSidebarWidth(width) {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        width,
+      },
+    }));
+  },
 }));
 
 // Add a currentPage selector
@@ -571,7 +590,7 @@ export const initializeDesign = async () => {
 
       // Handle layout data - check if layoutId is populated with actual layout data
       let layoutData: APILayout | null = null;
-      
+
       if (typeof design.layoutId === 'object' && design.layoutId !== null) {
         // layoutId is populated with Layout object
         layoutData = design.layoutId as APILayout;
@@ -583,7 +602,7 @@ export const initializeDesign = async () => {
       if (layoutData && layoutData.pages && layoutData.pages.length > 0) {
         // Convert API pages to frontend format
         const frontendPages = layoutData.pages.map(convertAPIPageToFrontend);
-        
+
         useEditorStore.setState({
           pages: frontendPages,
           currentPageId: frontendPages[0].id,
@@ -599,7 +618,7 @@ export const initializeDesign = async () => {
           elements: [],
           canvasSize: DEFAULT_CANVAS_SIZE
         };
-        
+
         useEditorStore.setState({
           pages: [defaultPage],
           currentPageId: defaultPage.id,
@@ -625,10 +644,10 @@ export const initializeDesign = async () => {
 export const initializeTemplate = async (templateId: string) => {
   try {
     console.log('Loading template:', templateId);
-    
+
     // Import templatesAPI
     // const { templatesAPI } = await import('@/lib/api');
-    
+
     // Load template data
     // const template = await templatesAPI.getById(templateId);
     const template = null;
@@ -647,7 +666,7 @@ export const initializeTemplate = async (templateId: string) => {
       if (template.pages && template.pages.length > 0) {
         // Convert template pages to frontend format
         const frontendPages = template.pages.map(convertAPIPageToFrontend);
-        
+
         useEditorStore.setState({
           pages: frontendPages,
           currentPageId: frontendPages[0].id,
@@ -668,7 +687,7 @@ export const initializeTemplate = async (templateId: string) => {
             height: canvasSize.height
           }
         };
-        
+
         useEditorStore.setState({
           pages: [defaultPage],
           currentPageId: defaultPage.id,
@@ -685,7 +704,7 @@ export const initializeTemplate = async (templateId: string) => {
 export const initializeWithPreset = async (presetId: string) => {
   try {
     console.log('Initializing with preset:', presetId);
-    
+
     // Handle blank preset
     if (presetId === 'blank') {
       useEditorStore.setState({
@@ -698,7 +717,7 @@ export const initializeWithPreset = async (presetId: string) => {
 
     // Import projectsAPI
     const { projectsAPI } = await import('@/lib/api');
-    
+
     // Load presets
     const presets = await projectsAPI.getPresets();
     const preset = presets.find((p: any) => p.id === presetId);
@@ -719,7 +738,7 @@ export const initializeWithPreset = async (presetId: string) => {
         width: preset.canvasSize.width,
         height: preset.canvasSize.height
       };
-      
+
       const defaultPage: Page = {
         id: `page-${Date.now()}`,
         name: 'Page 1',
@@ -728,7 +747,7 @@ export const initializeWithPreset = async (presetId: string) => {
         elements: [],
         canvasSize: canvasSize
       };
-      
+
       useEditorStore.setState({
         pages: [defaultPage],
         currentPageId: defaultPage.id,

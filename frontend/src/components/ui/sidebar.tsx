@@ -5,8 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { LucideIcon, Plus, Sidebar as SidebarIcon } from "lucide-react"
 import * as React from "react"
-import { useState } from "react"
-import { T } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js"
+import { useState, useMemo, useCallback, forwardRef } from "react"
 
 interface SidebarItem {
     id: string
@@ -41,25 +40,43 @@ interface MenuButtonProps {
 
 interface MenuIconProps {
     icon: LucideIcon,
+    isFill?: boolean;
     width?: string;
     height?: string;
 }
 
+interface SidebarItemProps {
+    item: SidebarItem
+    onItemClick?: (item: SidebarItem) => void
+    isActive?: boolean
+    level: number,
+    isCollapsed: boolean,
+    activeItem?: string
+}
+
+interface SidebarShellProps {
+    children: React.ReactNode;
+    className?: string;
+    isCollapsed?: boolean;
+    ref?: React.Ref<HTMLDivElement>;
+}
+
 const MenuIcon = (props: MenuIconProps) => {
 
-    const { icon: Icon, width, height } = props;
+    const { icon: Icon, width, height, isFill = false } = props;
 
 
     return <Icon style={{
         width: width || "0.98rem",
-        height: height || '0.98rem'
+        height: height || '0.98rem',
+        fill: isFill ? "var(--text-primary)" : "none",
     }} />;
 
 }
 
 const MenuButton = (props: MenuButtonProps) => {
 
-    const { onClick, isActive, level, icon, label, widthMode = "full" } = props;
+    const { onClick, isActive, level, icon, label } = props;
 
     return <div className="flex flex-col items-center justify-center">
         <Button
@@ -69,7 +86,7 @@ const MenuButton = (props: MenuButtonProps) => {
                 "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
                 "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
                 isActive
-                    ? "bg-[var(--interactive-bg-accent-default)] text-[var(--text-primary)]"
+                    ? "bg-[var(--interactive-bg-secondary-selected)] text-[var(--text-primary)]"
                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                 level > 0 && "ml-4")}
             style={{ paddingLeft: `${12 + level * 16}px` }}
@@ -82,7 +99,7 @@ const MenuButton = (props: MenuButtonProps) => {
     </div>
 }
 
-const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
+const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     ({
         sections,
         className,
@@ -90,10 +107,12 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         activeItem,
         isDefaultCollapsed = false,
     }, ref) => {
+
+        const [activeItemId, setActiveItemId] = useState<string | null>(activeItem || null);
         const [isCollapsed, setIsCollapsed] = useState<boolean>(isDefaultCollapsed);
         const [searchQuery, setSearchQuery] = useState<string>("")
 
-        const filteredSections = React.useMemo(() => {
+        const filteredSections = useMemo(() => {
             if (!searchQuery) return sections
 
             return sections.map(section => ({
@@ -104,35 +123,24 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             })).filter(section => section.items.length > 0)
         }, [sections, searchQuery])
 
-
-
+        const handleItemClick = useCallback((item: SidebarItem) => {
+            setActiveItemId(item.id);
+            onItemClick?.(item);
+        }, [onItemClick]);
 
         return (
-            <div
-                ref={ref}
-                className={cn(
-                    "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
-                    !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
-                    className
-                )}
-                style={{
-                    backgroundColor: "var(--bg-elevated-secondary)",
-                    borderRightColor: "var(--border-default)"
-                }}
-            >
-
-
-                {/* Scrollable Content */}
+            <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
                 <ScrollArea className="flex-1">
                     <div className="p-1">
                         <aside className="mb-6">
                             <div className="flex justify-end">
                                 <MenuButton
                                     isActive={false}
-                                    onClick={() => setIsCollapsed(isCollapsed => !isCollapsed)}
                                     icon={<MenuIcon icon={SidebarIcon} />}
                                     widthMode="wrap"
                                     level={0}
+                                    // label="Toggle Sidebar"
+                                    onClick={() => setIsCollapsed(!isCollapsed)}
                                 />
 
 
@@ -140,10 +148,6 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                         </aside>
                         {filteredSections.map((section) => (
                             <aside key={section.title} className="mb-6">
-                                {/* Section Title */}
-                                {/* <h3 className="mb-3 px-3 text-lg font-semibold text-[var(--text-primary)]">
-                  {section.title}
-                </h3> */}
 
                                 {/* Section Items */}
                                 <div className="space-y-5">
@@ -152,8 +156,8 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                                             isCollapsed={isCollapsed}
                                             key={item.id}
                                             item={item}
-                                            onItemClick={onItemClick}
-                                            isActive={activeItem === item.id}
+                                            onItemClick={handleItemClick}
+                                            isActive={activeItemId === item.id}
                                             level={0}
                                             activeItem={activeItem}
                                         />
@@ -163,19 +167,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                         ))}
                     </div>
                 </ScrollArea>
-            </div>
+            </SidebarShell>
         )
     }
 )
-
-interface SidebarItemProps {
-    item: SidebarItem
-    onItemClick?: (item: SidebarItem) => void
-    isActive?: boolean
-    level: number,
-    isCollapsed: boolean,
-    activeItem?: string
-}
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
     item,
@@ -195,27 +190,13 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         onItemClick?.(item)
     }
 
-    const Icon = <MenuIcon icon={item.icon || Plus} />
-
-    const CollapsedMenuButton = () => (
-        <div className="flex flex-col items-center">
-            <span className="mb-4">
-                <MenuIcon icon={item.icon || Plus} width="1.5rem" height="1.2rem" />
-            </span>
-            <span className="text-xs">
-                {item.title}
-            </span>
-        </div>
-    )
-
     return (
         <div>
             <MenuButton
                 onClick={handleClick}
                 level={level}
                 label={item.title}
-                icon={<MenuIcon icon={item.icon || Plus} width="1.2rem" height="1.2rem" />}
-                // label={isCollapsed ? <CollapsedMenuButton /> : <div className="flex space-x-2 items-center "><span>{Icon}</span><span>{item.title}</span></div>}
+                icon={<MenuIcon icon={item.icon || Plus} width="1.2rem" height="1.2rem" isFill={isActive} />}
                 isActive={isActive}
             />
             {/* Render children if expanded */}
@@ -238,7 +219,27 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     )
 }
 
-Sidebar.displayName = "Sidebar"
+const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
+    (props: SidebarShellProps, ref) => {
 
-export { Sidebar, type SidebarItem, type SidebarProps, type SidebarSection }
+        const { children, className, isCollapsed } = props;
+
+        return <div
+            ref={ref}
+            className={cn(
+                "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
+                !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
+                className
+            )}
+            style={{
+                backgroundColor: "var(--bg-elevated-secondary)",
+                borderRightColor: "var(--border-default)"
+            }}
+        >{children}</div>
+    });
+
+Sidebar.displayName = "Sidebar"
+SidebarShell.displayName = "SidebarShell"
+
+export { Sidebar, SidebarShell, type SidebarItem, type SidebarProps, type SidebarSection }
 
