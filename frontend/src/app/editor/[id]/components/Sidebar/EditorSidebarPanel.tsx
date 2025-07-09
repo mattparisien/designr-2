@@ -1,4 +1,5 @@
 import { SidebarShell } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils";
 
 export interface EditorSidebarPanelSection {
     id: string;
@@ -8,6 +9,7 @@ export interface EditorSidebarPanelSection {
         title: string;
         icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
         onClick?: () => void;
+        fill?: boolean;
     }[];
 }
 
@@ -29,9 +31,12 @@ const EditorSidebarPanel = ({ title, sections }: EditorSidebarPanelProps) => {
                             <div className="grid grid-cols-2 gap-2 mb-2">
                                 {section.items.map((item) => (
                                     <div key={item.id} className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-200" onClick={item.onClick}>
-                                        <item.icon className="w-full h-full stroke-none" style={{
-                                            fill: "var(--color-text-secondary)"
-                                        }}/>
+                                        <item.icon className={cn(
+                                            "w-full h-full",
+                                            item.fill ? "stroke-none" : null
+                                        )} style={{
+                                            fill: item.fill ? "var(--color-text-secondary)" : "none"
+                                        }} />
                                     </div>
                                 ))}
                             </div>

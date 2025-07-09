@@ -1,9 +1,9 @@
 import { Sidebar } from "@/components/ui";
-import { SidebarItem, SidebarShell } from "@/components/ui/sidebar";
-import { Circle, LayoutPanelTop, Palette, Shapes, Square, Type } from "lucide-react";
-import { useCallback, useRef, useState, useLayoutEffect, useMemo } from "react";
-import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
+import { SidebarItem } from "@/components/ui/sidebar";
+import { Circle, LayoutPanelTop, LineSquiggle, Palette, Shapes, Square, Triangle, Type, Minus } from "lucide-react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import useEditorStore from "../../lib/stores/useEditorStore";
+import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 
 
 interface EditorSidebarProps {
@@ -96,18 +96,33 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                             id: "circle",
                             title: "Circle",
                             icon: Circle,
+                            fill: true,
                             onClick: () => console.log("Add circle clicked")
                         },
                         {
                             id: "square",
                             title: "Square",
                             icon: Square,
+                            fill: true,
                             onClick: () => console.log("Edit Shape Clicked")
                         },
+                        {
+                            id: "triangle",
+                            title: "Triangle",
+                            icon: Triangle,
+                            fill: true,
+                            onClick: () => console.log("Edit Shape Clicked")
+                        },
+                        {
+                            id: "line",
+                            title: "Line",
+                            icon: Minus,
+                            onClick: () => console.log("Edit Shape Clicked")
+                        }
                     ]
                 })
             default:
-                
+
         }
 
         return sections;
