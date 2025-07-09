@@ -236,8 +236,8 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
     <div
       className={classNames("canvas-border-wrapper relative",
         {
-          [styles.borderDefault]: !((isCanvasHovering && !isHoveringChild) || isCanvasSelected),
-          [styles.borderActive]: (isCanvasHovering && !isHoveringChild) || isCanvasSelected,
+          [styles.borderDefault]: !((isCanvasHovering && !isHoveringChild && !isDragging) || (isCanvasSelected && !isDragging)),
+          [styles.borderActive]: ((isCanvasHovering && !isHoveringChild) || isCanvasSelected) && !isDragging,
         }
       )}
       style={{
