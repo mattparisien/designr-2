@@ -7,7 +7,6 @@ import useEditorStore from "../../lib/stores/useEditorStore";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
-import Image from "next/image";
 
 
 const sections = [
@@ -73,52 +72,12 @@ const EditorSidebar = () => {
         setLoadingAssets(true);
         try {
             const response = await apiClient.getAssets();
-            setAssets(response.data || response || []);
+            // Handle both response.data and direct response formats
+            const assetsData = response.data || response || [];
+            setAssets(Array.isArray(assetsData) ? assetsData : []);
         } catch (error) {
             console.error('Error fetching assets:', error);
-            // For now, provide some mock assets until backend is implemented
-            const mockAssets: Asset[] = [
-                {
-                    _id: '1',
-                    name: 'Sample Image 1',
-                    originalFilename: 'sample1.jpg',
-                    type: 'image',
-                    url: 'https://via.placeholder.com/300x200/3b82f6/ffffff?text=Sample+1',
-                    mimeType: 'image/jpeg',
-                    fileSize: 12345,
-                    thumbnail: 'https://via.placeholder.com/150x100/3b82f6/ffffff?text=Sample+1',
-                    userId: 'mock-user',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                {
-                    _id: '2',
-                    name: 'Sample Image 2',
-                    originalFilename: 'sample2.jpg',
-                    type: 'image',
-                    url: 'https://via.placeholder.com/300x200/10b981/ffffff?text=Sample+2',
-                    mimeType: 'image/jpeg',
-                    fileSize: 23456,
-                    thumbnail: 'https://via.placeholder.com/150x100/10b981/ffffff?text=Sample+2',
-                    userId: 'mock-user',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                {
-                    _id: '3',
-                    name: 'Sample Image 3',
-                    originalFilename: 'sample3.jpg',
-                    type: 'image',
-                    url: 'https://via.placeholder.com/300x200/f59e0b/ffffff?text=Sample+3',
-                    mimeType: 'image/jpeg',
-                    fileSize: 34567,
-                    thumbnail: 'https://via.placeholder.com/150x100/f59e0b/ffffff?text=Sample+3',
-                    userId: 'mock-user',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                }
-            ];
-            setAssets(mockAssets);
+            setAssets([]);
         } finally {
             setLoadingAssets(false);
         }
@@ -356,12 +315,12 @@ const EditorSidebar = () => {
                                 }}
                             >
                                 {asset.type === 'image' || asset.mimeType.startsWith('image/') ? (
-                                    <Image
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
                                         src={asset.thumbnail || asset.url} 
                                         alt={asset.name}
-                                        width={48}
-                                        height={48}
                                         className="w-full h-full object-cover"
+                                        style={{ width: '48px', height: '48px' }}
                                     />
                                 ) : (
                                     <span className="text-xs text-gray-500 text-center px-1">

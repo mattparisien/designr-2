@@ -13,6 +13,7 @@ import exportRoutes from './routes/export';
 import stripeRoutes from './routes/stripe';
 import telemetryRoutes from './routes/telemetry';
 import fontRoutes from './routes/fonts';
+import assetRoutes from './routes/assets';
 
 // Load environment variables
 dotenv.config({ path: '.env' });
@@ -62,6 +63,7 @@ app.use('/api/export', exportRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/fonts', fontRoutes);
+app.use('/api/assets', assetRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

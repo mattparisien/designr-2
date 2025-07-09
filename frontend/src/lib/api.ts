@@ -77,7 +77,9 @@ export class ApiClient {
     }
 
     try {
+      console.log(url)
       const response = await fetch(url, config);
+      
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
