@@ -123,8 +123,9 @@ export function useCanvasElementResize() {
 
       // Determine resize behavior based on element type
       // Text elements should always maintain aspect ratio (constrained)
-      // Shape elements (rectangle, circle, line, arrow) can resize freely
-      const shouldMaintainAspectRatio = element.kind === "text";
+      // Rectangle shapes can resize freely, but circles and triangles should maintain aspect ratio
+      const shouldMaintainAspectRatio = element.kind === "text" || 
+        (element.kind === "shape" && element.shapeType !== "rect");
 
       // Calculate the total delta from the initial mouse position
       // This approach provides smoother resizing by avoiding accumulated errors

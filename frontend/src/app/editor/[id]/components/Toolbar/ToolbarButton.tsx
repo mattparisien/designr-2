@@ -9,7 +9,7 @@ interface ToolbarButtonProps {
     rounded?: 'xl' | 'lg'
 }
 const ToolbarButton = ({ onClick, isActive, children, className = "", title, rounded = 'xl' }: ToolbarButtonProps) => {
-    const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-50 transition"
+    const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-50 transition cursor-pointer"
     const BUTTON_ICON_CLASSES = "p-1.5"
     const BUTTON_ACTIVE_CLASSES = ""
     const BUTTON_ROUNDED_XL = "rounded-xl"

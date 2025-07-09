@@ -7,15 +7,40 @@ import useEditorStore from "../../lib/stores/useEditorStore";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 
 
-interface EditorSidebarProps {
+const sections = [
+    {
+        title: "General",
+        items: [
+            {
+                id: "design",
+                title: "Design",
+                href: "/editor/brand",
+                icon: LayoutPanelTop
+            },
+            {
+                id: "brand",
+                title: "Brands",
+                href: "/editor/brand",
+                icon: Palette
+            },
+            {
+                id: "shape",
+                title: "Shapes",
+                href: "/editor/brand",
+                icon: Shapes
+            },
+            {
+                id: "text",
+                title: "Text",
+                href: "/editor/brand",
+                icon: Type
+            },
+        ],
+    },
+];
 
-}
 
-
-const EditorSidebar = (props: EditorSidebarProps) => {
-
-    const { } = props;
-    const [activeItem, setActiveItem] = useState<SidebarItem | null>(null);
+const EditorSidebar = () => {
 
     const sidebarWrapper = useRef<HTMLDivElement>(null);
     const sidebar = useEditorStore((state) => state.sidebar);
@@ -31,39 +56,9 @@ const EditorSidebar = (props: EditorSidebarProps) => {
     const updateElement = useCanvasStore((state) => state.updateElement);
     const closeSidebarPanel = useEditorStore((state) => state.closeSidebarPanel);
 
-
-    const sections = [
-        {
-            title: "General",
-            items: [
-                {
-                    id: "design",
-                    title: "Design",
-                    href: "/editor/brand",
-                    icon: LayoutPanelTop
-                },
-                {
-                    id: "brand",
-                    title: "Brands",
-                    href: "/editor/brand",
-                    icon: Palette
-                },
-                {
-                    id: "shape",
-                    title: "Shapes",
-                    href: "/editor/brand",
-                    icon: Shapes
-                },
-                {
-                    id: "text",
-                    title: "Text",
-                    href: "/editor/brand",
-                    icon: Type
-                },
-            ],
-        },
-    ];
-
+    const activeItem = useMemo(() => {
+        return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
+    }, [sidebar.activeItemId]);
 
     const getSidebarWidth = (): number => {
         const sidebarWidth = sidebarWrapper.current?.getBoundingClientRect().width || 0;
@@ -73,10 +68,8 @@ const EditorSidebar = (props: EditorSidebarProps) => {
     const handleItemClick = useCallback((item: SidebarItem) => {
         if (item.id === activeItem?.id) {
             closeSidebar();
-            setActiveItem(null);
         } else {
             openSidebar(item.id);
-            setActiveItem(item);
         }
 
     }, [activeItem, openSidebar, closeSidebar])
@@ -86,11 +79,11 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         const currentPage = pages.find(page => page.id === currentPageId);
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
-        
+
         const defaultShapeSize = 100;
-        const canvasCenter = { 
-            x: canvasWidth / 2, 
-            y: canvasHeight / 2 
+        const canvasCenter = {
+            x: canvasWidth / 2,
+            y: canvasHeight / 2
         };
 
         addElement({
@@ -113,11 +106,11 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         const currentPage = pages.find(page => page.id === currentPageId);
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
-        
+
         const defaultLineLength = 150;
-        const canvasCenter = { 
-            x: canvasWidth / 2, 
-            y: canvasHeight / 2 
+        const canvasCenter = {
+            x: canvasWidth / 2,
+            y: canvasHeight / 2
         };
 
         addElement({
@@ -141,7 +134,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
 
     const panelSections = useMemo(() => {
         console.log(activeItem)
-        
+
         // If sidebar panel is open for colors, show color picker
         if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
             const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
@@ -167,7 +160,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                     id: `color-${index}`,
                     title: color,
                     icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-                        <div 
+                        <div
                             {...props}
                             className={`w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
                             style={{ backgroundColor: color }}
@@ -182,12 +175,12 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                             console.log('Current backgroundColor:', selectedElement.backgroundColor);
                             console.log('Applying color:', color);
                             console.log('Is background color?', isBackgroundColor);
-                            
+
                             if (isBackgroundColor && selectedElement.kind === "shape") {
                                 // Update shape background color
                                 console.log('Updating shape backgroundColor to:', color);
                                 updateElement(selectedElement.id, { backgroundColor: color });
-                                
+
                                 // Let's also check if the update worked by logging after a short delay
                                 setTimeout(() => {
                                     const canvasStore = useCanvasStore.getState();
@@ -195,14 +188,14 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                                     const currentPage = editorStore.pages.find(p => p.id === editorStore.currentPageId);
                                     const updatedElement = currentPage?.elements.find(el => el.id === selectedElement.id);
                                     const selectedFromStore = canvasStore.selectedElement;
-                                    
+
                                     console.log('=== AFTER UPDATE ===');
                                     console.log('Element from page:', updatedElement);
                                     console.log('Selected element from store:', selectedFromStore);
                                     console.log('Updated backgroundColor:', updatedElement?.backgroundColor);
                                     console.log('===================');
                                 }, 100);
-                                
+
                             } else if (!isBackgroundColor && selectedElement.kind === "text") {
                                 // Update text color
                                 console.log('Updating text color to:', color);
@@ -210,7 +203,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                             } else {
                                 console.log('No matching condition - element kind:', selectedElement.kind, 'isBackground:', isBackgroundColor);
                             }
-                            
+
                             // Close the sidebar panel after color selection
                             closeSidebarPanel();
                         } else {
@@ -276,14 +269,14 @@ const EditorSidebar = (props: EditorSidebarProps) => {
             onItemClick={handleItemClick}
         />
         {(sidebar.isOpen || sidebarPanel.isOpen) && (
-            <EditorSidebarPanel 
-                title={sidebarPanel.isOpen ? 
-                    (sidebarPanel.activeItemId === "background-color" ? "Shape Color" : 
-                     sidebarPanel.activeItemId === "text-color" ? "Text Color" : 
-                     activeItem?.title) : 
+            <EditorSidebarPanel
+                title={sidebarPanel.isOpen ?
+                    (sidebarPanel.activeItemId === "background-color" ? "Shape Color" :
+                        sidebarPanel.activeItemId === "text-color" ? "Text Color" :
+                            activeItem?.title) :
                     activeItem?.title
-                } 
-                sections={panelSections} 
+                }
+                sections={panelSections}
             />
         )}
 

@@ -552,7 +552,8 @@ const Handles = memo(({
 }: HandlesProps) => {
 
     const handleSize = 14; // Size of the resize handles
-    const showTopBottomHandles = element.kind !== "text"
+    const showTopBottomHandles = element.kind !== "text";
+    const showSideHandles = element.kind !== "text" && (element.kind !== "shape" || element.shapeType === "rect");
 
     // Use actual dimensions if available (for text elements), otherwise use element dimensions
     const effectiveHeight = actualDimensions?.height || (element.height * scale);
@@ -588,8 +589,8 @@ const Handles = memo(({
             />
         )}
 
-        {/* Top handle - only for shape elements */}
-        {showTopBottomHandles && !isTooSmallForAllHandles && (!isResizing || resizeDirection === "n") && (
+        {/* Top handle - only for shape elements that can resize freely */}
+        {showTopBottomHandles && showSideHandles && !isTooSmallForAllHandles && (!isResizing || resizeDirection === "n") && (
             <div
                 className="absolute cursor-ns-resize resize-handle"
                 style={{
@@ -681,8 +682,8 @@ const Handles = memo(({
             />
         )}
 
-        {/* Bottom handle - only for shape elements */}
-        {showTopBottomHandles && !isTooSmallForAllHandles && (!isResizing || resizeDirection === "s") && (
+        {/* Bottom handle - only for shape elements that can resize freely */}
+        {showTopBottomHandles && showSideHandles && !isTooSmallForAllHandles && (!isResizing || resizeDirection === "s") && (
             <div
                 className="absolute cursor-ns-resize resize-handle"
                 style={{
@@ -703,8 +704,8 @@ const Handles = memo(({
             />
         )}
 
-        {/* Right handle with enhanced styling */}
-        {(!isResizing || resizeDirection === "e") && (
+        {/* Right handle with enhanced styling - only for elements that can resize freely */}
+        {showSideHandles && (!isResizing || resizeDirection === "e") && (
             <div
                 className="absolute cursor-ew-resize resize-handle"
                 style={{
@@ -725,8 +726,8 @@ const Handles = memo(({
             />
         )}
 
-        {/* Left handle with enhanced styling */}
-        {!isTooSmallForAllHandles && (!isResizing || resizeDirection === "w") && (
+        {/* Left handle with enhanced styling - only for elements that can resize freely */}
+        {showSideHandles && !isTooSmallForAllHandles && (!isResizing || resizeDirection === "w") && (
             <div
                 className="absolute cursor-ew-resize resize-handle"
                 style={{
@@ -757,47 +758,51 @@ const Handles = memo(({
             }}
         /> */}
 
-        {/* Wide invisible resize zones */}
-        <div
-            className="absolute top-0 left-0 -translate-x-1/2 h-full"
-            style={{
-                width: 40,
-                cursor: "ew-resize",
-                zIndex: 5,
-                background: "transparent"
-            }}
-            onMouseDown={(e) => handleResizeStart(e, "w")}
-            onMouseEnter={() => {
-                if (!isResizing && !leftBorderHover) {
-                    setLeftBorderHover(true)
-                }
-            }}
-            onMouseLeave={() => {
-                if (!isResizing && leftBorderHover) {
-                    setLeftBorderHover(false)
-                }
-            }}
-        />
-        <div
-            className="absolute top-0 right-0 translate-x-1/2 h-full"
-            style={{
-                width: 40,
-                cursor: "ew-resize",
-                zIndex: 5,
-                background: "transparent"
-            }}
-            onMouseDown={(e) => handleResizeStart(e, "e")}
-            onMouseEnter={() => {
-                if (!isResizing && !rightBorderHover) {
-                    setRightBorderHover(true)
-                }
-            }}
-            onMouseLeave={() => {
-                if (!isResizing && rightBorderHover) {
-                    setRightBorderHover(false)
-                }
-            }}
-        />
+        {/* Wide invisible resize zones - only for elements that can resize freely */}
+        {showSideHandles && (
+            <>
+                <div
+                    className="absolute top-0 left-0 -translate-x-1/2 h-full"
+                    style={{
+                        width: 40,
+                        cursor: "ew-resize",
+                        zIndex: 5,
+                        background: "transparent"
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, "w")}
+                    onMouseEnter={() => {
+                        if (!isResizing && !leftBorderHover) {
+                            setLeftBorderHover(true)
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (!isResizing && leftBorderHover) {
+                            setLeftBorderHover(false)
+                        }
+                    }}
+                />
+                <div
+                    className="absolute top-0 right-0 translate-x-1/2 h-full"
+                    style={{
+                        width: 40,
+                        cursor: "ew-resize",
+                        zIndex: 5,
+                        background: "transparent"
+                    }}
+                    onMouseDown={(e) => handleResizeStart(e, "e")}
+                    onMouseEnter={() => {
+                        if (!isResizing && !rightBorderHover) {
+                            setRightBorderHover(true)
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (!isResizing && rightBorderHover) {
+                            setRightBorderHover(false)
+                        }
+                    }}
+                />
+            </>
+        )}
     </>
 });
 
