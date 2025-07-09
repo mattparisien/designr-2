@@ -1,7 +1,8 @@
 import { Sidebar } from "@/components/ui";
 import { SidebarItem, SidebarShell } from "@/components/ui/sidebar";
-import { LayoutPanelTop, Palette, Shapes, Type } from "lucide-react";
-import { useCallback, useRef, useState, useLayoutEffect } from "react";
+import { Circle, LayoutPanelTop, Palette, Shapes, Square, Type } from "lucide-react";
+import { useCallback, useRef, useState, useLayoutEffect, useMemo } from "react";
+import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import useEditorStore from "../../lib/stores/useEditorStore";
 
 
@@ -21,7 +22,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
     const closeSidebar = useEditorStore((state) => state.closeSidebar);
     const setSidebarWidth = useEditorStore((state) => state.setSidebarWidth);
     const isSidebarOpen = useEditorStore((state) => state.sidebar.isOpen);
-    
+
 
     const sections = [
         {
@@ -79,6 +80,39 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         }
     }, [isSidebarOpen]);
 
+    const panelSections = useMemo(() => {
+        console.log(activeItem)
+        if (!activeItem) return [];
+
+        const sections: EditorSidebarPanelSection[] = [];
+
+        switch (activeItem.id) {
+            case "shape":
+                sections.push({
+                    id: "shapes",
+                    title: "Shapes",
+                    items: [
+                        {
+                            id: "circle",
+                            title: "Circle",
+                            icon: Circle,
+                            onClick: () => console.log("Add circle clicked")
+                        },
+                        {
+                            id: "square",
+                            title: "Square",
+                            icon: Square,
+                            onClick: () => console.log("Edit Shape Clicked")
+                        },
+                    ]
+                })
+            default:
+                
+        }
+
+        return sections;
+    }, [activeItem]);
+
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
         <Sidebar
@@ -86,16 +120,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
             sections={sections}
             onItemClick={handleItemClick}
         />
-        {sidebar.isOpen && <SidebarShell>
-            <div className="px-4">
-                <div className="pt-8 px-4">
-                <h2 className="font-bold text-lg">{activeItem?.title}</h2>
-                </div>
-            </div>
-            {/* <div className="w-[var(--sidebar-width)] h-screen z-[var(--z-editor-sidebar)]" style={{
-                backgroundColor: "var(--bg-elevated-secondary)"
-            }}> */}
-        </SidebarShell>}
+        {sidebar.isOpen && <EditorSidebarPanel title={activeItem?.title} sections={panelSections} />}
 
     </div >
 
