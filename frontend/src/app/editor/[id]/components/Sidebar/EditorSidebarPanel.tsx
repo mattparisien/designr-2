@@ -31,7 +31,7 @@ const EditorSidebarPanel = ({ title, sections }: EditorSidebarPanelProps) => {
                             <div key={section.id} className="mt-4">
                                 <div className={cn(
                                     "gap-2 mb-2",
-                                    section.id === "colors" ? "grid grid-cols-4" : "grid grid-cols-2"
+                                    section.id === "colors" ? "grid grid-cols-6" : "grid grid-cols-2"
                                 )}>
                                     {section.items.map((item) => (
                                         <div
