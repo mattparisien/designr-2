@@ -175,15 +175,46 @@ const EditorSidebar = (props: EditorSidebarProps) => {
                     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
                     onClick: () => {
                         if (selectedElement) {
+                            console.log('=== COLOR UPDATE DEBUG ===');
+                            console.log('Selected element before update:', JSON.stringify(selectedElement, null, 2));
+                            console.log('Element kind:', selectedElement.kind);
+                            console.log('Element shapeType:', selectedElement.shapeType);
+                            console.log('Current backgroundColor:', selectedElement.backgroundColor);
+                            console.log('Applying color:', color);
+                            console.log('Is background color?', isBackgroundColor);
+                            
                             if (isBackgroundColor && selectedElement.kind === "shape") {
                                 // Update shape background color
+                                console.log('Updating shape backgroundColor to:', color);
                                 updateElement(selectedElement.id, { backgroundColor: color });
+                                
+                                // Let's also check if the update worked by logging after a short delay
+                                setTimeout(() => {
+                                    const canvasStore = useCanvasStore.getState();
+                                    const editorStore = useEditorStore.getState();
+                                    const currentPage = editorStore.pages.find(p => p.id === editorStore.currentPageId);
+                                    const updatedElement = currentPage?.elements.find(el => el.id === selectedElement.id);
+                                    const selectedFromStore = canvasStore.selectedElement;
+                                    
+                                    console.log('=== AFTER UPDATE ===');
+                                    console.log('Element from page:', updatedElement);
+                                    console.log('Selected element from store:', selectedFromStore);
+                                    console.log('Updated backgroundColor:', updatedElement?.backgroundColor);
+                                    console.log('===================');
+                                }, 100);
+                                
                             } else if (!isBackgroundColor && selectedElement.kind === "text") {
                                 // Update text color
+                                console.log('Updating text color to:', color);
                                 updateElement(selectedElement.id, { color: color });
+                            } else {
+                                console.log('No matching condition - element kind:', selectedElement.kind, 'isBackground:', isBackgroundColor);
                             }
+                            
                             // Close the sidebar panel after color selection
                             closeSidebarPanel();
+                        } else {
+                            console.log('No element selected');
                         }
                     }
                 }))

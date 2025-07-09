@@ -30,6 +30,9 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const setDragState = useCanvasStore(state => state.setDragState);
     const clearAlignmentGuides = useCanvasStore(state => state.clearAlignmentGuides);
     const setResizeState = useCanvasStore(state => state.setResizeState);
+    
+    // Editor store - get sidebar width for responsive positioning
+    const sidebarWidth = useEditorStore(state => state.sidebar.width);
 
     // Use the interaction hook
     const {
@@ -131,7 +134,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
             document.removeEventListener('wheel', handleWheel);
         };
-    }, [element?.id, scale, updateElementRect]);
+    }, [element?.id, scale, updateElementRect, sidebarWidth]);
 
     // Handle mouse down to start drag
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
