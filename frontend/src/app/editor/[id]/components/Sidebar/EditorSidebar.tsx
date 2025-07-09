@@ -1,10 +1,13 @@
 import { Sidebar } from "@/components/ui";
 import { SidebarItem } from "@/components/ui/sidebar";
 import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
+import { Asset } from "@/lib/types/api";
+import { apiClient } from "@/lib/api";
+import Image from "next/image";
 
 
 const sections = [
@@ -35,6 +38,12 @@ const sections = [
                 href: "/editor/brand",
                 icon: Type
             },
+            {
+                id: "assets",
+                title: "Assets",
+                href: "/editor/assets",
+                icon: Type
+            },
         ],
     },
 ];
@@ -54,6 +63,52 @@ const EditorSidebar = () => {
     const addElement = useCanvasStore((state) => state.addElement);
     const selectedElement = useCanvasStore((state) => state.selectedElement);
     const updateElement = useCanvasStore((state) => state.updateElement);
+
+    // State for assets
+    const [assets, setAssets] = useState<Asset[]>([]);
+    const [loadingAssets, setLoadingAssets] = useState(false);
+
+    // Function to fetch assets from backend
+    const fetchAssets = useCallback(async () => {
+        setLoadingAssets(true);
+        try {
+            const response = await apiClient.getAssets();
+            setAssets(response.data || response || []);
+        } catch (error) {
+            console.error('Error fetching assets:', error);
+            setAssets([]);
+        } finally {
+            setLoadingAssets(false);
+        }
+    }, []);
+
+    // Function to add an image asset to the canvas
+    const addImageAsset = useCallback((asset: Asset) => {
+        const currentPage = pages.find(page => page.id === currentPageId);
+        const canvasWidth = currentPage?.canvas?.width || 800;
+        const canvasHeight = currentPage?.canvas?.height || 600;
+
+        // Default image size
+        const defaultWidth = 200;
+        const defaultHeight = 150;
+
+        const canvasCenter = {
+            x: canvasWidth / 2,
+            y: canvasHeight / 2
+        };
+
+        addElement({
+            kind: "image" as const,
+            x: canvasCenter.x - defaultWidth / 2,
+            y: canvasCenter.y - defaultHeight / 2,
+            width: defaultWidth,
+            height: defaultHeight,
+            src: asset.url,
+            alt: asset.name,
+            opacity: 1,
+            rotation: 0
+        });
+    }, [addElement, pages, currentPageId]);
 
     const activeItem = useMemo(() => {
         return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
@@ -240,12 +295,55 @@ const EditorSidebar = () => {
                     ]
                 })
                 break;
+            case "assets":
+                sections.push({
+                    id: "assets",
+                    title: loadingAssets ? "Loading Assets..." : "Assets",
+                    items: assets.map((asset) => ({
+                        id: asset._id,
+                        title: asset.name,
+                        icon: ((props: React.HTMLAttributes<HTMLElement>) => (
+                            <div
+                                {...props}
+                                className={`w-full h-12 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center overflow-hidden ${props.className || ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (asset.type === 'image' || asset.mimeType.startsWith('image/')) {
+                                        addImageAsset(asset);
+                                    }
+                                }}
+                            >
+                                {asset.type === 'image' || asset.mimeType.startsWith('image/') ? (
+                                    <Image
+                                        src={asset.thumbnail || asset.url} 
+                                        alt={asset.name}
+                                        width={48}
+                                        height={48}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-xs text-gray-500 text-center px-1">
+                                        {asset.name}
+                                    </span>
+                                )}
+                            </div>
+                        )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
+                    }))
+                })
+                break;
             default:
                 break;
         }
 
         return sections;
-    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement]);
+    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset]);
+
+    // Effect to fetch assets when assets panel is opened
+    useEffect(() => {
+        if (activeItem?.id === "assets") {
+            fetchAssets();
+        }
+    }, [activeItem?.id, fetchAssets]);
 
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>

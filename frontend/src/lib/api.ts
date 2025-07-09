@@ -303,6 +303,11 @@ export class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Assets API methods
+  async getAssets() {
+    return this.request('/assets');
+  }
 }
 
 export const apiClient = new ApiClient();
