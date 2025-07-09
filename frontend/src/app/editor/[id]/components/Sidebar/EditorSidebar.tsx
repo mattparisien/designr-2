@@ -19,6 +19,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
 
     const sidebarWrapper = useRef<HTMLDivElement>(null);
     const sidebar = useEditorStore((state) => state.sidebar);
+    const sidebarPanel = useEditorStore((state) => state.sidebarPanel);
     const openSidebar = useEditorStore((state) => state.openSidebar);
     const closeSidebar = useEditorStore((state) => state.closeSidebar);
     const setSidebarWidth = useEditorStore((state) => state.setSidebarWidth);
@@ -26,6 +27,9 @@ const EditorSidebar = (props: EditorSidebarProps) => {
     const currentPageId = useEditorStore((state) => state.currentPageId);
     const pages = useEditorStore((state) => state.pages);
     const addElement = useCanvasStore((state) => state.addElement);
+    const selectedElement = useCanvasStore((state) => state.selectedElement);
+    const updateElement = useCanvasStore((state) => state.updateElement);
+    const closeSidebarPanel = useEditorStore((state) => state.closeSidebarPanel);
 
 
     const sections = [
@@ -137,6 +141,56 @@ const EditorSidebar = (props: EditorSidebarProps) => {
 
     const panelSections = useMemo(() => {
         console.log(activeItem)
+        
+        // If sidebar panel is open for colors, show color picker
+        if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
+            const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
+            const colors = [
+                "#3b82f6", // Blue
+                "#ef4444", // Red  
+                "#10b981", // Green
+                "#f59e0b", // Yellow
+                "#8b5cf6", // Purple
+                "#f97316", // Orange
+                "#06b6d4", // Cyan
+                "#84cc16", // Lime
+                "#ec4899", // Pink
+                "#6b7280", // Gray
+                "#000000", // Black
+                "#ffffff", // White
+            ];
+
+            return [{
+                id: "colors",
+                title: isBackgroundColor ? "Shape Colors" : "Text Colors",
+                items: colors.map((color, index) => ({
+                    id: `color-${index}`,
+                    title: color,
+                    icon: ((props: React.HTMLAttributes<HTMLElement>) => (
+                        <div 
+                            {...props}
+                            className={`w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
+                            style={{ backgroundColor: color }}
+                        />
+                    )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
+                    onClick: () => {
+                        if (selectedElement) {
+                            if (isBackgroundColor && selectedElement.kind === "shape") {
+                                // Update shape background color
+                                updateElement(selectedElement.id, { backgroundColor: color });
+                            } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                                // Update text color
+                                updateElement(selectedElement.id, { color: color });
+                            }
+                            // Close the sidebar panel after color selection
+                            closeSidebarPanel();
+                        }
+                    }
+                }))
+            }];
+        }
+
+        // Original shape panel logic
         if (!activeItem) return [];
 
         const sections: EditorSidebarPanelSection[] = [];
@@ -181,7 +235,7 @@ const EditorSidebar = (props: EditorSidebarProps) => {
         }
 
         return sections;
-    }, [activeItem, addShape, addLine]);
+    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, closeSidebarPanel]);
 
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
@@ -190,7 +244,17 @@ const EditorSidebar = (props: EditorSidebarProps) => {
             sections={sections}
             onItemClick={handleItemClick}
         />
-        {sidebar.isOpen && <EditorSidebarPanel title={activeItem?.title} sections={panelSections} />}
+        {(sidebar.isOpen || sidebarPanel.isOpen) && (
+            <EditorSidebarPanel 
+                title={sidebarPanel.isOpen ? 
+                    (sidebarPanel.activeItemId === "background-color" ? "Shape Color" : 
+                     sidebarPanel.activeItemId === "text-color" ? "Text Color" : 
+                     activeItem?.title) : 
+                    activeItem?.title
+                } 
+                sections={panelSections} 
+            />
+        )}
 
     </div >
 

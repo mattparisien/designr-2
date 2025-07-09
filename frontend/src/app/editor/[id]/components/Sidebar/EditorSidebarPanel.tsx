@@ -7,7 +7,7 @@ export interface EditorSidebarPanelSection {
     items: {
         id: string;
         title: string;
-        icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+        icon: React.ComponentType<React.SVGProps<SVGSVGElement>> | React.ComponentType<React.HTMLAttributes<HTMLElement>>;
         onClick?: () => void;
         fill?: boolean;
     }[];
@@ -28,15 +28,28 @@ const EditorSidebarPanel = ({ title, sections }: EditorSidebarPanelProps) => {
                 <div className="flex flex-col space-y-4 mt-4">
                     {sections.map((section) => (
                         <div key={section.id} className="mt-4">
-                            <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div className={cn(
+                                "gap-2 mb-2",
+                                section.id === "colors" ? "grid grid-cols-4" : "grid grid-cols-2"
+                            )}>
                                 {section.items.map((item) => (
-                                    <div key={item.id} className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-200" onClick={item.onClick}>
-                                        <item.icon className={cn(
-                                            "w-full h-full",
-                                            item.fill ? "stroke-none" : null
-                                        )} style={{
-                                            fill: item.fill ? "var(--color-text-secondary)" : "none"
-                                        }} />
+                                    <div 
+                                        key={item.id} 
+                                        className={cn(
+                                            "flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-200",
+                                            section.id === "colors" ? "p-1" : "space-x-2"
+                                        )}
+                                        onClick={item.onClick}
+                                    >
+                                        <item.icon 
+                                            className={cn(
+                                                section.id === "colors" ? "w-8 h-8" : "w-full h-full",
+                                                item.fill && section.id !== "colors" ? "stroke-none" : null
+                                            )} 
+                                            style={section.id !== "colors" ? {
+                                                fill: item.fill ? "var(--color-text-secondary)" : "none"
+                                            } : undefined}
+                                        />
                                     </div>
                                 ))}
                             </div>
