@@ -553,7 +553,7 @@ const Handles = memo(({
 
     const handleSize = 14; // Size of the resize handles
     const showTopBottomHandles = element.kind !== "text";
-    const showSideHandles = element.kind !== "text" && (element.kind !== "shape" || element.shapeType === "rect");
+    const showSideHandles = element.kind === "text" || (element.kind !== "shape" || element.shapeType === "rect");
 
     // Use actual dimensions if available (for text elements), otherwise use element dimensions
     const effectiveHeight = actualDimensions?.height || (element.height * scale);
