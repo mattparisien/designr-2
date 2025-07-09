@@ -15,7 +15,7 @@ const sections = [
                 id: "design",
                 title: "Design",
                 href: "/editor/brand",
-                icon: LayoutPanelTop
+                icon: LayoutPanelTop,
             },
             {
                 id: "brand",
@@ -54,7 +54,6 @@ const EditorSidebar = () => {
     const addElement = useCanvasStore((state) => state.addElement);
     const selectedElement = useCanvasStore((state) => state.selectedElement);
     const updateElement = useCanvasStore((state) => state.updateElement);
-    const closeSidebarPanel = useEditorStore((state) => state.closeSidebarPanel);
 
     const activeItem = useMemo(() => {
         return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
@@ -130,12 +129,10 @@ const EditorSidebar = () => {
             const width = getSidebarWidth();
             setSidebarWidth(width);
         }
-    }, [isSidebarOpen]);
+    }, [isSidebarOpen, setSidebarWidth]);
 
     const panelSections = useMemo(() => {
-        console.log(activeItem)
-
-        // If sidebar panel is open for colors, show color picker
+        // If sidebar panel is open for colors, show color picker - this takes priority
         if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
             const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
             const colors = [
@@ -164,57 +161,26 @@ const EditorSidebar = () => {
                             {...props}
                             className={`w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
                             style={{ backgroundColor: color }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (selectedElement) {
+                                    if (isBackgroundColor && selectedElement.kind === "shape") {
+                                        // Update shape background color
+                                        updateElement(selectedElement.id, { backgroundColor: color });
+                                    } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                                        // Update text color
+                                        updateElement(selectedElement.id, { color: color });
+                                    }
+                                }
+                                // Don't close the panel - keep it open for multiple color selections
+                            }}
                         />
                     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-                    onClick: () => {
-                        if (selectedElement) {
-                            console.log('=== COLOR UPDATE DEBUG ===');
-                            console.log('Selected element before update:', JSON.stringify(selectedElement, null, 2));
-                            console.log('Element kind:', selectedElement.kind);
-                            console.log('Element shapeType:', selectedElement.shapeType);
-                            console.log('Current backgroundColor:', selectedElement.backgroundColor);
-                            console.log('Applying color:', color);
-                            console.log('Is background color?', isBackgroundColor);
-
-                            if (isBackgroundColor && selectedElement.kind === "shape") {
-                                // Update shape background color
-                                console.log('Updating shape backgroundColor to:', color);
-                                updateElement(selectedElement.id, { backgroundColor: color });
-
-                                // Let's also check if the update worked by logging after a short delay
-                                setTimeout(() => {
-                                    const canvasStore = useCanvasStore.getState();
-                                    const editorStore = useEditorStore.getState();
-                                    const currentPage = editorStore.pages.find(p => p.id === editorStore.currentPageId);
-                                    const updatedElement = currentPage?.elements.find(el => el.id === selectedElement.id);
-                                    const selectedFromStore = canvasStore.selectedElement;
-
-                                    console.log('=== AFTER UPDATE ===');
-                                    console.log('Element from page:', updatedElement);
-                                    console.log('Selected element from store:', selectedFromStore);
-                                    console.log('Updated backgroundColor:', updatedElement?.backgroundColor);
-                                    console.log('===================');
-                                }, 100);
-
-                            } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                                // Update text color
-                                console.log('Updating text color to:', color);
-                                updateElement(selectedElement.id, { color: color });
-                            } else {
-                                console.log('No matching condition - element kind:', selectedElement.kind, 'isBackground:', isBackgroundColor);
-                            }
-
-                            // Close the sidebar panel after color selection
-                            closeSidebarPanel();
-                        } else {
-                            console.log('No element selected');
-                        }
-                    }
                 }))
             }];
         }
 
-        // Original shape panel logic
+        // Original shape panel logic - only if color panel is not open
         if (!activeItem) return [];
 
         const sections: EditorSidebarPanelSection[] = [];
@@ -254,12 +220,13 @@ const EditorSidebar = () => {
                         }
                     ]
                 })
+                break;
             default:
-
+                break;
         }
 
         return sections;
-    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, closeSidebarPanel]);
+    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement]);
 
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>

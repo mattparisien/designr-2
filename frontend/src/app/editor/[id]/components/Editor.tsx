@@ -289,8 +289,8 @@ export default function Editor() {
     useEffect(() => {
         const handleOutsideClick = (e: globalThis.MouseEvent) => {
             // Only process if we're in edit mode
-            if (!isEditMode) return;
 
+            if (!isEditMode) return;
 
             const target = e.target as HTMLElement;
 
