@@ -1,6 +1,6 @@
 import { Sidebar } from "@/components/ui";
 import { SidebarItem } from "@/components/ui/sidebar";
-import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type } from "lucide-react";
+import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
@@ -42,7 +42,7 @@ const sections = [
                 id: "assets",
                 title: "Assets",
                 href: "/editor/assets",
-                icon: Type
+                icon: Camera
             },
         ],
     },
@@ -76,7 +76,49 @@ const EditorSidebar = () => {
             setAssets(response.data || response || []);
         } catch (error) {
             console.error('Error fetching assets:', error);
-            setAssets([]);
+            // For now, provide some mock assets until backend is implemented
+            const mockAssets: Asset[] = [
+                {
+                    _id: '1',
+                    name: 'Sample Image 1',
+                    originalFilename: 'sample1.jpg',
+                    type: 'image',
+                    url: 'https://via.placeholder.com/300x200/3b82f6/ffffff?text=Sample+1',
+                    mimeType: 'image/jpeg',
+                    fileSize: 12345,
+                    thumbnail: 'https://via.placeholder.com/150x100/3b82f6/ffffff?text=Sample+1',
+                    userId: 'mock-user',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                {
+                    _id: '2',
+                    name: 'Sample Image 2',
+                    originalFilename: 'sample2.jpg',
+                    type: 'image',
+                    url: 'https://via.placeholder.com/300x200/10b981/ffffff?text=Sample+2',
+                    mimeType: 'image/jpeg',
+                    fileSize: 23456,
+                    thumbnail: 'https://via.placeholder.com/150x100/10b981/ffffff?text=Sample+2',
+                    userId: 'mock-user',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                {
+                    _id: '3',
+                    name: 'Sample Image 3',
+                    originalFilename: 'sample3.jpg',
+                    type: 'image',
+                    url: 'https://via.placeholder.com/300x200/f59e0b/ffffff?text=Sample+3',
+                    mimeType: 'image/jpeg',
+                    fileSize: 34567,
+                    thumbnail: 'https://via.placeholder.com/150x100/f59e0b/ffffff?text=Sample+3',
+                    userId: 'mock-user',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }
+            ];
+            setAssets(mockAssets);
         } finally {
             setLoadingAssets(false);
         }
