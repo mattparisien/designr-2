@@ -126,9 +126,11 @@ export function useCanvasElementResize() {
       // Text elements should always maintain aspect ratio (constrained)
       // Rectangle shapes can resize freely, but should maintain aspect ratio when Shift is pressed
       // Circles and triangles should maintain aspect ratio by default
+      // Images should maintain aspect ratio when Shift is pressed
       const shouldMaintainAspectRatio = element.kind === "text" || 
         (element.kind === "shape" && element.shapeType === "rect" && isShiftKeyPressed) ||
-        (element.kind === "shape" && element.shapeType !== "rect");
+        (element.kind === "shape" && element.shapeType !== "rect") ||
+        (element.kind === "image" && isShiftKeyPressed);
 
       // Calculate the total delta from the initial mouse position
       // This approach provides smoother resizing by avoiding accumulated errors
