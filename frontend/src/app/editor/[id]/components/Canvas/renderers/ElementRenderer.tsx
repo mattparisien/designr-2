@@ -5,6 +5,7 @@ import { memo } from "react";
 // Make sure these paths correctly point to where your element components are located
 import { ArrowElement } from "../elements/ArrowElement";
 import { CircleElement } from "../elements/CircleElement";
+import { ImageElement } from "../elements/ImageElement";
 import { LineElement } from "../elements/LineElement";
 import { RectangleElement } from "../elements/RectangleElement";
 import { TextElement } from "../elements/TextElement";
@@ -51,6 +52,8 @@ const ElementRenderer = memo(({
                     isResizing={isResizing}
                 />
             );
+        case "image":
+            return <ImageElement element={element} />;
         case "shape":
             // Handle different shape types
             switch (element.shapeType) {

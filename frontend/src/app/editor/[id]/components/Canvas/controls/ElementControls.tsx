@@ -39,6 +39,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         isDragging,
         isDragInitiated,
         isAltKeyPressed,
+        isShiftKeyPressed,
         isHovering,
         leftBorderHover,
         rightBorderHover,
@@ -330,6 +331,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 lastEvent.clientY,
                 scale,
                 isAltKeyPressed, // pass the alt key state
+                isShiftKeyPressed, // pass the shift key state
                 allElements,
                 canvasWidth,
                 canvasHeight
@@ -405,7 +407,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 cancelAnimationFrame(animationFrameId);
             }
         };
-    }, [isResizing, element, scale, updateElement, calculateResize, endResize, selectElement, isAltKeyPressed, setJustFinishedResizing, isDragging, measurementHook]);
+    }, [isResizing, element, scale, updateElement, calculateResize, endResize, selectElement, isAltKeyPressed, isShiftKeyPressed, setJustFinishedResizing, isDragging, measurementHook]);
 
     // For text elements, get the actual DOM dimensions to ensure selection border matches
     const getActualDimensions = useCallback(() => {

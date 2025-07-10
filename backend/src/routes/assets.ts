@@ -2,81 +2,32 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import Asset from '../models/Asset';
 
 const router = express.Router();
 
-// Mock assets data for now - replace this with a proper database model later
-const mockAssets: any[] = [
-  {
-    _id: '1',
-    name: 'Sample Image 1',
-    originalFilename: 'sample1.jpg',
-    type: 'image',
-    url: 'https://via.placeholder.com/300x200/3b82f6/ffffff?text=Sample+1',
-    mimeType: 'image/jpeg',
-    fileSize: 12345,
-    thumbnail: 'https://via.placeholder.com/150x100/3b82f6/ffffff?text=Sample+1',
-    userId: 'mock-user',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    _id: '2',
-    name: 'Sample Image 2',
-    originalFilename: 'sample2.jpg',
-    type: 'image',
-    url: 'https://via.placeholder.com/300x200/10b981/ffffff?text=Sample+2',
-    mimeType: 'image/jpeg',
-    fileSize: 23456,
-    thumbnail: 'https://via.placeholder.com/150x100/10b981/ffffff?text=Sample+2',
-    userId: 'mock-user',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    _id: '3',
-    name: 'Sample Image 3',
-    originalFilename: 'sample3.jpg',
-    type: 'image',
-    url: 'https://via.placeholder.com/300x200/f59e0b/ffffff?text=Sample+3',
-    mimeType: 'image/jpeg',
-    fileSize: 34567,
-    thumbnail: 'https://via.placeholder.com/150x100/f59e0b/ffffff?text=Sample+3',
-    userId: 'mock-user',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    _id: '4',
-    name: 'Sample Image 4',
-    originalFilename: 'sample4.jpg',
-    type: 'image',
-    url: 'https://via.placeholder.com/300x200/ec4899/ffffff?text=Sample+4',
-    mimeType: 'image/jpeg',
-    fileSize: 45678,
-    thumbnail: 'https://via.placeholder.com/150x100/ec4899/ffffff?text=Sample+4',
-    userId: 'mock-user',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    _id: '5',
-    name: 'Sample Image 5',
-    originalFilename: 'sample5.jpg',
-    type: 'image',
-    url: 'https://via.placeholder.com/300x200/8b5cf6/ffffff?text=Sample+5',
-    mimeType: 'image/jpeg',
-    fileSize: 56789,
-    thumbnail: 'https://via.placeholder.com/150x100/8b5cf6/ffffff?text=Sample+5',
-    userId: 'mock-user',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// Configure multer for asset file uploads
-const storage = multer.diskStorage({
+// Configure Cloudinary storage for multer
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'design-tool-assets',
+    resource_type: 'auto', // Automatically detect file type
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'mp4', 'mov', 'avi'],
+  } as any,
+});
+
+// Fallback to local storage if Cloudinary is not configured
+const localStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '../../uploads/assets');
     if (!fs.existsSync(uploadPath)) {
@@ -85,11 +36,13 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
-    // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
+
+// Use Cloudinary if configured, otherwise fall back to local storage
+const storage = process.env.CLOUDINARY_CLOUD_NAME ? cloudinaryStorage : localStorage;
 
 const fileFilter = (req: any, file: any, cb: any) => {
   // Check file type - allow various asset types
@@ -111,28 +64,42 @@ const upload = multer({
   }
 });
 
-// Get all assets
+// Get all assets (only images and graphics for sidebar)
 router.get('/', async (req, res) => {
   try {
     const { userId, folderId } = req.query;
     
-    let filteredAssets = mockAssets;
+    // Build query filter - only fetch image assets for the sidebar
+    const filter: any = {
+      type: 'image', // Only fetch image assets
+      mimeType: { 
+        $in: [
+          'image/jpeg', 
+          'image/jpg', 
+          'image/png', 
+          'image/gif', 
+          'image/svg+xml', 
+          'image/webp'
+        ] 
+      }
+    };
     
     // Filter by userId if provided
     if (userId) {
-      filteredAssets = filteredAssets.filter(asset => asset.userId === userId);
+      filter.userId = userId;
     }
     
     // Filter by folderId if provided
     if (folderId) {
-      // For now, we don't have folder structure in mock data
-      // This would be implemented with a proper database
+      filter.folderId = folderId;
     }
+    
+    const assets = await Asset.find(filter).sort({ createdAt: -1 });
     
     res.json({
       success: true,
-      data: filteredAssets,
-      count: filteredAssets.length
+      data: assets,
+      count: assets.length
     });
   } catch (error) {
     console.error('Error fetching assets:', error);
@@ -147,7 +114,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const asset = mockAssets.find(a => a._id === id);
+    const asset = await Asset.findById(id);
     
     if (!asset) {
       return res.status(404).json({
@@ -179,35 +146,60 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
       });
     }
 
-    const { originalname, filename, mimetype, size } = req.file;
+    const { originalname, mimetype, size } = req.file;
     const userId = req.user?.id || 'unknown';
     
-    // Create asset object
-    const newAsset = {
-      _id: Date.now().toString(),
+    // Determine asset type
+    const assetType = mimetype.startsWith('image/') ? 'image' : 
+                     mimetype.startsWith('video/') ? 'video' : 
+                     mimetype.startsWith('audio/') ? 'audio' : 'document';
+    
+    let assetUrl: string;
+    let thumbnailUrl: string | undefined;
+    let cloudinaryPublicId: string | undefined;
+    
+    if (process.env.CLOUDINARY_CLOUD_NAME && (req.file as any).public_id) {
+      // Cloudinary upload
+      cloudinaryPublicId = (req.file as any).public_id;
+      assetUrl = (req.file as any).secure_url;
+      
+      // Generate thumbnail for images using Cloudinary transformations
+      if (assetType === 'image' && cloudinaryPublicId) {
+        thumbnailUrl = cloudinary.url(cloudinaryPublicId, {
+          width: 150,
+          height: 100,
+          crop: 'fill',
+          quality: 'auto',
+          format: 'auto'
+        });
+      }
+    } else {
+      // Local storage
+      assetUrl = `/uploads/assets/${req.file.filename}`;
+      thumbnailUrl = assetType === 'image' ? assetUrl : undefined;
+    }
+    
+    // Create new asset in database
+    const newAsset = new Asset({
       name: req.body.name || originalname,
       originalFilename: originalname,
-      type: mimetype.startsWith('image/') ? 'image' : 
-            mimetype.startsWith('video/') ? 'video' : 
-            mimetype.startsWith('audio/') ? 'audio' : 'document',
-      url: `/uploads/assets/${filename}`,
+      type: assetType,
+      url: assetUrl,
       mimeType: mimetype,
       fileSize: size,
-      thumbnail: mimetype.startsWith('image/') ? `/uploads/assets/${filename}` : undefined,
+      thumbnail: thumbnailUrl,
+      cloudinaryPublicId,
       userId,
       tags: req.body.tags ? JSON.parse(req.body.tags) : [],
-      folderId: req.body.folderId || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+      folderId: req.body.folderId || undefined
+    });
     
-    // Add to mock assets (in a real app, save to database)
-    mockAssets.push(newAsset);
+    const savedAsset = await newAsset.save();
 
     res.json({
       success: true,
       message: 'Asset uploaded successfully',
-      data: newAsset
+      data: savedAsset
     });
   } catch (error) {
     console.error('Error uploading asset:', error);
@@ -222,18 +214,26 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const assetIndex = mockAssets.findIndex(a => a._id === id);
+    const asset = await Asset.findById(id);
     
-    if (assetIndex === -1) {
+    if (!asset) {
       return res.status(404).json({
         success: false,
         error: 'Asset not found'
       });
     }
     
-    const asset = mockAssets[assetIndex];
+    // Delete from Cloudinary if it was uploaded there
+    if (asset.cloudinaryPublicId) {
+      try {
+        await cloudinary.uploader.destroy(asset.cloudinaryPublicId);
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', cloudinaryError);
+        // Continue with database deletion even if Cloudinary deletion fails
+      }
+    }
     
-    // Delete file from filesystem if it's a local file
+    // Delete file from local filesystem if it's a local file
     if (asset.url.startsWith('/uploads/')) {
       const filePath = path.join(__dirname, '../../', asset.url);
       if (fs.existsSync(filePath)) {
@@ -241,8 +241,8 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
     
-    // Remove from mock assets
-    mockAssets.splice(assetIndex, 1);
+    // Delete from database
+    await Asset.findByIdAndDelete(id);
 
     res.json({
       success: true,

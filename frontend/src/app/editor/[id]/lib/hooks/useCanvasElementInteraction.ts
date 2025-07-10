@@ -9,6 +9,7 @@ export function useCanvasElementInteraction() {
   const [isDragActive, setIsDragActive] = useState<boolean>(true);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isAltKeyPressed, setIsAltKeyPressed] = useState<boolean>(false);
+  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState<boolean>(false);
   const [isHovering, setIsHovering] = useState<boolean>(false);
   const [isDragInitiated, setIsDragInitiated] = useState<boolean>(false); // Track if drag has been initiated but not yet started
 
@@ -249,17 +250,23 @@ export function useCanvasElementInteraction() {
   // We've removed the outside click handler from here
   // as it's now handled at the Editor component level
 
-  // Track Alt/Option key state
+  // Track Alt/Option and Shift key state
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Alt' || e.key === 'Option') {
         setIsAltKeyPressed(true);
+      }
+      if (e.key === 'Shift') {
+        setIsShiftKeyPressed(true);
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Alt' || e.key === 'Option') {
         setIsAltKeyPressed(false);
+      }
+      if (e.key === 'Shift') {
+        setIsShiftKeyPressed(false);
       }
     };
 
@@ -295,6 +302,7 @@ export function useCanvasElementInteraction() {
     isDragging,
     isDragInitiated,
     isAltKeyPressed,
+    isShiftKeyPressed,
     isHovering,
     leftBorderHover,
     rightBorderHover,

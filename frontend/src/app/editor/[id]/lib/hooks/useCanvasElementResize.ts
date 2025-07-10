@@ -108,6 +108,7 @@ export function useCanvasElementResize() {
       mouseY: number,
       scale: number,
       isAltKeyPressed: boolean,
+      isShiftKeyPressed: boolean,
       otherElements: CanvasElement[] = [],
       canvasWidth: number = 0,
       canvasHeight: number = 0
@@ -121,10 +122,12 @@ export function useCanvasElementResize() {
         fontSize: origFontSize = element.fontSize || 36,
       } = originalState.current;
 
-      // Determine resize behavior based on element type
+      // Determine resize behavior based on element type and key modifiers
       // Text elements should always maintain aspect ratio (constrained)
-      // Rectangle shapes can resize freely, but circles and triangles should maintain aspect ratio
+      // Rectangle shapes can resize freely, but should maintain aspect ratio when Shift is pressed
+      // Circles and triangles should maintain aspect ratio by default
       const shouldMaintainAspectRatio = element.kind === "text" || 
+        (element.kind === "shape" && element.shapeType === "rect" && isShiftKeyPressed) ||
         (element.kind === "shape" && element.shapeType !== "rect");
 
       // Calculate the total delta from the initial mouse position
