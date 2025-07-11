@@ -445,7 +445,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <span>Letter</span>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg">
+            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
@@ -471,7 +471,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <span>Line</span>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg">
+            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-700">Line Height</label>
@@ -549,7 +549,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
           <PopoverTrigger asChild>
             <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium">Position</button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3 bg-white border border-gray-100 rounded-xl shadow-lg">
+          <PopoverContent className="w-auto p-3 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 justify-between">
                 <button
