@@ -18,7 +18,7 @@ const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out " +
+        "z-[100000] data-[state=open]:animate-in data-[state=closed]:animate-out " +
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 " +
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 " +
         "data-[side=bottom]:slide-in-from-top-2 " +
@@ -29,7 +29,7 @@ const PopoverContent = React.forwardRef<
       )}
       {...props}
     >
-      <ElevatedSurface className="py-3 px-0 font-semibold" dataEditorInteractive="true">
+      <ElevatedSurface className="py-3 px-0 font-semibold" data-editor-interactive="true">
         {children}
       </ElevatedSurface>
     </PopoverPrimitive.Content>

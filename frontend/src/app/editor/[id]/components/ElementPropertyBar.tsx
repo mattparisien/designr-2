@@ -289,8 +289,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-48 p-0 max-h-60 overflow-hidden" data-editor-interactive="true" align="start">
-              <div className="max-h-60 overflow-y-auto">
+            <PopoverContent className="w-48 p-0 max-h-60 overflow-hidden" align="start">
+              <div className="max-h-60 overflow-y-auto w-full">
                 {/* Upload Font Button */}
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-blue-600 font-medium"
@@ -563,7 +563,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
     {/* Font Upload Modal */}
     {showFontUpload && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100001]">
         <FontUpload
           onFontUploaded={(fontFamily) => {
             handleFontFamilyChange(fontFamily);
