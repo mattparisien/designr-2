@@ -248,7 +248,7 @@ const EditorSidebar = () => {
                     icon: ((props: React.HTMLAttributes<HTMLElement>) => (
                         <div
                             {...props}
-                            className={`w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
+                            className={`w-12 h-12 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
                             style={{ backgroundColor: color }}
                             onClick={(e) => {
                                 e.stopPropagation();

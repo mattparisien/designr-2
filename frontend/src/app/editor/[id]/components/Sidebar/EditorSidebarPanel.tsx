@@ -58,7 +58,7 @@ const EditorSidebarPanel = ({ title, sections }: EditorSidebarPanelProps) => {
                                     /* Render regular grid layout */
                                     <div className={cn(
                                         "gap-2 mb-2",
-                                        section.id === "colors" || section.id.startsWith("colors-") ? "grid grid-cols-6" : "grid grid-cols-2"
+                                        section.id === "colors" || section.id.startsWith("colors-") ? "flex flex-wrap" : "grid grid-cols-2"
                                     )}>
                                         {section.items?.map((item) => (
                                             <div
