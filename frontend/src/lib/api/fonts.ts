@@ -31,9 +31,9 @@ export class FontsAPI extends APIBase {
             const formData = new FormData();
             formData.append("file", file);
             
-            if (name) {
-                formData.append("name", name);
-            }
+            // Always send fontFamily - use provided name or derive from filename
+            const fontFamily = name || file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            formData.append("fontFamily", fontFamily);
 
             // Get userId from localStorage
             const token = this.getAuthToken();
@@ -86,11 +86,18 @@ export class FontsAPI extends APIBase {
             }
 
             const params = userId ? { userId } : {};
-            const response = await this.apiClient.get<CustomFont[]>("/fonts", { params });
-            return response.data;
-        } catch (error: any) {
-            console.error("Error fetching fonts:", error.response?.data || error.message);
-            throw error.response?.data || new Error("Failed to fetch fonts");
+            const response = await this.apiClient.get("/fonts", { params });
+            
+            // Handle the response format from the backend
+            const data = response.data;
+            if (data.success && data.fonts) {
+                return data.fonts;
+            } else {
+                return data; // Fallback for direct array response
+            }
+        } catch (error: unknown) {
+            console.error("Error fetching fonts:", error);
+            throw new Error("Failed to fetch fonts");
         }
     }
 

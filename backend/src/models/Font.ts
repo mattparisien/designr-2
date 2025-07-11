@@ -7,7 +7,7 @@ export interface IFont extends Document {
   fileUrl: string;
   fileSize: number;
   mimeType: string;
-  userId: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId; // Make optional
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -39,12 +39,24 @@ const FontSchema: Schema = new Schema({
   mimeType: {
     type: String,
     required: true,
-    enum: ['font/woff', 'font/woff2', 'font/ttf', 'font/otf', 'application/font-woff', 'application/font-woff2', 'application/x-font-ttf', 'application/x-font-otf'],
+    enum: [
+      'font/woff', 
+      'font/woff2', 
+      'font/ttf', 
+      'font/otf', 
+      'application/font-woff', 
+      'application/font-woff2', 
+      'application/x-font-ttf', 
+      'application/x-font-otf',
+      'application/octet-stream', // Add this common fallback MIME type
+      'font/opentype',
+      'application/font-sfnt'
+    ],
   },
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false, // Make optional for anonymous uploads
   },
   isPublic: {
     type: Boolean,

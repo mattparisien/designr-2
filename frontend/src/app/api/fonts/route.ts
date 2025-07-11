@@ -4,15 +4,21 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/ap
 
 export async function GET(request: NextRequest) {
   try {
-    // Get authorization header from the request
-    const authorization = request.headers.get('authorization');
+    // Get query parameters from the request URL
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    // Build query string
+    const queryParams = new URLSearchParams();
+    if (userId) {
+      queryParams.set('userId', userId);
+    }
     
     // Forward the request to the backend
-    const response = await fetch(`${BACKEND_URL}/fonts`, {
+    const response = await fetch(`${BACKEND_URL}/fonts?${queryParams.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(authorization && { Authorization: authorization }),
       },
     });
 
@@ -27,42 +33,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error proxying fonts request:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // Get authorization header from the request
-    const authorization = request.headers.get('authorization');
-    
-    // Get the request body
-    const body = await request.json();
-    
-    // Forward the request to the backend
-    const response = await fetch(`${BACKEND_URL}/fonts/upload`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authorization && { Authorization: authorization }),
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: `Backend responded with ${response.status}` },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error proxying fonts upload request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -23,6 +23,10 @@ interface TextEditorProps {
   fontSize?: number;
   /** Font-family for the text (default: Inter) */
   fontFamily?: string;
+  /** Letter spacing in em units */
+  letterSpacing?: number;
+  /** Line height relative to font size */
+  lineHeight?: number;
   /** Whether the surrounding element is currently selected */
   /** Propagates content changes to the parent */
   onChange: (content: string) => void;
@@ -49,6 +53,8 @@ export function TextEditor({
   content,
   fontSize = DEFAULT_FONT_SIZE,
   fontFamily = "Inter",
+  letterSpacing = 0,
+  lineHeight = 1.2,
   onChange,
   onHeightChange,
   textAlign = DEFAULT_TEXT_ALIGN,
@@ -166,7 +172,8 @@ export function TextEditor({
     fontSize: `${fontSize}px`,
     fontFamily,
     whiteSpace: "normal",
-    lineHeight: 1.2, // Keep consistent with editorStyles
+    lineHeight: lineHeight, // Use dynamic line height
+    letterSpacing: `${letterSpacing}em`, // Use dynamic letter spacing
     overflow: "hidden",
     width: "100%",
     minHeight: "1em",
@@ -185,7 +192,8 @@ export function TextEditor({
     width: "100%",
     height: "100%",
     outline: "none",
-    lineHeight: 1.2, // Match baseStyle
+    lineHeight: lineHeight, // Use dynamic line height
+    letterSpacing: `${letterSpacing}em`, // Use dynamic letter spacing
     fontSize: `${fontSize}px`,
     fontFamily,
     fontWeight: isBold ? "bold" : "normal",

@@ -1,12 +1,19 @@
 "use client"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Slider } from "@/components/ui/slider"
 import type { Element } from "../lib/types/canvas" // Update import to use types directly
 import {
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_ALIGN,
   MAX_FONT_SIZE,
   MIN_FONT_SIZE,
+  DEFAULT_LETTER_SPACING,
+  MIN_LETTER_SPACING,
+  MAX_LETTER_SPACING,
+  DEFAULT_LINE_HEIGHT,
+  MIN_LINE_HEIGHT,
+  MAX_LINE_HEIGHT,
   type TextAlignment
 } from "../lib/constants"
 import { cn } from "@/lib/utils"
@@ -22,7 +29,9 @@ import {
   Strikethrough,
   Type,
   Underline,
-  Upload
+  Upload,
+  Settings,
+  AlignJustify
 } from "lucide-react"
 import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useCallback } from "react"
 import useEditorStore from "../lib/stores/useEditorStore"
@@ -39,6 +48,8 @@ interface ElementPropertyBarProps {
   onFontSizeChange: (size: number) => void
   onFontFamilyChange: (family: string) => void
   onTextAlignChange: (align: TextAlignment) => void
+  onLetterSpacingChange?: (spacing: number) => void
+  onLineHeightChange?: (height: number) => void
   onFormatChange?: (format: { bold?: boolean; italic?: boolean; underline?: boolean; strikethrough?: boolean }) => void
   onPositionChange?: (position: { x?: number; y?: number }) => void
   isHovering: boolean
@@ -51,11 +62,17 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   onFontSizeChange,
   onFontFamilyChange,
   onTextAlignChange,
+  onLetterSpacingChange,
+  onLineHeightChange,
   onFormatChange,
   onPositionChange,
+  isHovering,
+  elementId,
   canvasWidth,
 }, ref) => {
   const [fontSize, setFontSize] = useState(selectedElement?.fontSize || DEFAULT_FONT_SIZE)
+  const [letterSpacing, setLetterSpacing] = useState(selectedElement?.letterSpacing || DEFAULT_LETTER_SPACING)
+  const [lineHeight, setLineHeight] = useState(selectedElement?.lineHeight || DEFAULT_LINE_HEIGHT)
   const [showFontDropdown, setShowFontDropdown] = useState(false)
   const [showFontUpload, setShowFontUpload] = useState(false)
   const [textAlign, setTextAlign] = useState<TextAlignment>(
@@ -86,6 +103,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
       setFontSize(selectedElement.fontSize || DEFAULT_FONT_SIZE)
       setFontFamily(selectedElement.fontFamily || allFonts[0] || "Inter")
       setTextAlign(selectedElement.textAlign || DEFAULT_TEXT_ALIGN)
+      setLetterSpacing(selectedElement.letterSpacing || DEFAULT_LETTER_SPACING)
+      setLineHeight(selectedElement.lineHeight || DEFAULT_LINE_HEIGHT)
       setIsBold(selectedElement.bold || false)
       setIsItalic(selectedElement.italic || false)
       setIsUnderlined(selectedElement.underline || false)
@@ -154,6 +173,24 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
         onFormatChange({ [formatType]: newValue });
       }
     };
+
+  // Handle letter spacing change
+  const handleLetterSpacingChange = (value: number[]) => {
+    const newSpacing = value[0];
+    setLetterSpacing(newSpacing);
+    if (onLetterSpacingChange) {
+      onLetterSpacingChange(newSpacing);
+    }
+  }
+
+  // Handle line height change
+  const handleLineHeightChange = (value: number[]) => {
+    const newHeight = value[0];
+    setLineHeight(newHeight);
+    if (onLineHeightChange) {
+      onLineHeightChange(newHeight);
+    }
+  }
 
   // Handle horizontal positioning changes
   const handleAlignStart = (e: React.MouseEvent) => {
@@ -397,6 +434,60 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
               <Strikethrough className="h-4 w-4" />
             </ToolbarButton>
           </div>
+
+          <Divider />
+
+          {/* Letter Spacing Control */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span>Letter</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
+                  <span className="text-sm text-gray-500">{letterSpacing.toFixed(2)}em</span>
+                </div>
+                <Slider
+                  value={[letterSpacing]}
+                  onValueChange={handleLetterSpacingChange}
+                  min={MIN_LETTER_SPACING}
+                  max={MAX_LETTER_SPACING}
+                  step={0.01}
+                  className="w-full"
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Line Height Control */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
+                <AlignJustify className="h-4 w-4" />
+                <span>Line</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Line Height</label>
+                  <span className="text-sm text-gray-500">{lineHeight.toFixed(1)}</span>
+                </div>
+                <Slider
+                  value={[lineHeight]}
+                  onValueChange={handleLineHeightChange}
+                  min={MIN_LINE_HEIGHT}
+                  max={MAX_LINE_HEIGHT}
+                  step={0.1}
+                  className="w-full"
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <Divider />
 

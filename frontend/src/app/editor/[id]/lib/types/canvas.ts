@@ -28,6 +28,8 @@ export interface Element {
   fontSize?: number
   fontFamily?: string
   textAlign?: "left" | "center" | "right"
+  letterSpacing?: number // Letter spacing in em units
+  lineHeight?: number // Line height relative to font size
   bold?: boolean // Bold formatting (renamed from isBold)
   italic?: boolean // Italic formatting (renamed from isItalic)
   underline?: boolean // Underline formatting (renamed from isUnderlined)

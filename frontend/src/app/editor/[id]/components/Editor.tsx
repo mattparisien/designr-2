@@ -6,6 +6,7 @@ import useCanvasStore, { useCurrentCanvasSize } from "../lib//stores/useCanvasSt
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
 import useElementActionBar from "../lib/hooks/useElementActionBar";
 import useEditorStore from "../lib/stores/useEditorStore";
+import { Element } from "../lib/types/canvas";
 import BottomBar from "./BottomBar";
 import Canvas from "./Canvas/Canvas";
 import ElementControls from "./Canvas/controls/ElementControls";
@@ -191,9 +192,21 @@ export default function Editor() {
         }
     }, [selectedElement, updateElement]);
 
+    const handleLetterSpacingChange = useCallback((spacing: number) => {
+        if (selectedElement && selectedElement.kind === "text") {
+            updateElement(selectedElement.id, { letterSpacing: spacing })
+        }
+    }, [selectedElement, updateElement]);
+
+    const handleLineHeightChange = useCallback((height: number) => {
+        if (selectedElement && selectedElement.kind === "text") {
+            updateElement(selectedElement.id, { lineHeight: height })
+        }
+    }, [selectedElement, updateElement]);
+
     const handleFormatChange = useCallback((format: { bold?: boolean; italic?: boolean; underline?: boolean; strikethrough?: boolean }) => {
         if (selectedElement && selectedElement.kind === "text") {
-            const updates: any = {};
+            const updates: Partial<Element> = {};
             if (format.bold !== undefined) updates.bold = format.bold;
             if (format.italic !== undefined) updates.italic = format.italic;
             if (format.underline !== undefined) updates.underline = format.underline;
@@ -384,6 +397,8 @@ export default function Editor() {
                         onFontSizeChange={handleFontSizeChange}
                         onFontFamilyChange={handleFontFamilyChange}
                         onTextAlignChange={handleTextAlignChange}
+                        onLetterSpacingChange={handleLetterSpacingChange}
+                        onLineHeightChange={handleLineHeightChange}
                         onFormatChange={handleFormatChange}
                         onPositionChange={handlePositionChange}
                         isHovering={false}

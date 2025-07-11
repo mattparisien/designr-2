@@ -20,6 +20,16 @@ export const DEFAULT_FONT_SIZE = 200;
 export const MIN_FONT_SIZE = 1;
 export const MAX_FONT_SIZE = 800;
 
+// Letter spacing (in em units)
+export const DEFAULT_LETTER_SPACING = 0;
+export const MIN_LETTER_SPACING = -0.1;
+export const MAX_LETTER_SPACING = 1;
+
+// Line height (relative to font size)
+export const DEFAULT_LINE_HEIGHT = 1.2;
+export const MIN_LINE_HEIGHT = 0.8;
+export const MAX_LINE_HEIGHT = 3;
+
 // Font lists
 export const FONT_FAMILIES = [
   "Inter",
