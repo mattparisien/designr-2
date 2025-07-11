@@ -64,12 +64,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       });
     }
 
+    // Get the backend URL - use 5001 to match frontend expectations
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    
     // Create font record in database
     const font = new Font({
       name: req.file.originalname.split('.')[0], // Remove extension from name
       originalName: req.file.originalname,
       fontFamily: fontFamily,
-      fileUrl: `/uploads/fonts/${req.file.filename}`,
+      fileUrl: `${backendUrl}/api/fonts/file/${req.file.filename}`, // Full backend URL
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       userId: userId && userId !== 'anonymous' ? userId : undefined, // Only set if valid ObjectId
@@ -130,16 +133,32 @@ router.get('/', async (req, res) => {
     
     const fonts = await Font.find(filter).sort({ createdAt: -1 });
 
+    // Get the backend URL for constructing full URLs - use 5001 to match frontend expectations
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+
     res.json({
       success: true,
-      fonts: fonts.map(font => ({
-        id: font._id,
-        name: font.name,
-        family: font.fontFamily,
-        url: font.fileUrl,
-        format: path.extname(font.originalName).substring(1), // Remove the dot
-        createdAt: font.createdAt,
-      }))
+      fonts: fonts.map(font => {
+        // Ensure the URL is a full URL (handle existing relative URLs)
+        let fontUrl = font.fileUrl;
+        if (fontUrl.startsWith('/uploads/')) {
+          // Convert old relative URLs to full URLs
+          const filename = path.basename(fontUrl);
+          fontUrl = `${backendUrl}/api/fonts/file/${filename}`;
+        } else if (fontUrl.startsWith('/api/fonts/file/')) {
+          // Handle URLs that start with /api/fonts/file/
+          fontUrl = `${backendUrl}${fontUrl}`;
+        }
+        
+        return {
+          id: font._id,
+          name: font.name,
+          family: font.fontFamily,
+          url: fontUrl,
+          format: path.extname(font.originalName).substring(1), // Remove the dot
+          createdAt: font.createdAt,
+        };
+      })
     });
 
   } catch (error) {

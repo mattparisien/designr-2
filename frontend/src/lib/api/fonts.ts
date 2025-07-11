@@ -143,6 +143,7 @@ export class FontsAPI extends APIBase {
     async loadAllUserFonts(): Promise<CustomFont[]> {
         try {
             const fonts = await this.getUserFonts();
+            console.log('fonts', fonts)
             
             // Load each font
             const loadPromises = fonts.map(font => this.loadFont(font));

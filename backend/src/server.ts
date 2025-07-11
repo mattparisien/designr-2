@@ -26,7 +26,7 @@ console.log('OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
 console.log('OPENAI_API_KEY value (first 10 chars):', process.env.OPENAI_API_KEY?.substring(0, 10));
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001; // Changed to 5001 to match frontend expectations
 
 // Security middleware
 app.use(helmet());
