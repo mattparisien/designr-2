@@ -89,9 +89,22 @@ const EditorSidebar = () => {
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
 
-        // Default image size
-        const defaultWidth = 200;
-        const defaultHeight = 150;
+        // Use actual asset dimensions if available, otherwise use defaults
+        const originalWidth = asset.metadata?.width || 200;
+        const originalHeight = asset.metadata?.height || 150;
+        
+        // Calculate scaled dimensions to fit within a reasonable size on canvas
+        const maxWidth = 300; // Maximum width for added images
+        const aspectRatio = originalHeight / originalWidth;
+        
+        let finalWidth = originalWidth;
+        let finalHeight = originalHeight;
+        
+        // Scale down if the image is too large
+        if (originalWidth > maxWidth) {
+            finalWidth = maxWidth;
+            finalHeight = maxWidth * aspectRatio;
+        }
 
         const canvasCenter = {
             x: canvasWidth / 2,
@@ -100,10 +113,10 @@ const EditorSidebar = () => {
 
         addElement({
             kind: "image" as const,
-            x: canvasCenter.x - defaultWidth / 2,
-            y: canvasCenter.y - defaultHeight / 2,
-            width: defaultWidth,
-            height: defaultHeight,
+            x: canvasCenter.x - finalWidth / 2,
+            y: canvasCenter.y - finalHeight / 2,
+            width: finalWidth,
+            height: finalHeight,
             src: asset.url,
             alt: asset.name,
             opacity: 1,
@@ -304,15 +317,16 @@ const EditorSidebar = () => {
                     layout: 'masonry',
                     loading: loadingAssets,
                     emptyMessage: "No images found",
-                    items: [], // Empty items array since we're using masonryItems
+                    items: [], // Empty regular items array since we're using masonryItems
                     masonryItems: assets
                         .filter(asset => asset.type === 'image' || asset.mimeType.startsWith('image/'))
+                        .filter(asset => asset.metadata?.width && asset.metadata?.height) // Only include assets with dimensions
                         .map((asset) => ({
                             id: asset._id,
                             src: asset.thumbnail || asset.url,
                             alt: asset.name,
-                            width: asset.metadata.width,
-                            height: asset.metadata.height,
+                            width: asset.metadata!.width!, // Safe to use ! after filter
+                            height: asset.metadata!.height!, // Safe to use ! after filter
                             onClick: () => {
                                 addImageAsset(asset);
                             }

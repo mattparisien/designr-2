@@ -17,6 +17,8 @@ export interface EditorSidebarPanelSection {
         id: string;
         src: string;
         alt: string;
+        width: number;
+        height: number;
         onClick?: () => void;
     }[];
     layout?: 'grid' | 'masonry';
