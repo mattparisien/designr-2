@@ -13,7 +13,7 @@ interface TextElementProps {
 }
 
 // Calculate text width based on content and font size
-const calculateTextWidth = (content: string, fontSize: number, fontFamily: string = 'Arial'): number => {
+const calculateTextWidth = (content: string, fontSize: number, fontFamily: string = 'Arial', letterSpacing: number = 0): number => {
   // Create a temporary canvas element to measure text
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -29,7 +29,14 @@ const calculateTextWidth = (content: string, fontSize: number, fontFamily: strin
   
   lines.forEach(line => {
     const metrics = context.measureText(line);
-    maxWidth = Math.max(maxWidth, metrics.width);
+    let lineWidth = metrics.width;
+    
+    // Add letter spacing if specified
+    if (letterSpacing > 0 && line.length > 1) {
+      lineWidth += letterSpacing * (line.length - 1);
+    }
+    
+    maxWidth = Math.max(maxWidth, lineWidth);
   });
   
   // Add some padding and ensure minimum width
@@ -58,7 +65,8 @@ export const TextElement = ({
     const calculatedAutoWidth = calculateTextWidth(
       content, 
       element.fontSize || 16, 
-      element.fontFamily || 'Arial'
+      element.fontFamily || 'Arial',
+      element.letterSpacing || 0
     );
     
     // Check if this element is currently being resized
@@ -76,11 +84,10 @@ export const TextElement = ({
     // 1. Currently resizing
     // 2. Was recently resized 
     // 3. Element appears to be manually resized (wider than auto-fit + threshold)
-    // 4. Element is in editable mode (being typed in)
+    // Note: Removed the isEditable check to allow width auto-fitting during typing
     const shouldAutoFit = !isThisElementResizing && 
                           !wasRecentlyResized && 
                           !isManuallyResized && 
-                          !element.isEditable &&
                           element.kind === 'text';
     
     if (shouldAutoFit) {
@@ -96,7 +103,7 @@ export const TextElement = ({
   };
 
   return (
-    <div className="w-full h-full text-element">
+    <div className="h-full text-element">
       <TextEditor
         key={textEditorKey}
         content={element.content || ""}

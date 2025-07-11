@@ -175,7 +175,6 @@ export function TextEditor({
     lineHeight: lineHeight, // Use dynamic line height
     letterSpacing: `${letterSpacing}em`, // Use dynamic letter spacing
     overflow: "hidden",
-    width: "100%",
     minHeight: "1em",
     padding: 0, // Keep consistent - no padding in base
     boxSizing: "border-box",
@@ -248,11 +247,11 @@ export function TextEditor({
      Render
      ---------------------------------------------------------------- */
   return (
-    <div className="flex w-full items-center justify-center">
+    <div className="flex items-center justify-center">
       {isEditable ? (
         <div
           ref={editorRef}
-          className="w-full outline-none"
+          className="outline-none"
           style={editorStyles}
           contentEditable
           suppressContentEditableWarning
@@ -262,7 +261,7 @@ export function TextEditor({
         />
       ) : (
         <div
-          className="w-full select-none outline-none"
+          className="select-none outline-none"
           style={baseStyle}
         >
           {localContent}

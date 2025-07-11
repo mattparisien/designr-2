@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { Element as CanvasElement } from "../types/canvas";
 
 /**
@@ -59,6 +59,8 @@ export function useTextMeasurement() {
     // Return the exact measured height without extra padding
     return measurerRef.current.scrollHeight;
   }, []);
+
+
 
   /**
    * Measures height for a specific canvas element
