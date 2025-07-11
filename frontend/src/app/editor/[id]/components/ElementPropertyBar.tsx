@@ -289,7 +289,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-48 p-0 max-h-60 overflow-hidden" align="start">
+            <PopoverContent className="w-48 p-0" align="start">
               <div className="max-h-60 overflow-y-auto w-full">
                 {/* Upload Font Button */}
                 <button
