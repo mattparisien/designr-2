@@ -73,7 +73,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const [fontSize, setFontSize] = useState(selectedElement?.fontSize || DEFAULT_FONT_SIZE)
   const [letterSpacing, setLetterSpacing] = useState(selectedElement?.letterSpacing || DEFAULT_LETTER_SPACING)
   const [lineHeight, setLineHeight] = useState(selectedElement?.lineHeight || DEFAULT_LINE_HEIGHT)
-  const [showFontDropdown, setShowFontDropdown] = useState(false)
   const [showFontUpload, setShowFontUpload] = useState(false)
   const [textAlign, setTextAlign] = useState<TextAlignment>(
     selectedElement?.textAlign || DEFAULT_TEXT_ALIGN
@@ -131,7 +130,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const handleFontFamilyChange = (newFamily: string) => {
     setFontFamily(newFamily)
     onFontFamilyChange(newFamily)
-    setShowFontDropdown(false)
   }
 
   const handleTextAlignChange = (align: TextAlignment) => {
@@ -270,7 +268,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   //   }}
   // >
   return (
-
+    <>
     <Toolbar
       onMouseEnter={handleToolbarMouseEnter}
       onMouseLeave={handleToolbarMouseLeave}
@@ -282,27 +280,23 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
       {isTextElement && (
         <>
           {/* Font Family Dropdown */}
-          <div className="relative">
-            <button
-              className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition font-medium text-sm w-[100px]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowFontDropdown(!showFontDropdown);
-              }}
-            >
-              <span className="truncate">{fontFamily}</span>
-              <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
-            </button>
-
-            {showFontDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto border border-gray-100">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition font-medium text-sm w-[100px]"
+              >
+                <span className="truncate">{fontFamily}</span>
+                <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-0 max-h-60 overflow-hidden" data-editor-interactive="true" align="start">
+              <div className="max-h-60 overflow-y-auto">
                 {/* Upload Font Button */}
                 <button
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-blue-600 font-medium"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowFontUpload(true);
-                    setShowFontDropdown(false);
                   }}
                 >
                   <Upload className="h-4 w-4" />
@@ -355,21 +349,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* Font Upload Popup */}
-            {showFontUpload && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <FontUpload
-                  onFontUploaded={(fontFamily) => {
-                    handleFontFamilyChange(fontFamily);
-                    setShowFontUpload(false);
-                  }}
-                  onClose={() => setShowFontUpload(false)}
-                />
-              </div>
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
 
           <Divider />
 
@@ -578,8 +559,21 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
           </PopoverContent>
         </Popover>
       </div>
-    </Toolbar >
+    </Toolbar>
 
+    {/* Font Upload Modal */}
+    {showFontUpload && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <FontUpload
+          onFontUploaded={(fontFamily) => {
+            handleFontFamilyChange(fontFamily);
+            setShowFontUpload(false);
+          }}
+          onClose={() => setShowFontUpload(false)}
+        />
+      </div>
+    )}
+    </>
   )
 }
 

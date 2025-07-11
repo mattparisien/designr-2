@@ -61,6 +61,10 @@
   --interactive-border-editor: var(--border-accent);
   --bg-elevated-editor: var(--bg-elevated-primary);
 
+  --elevated-surface-border: var(--border-heavy);
+  --elevated-surface-bg: var(--bg-elevated-primary);
+  --elevated-surface-radius: 0.9rem;
+
   --radius-elevated-editor: 0.9rem;
   --radius-editor-canvas: 1rem;
 

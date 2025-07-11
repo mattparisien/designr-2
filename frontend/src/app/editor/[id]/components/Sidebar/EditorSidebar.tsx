@@ -200,6 +200,29 @@ const EditorSidebar = () => {
         }
     }, [isSidebarOpen, setSidebarWidth]);
 
+    // Extract document colors from current page elements
+    const getDocumentColors = useCallback(() => {
+        const currentPage = pages.find(page => page.id === currentPageId);
+        if (!currentPage?.elements) return [];
+
+        const colorsSet = new Set<string>();
+        
+        currentPage.elements.forEach(element => {
+            // Extract colors based on element type
+            if (element.kind === "shape" && element.backgroundColor) {
+                colorsSet.add(element.backgroundColor);
+            }
+            if (element.kind === "text" && element.color) {
+                colorsSet.add(element.color);
+            }
+            if (element.kind === "line" && element.backgroundColor) {
+                colorsSet.add(element.backgroundColor);
+            }
+        });
+
+        return Array.from(colorsSet);
+    }, [pages, currentPageId]);
+
 
     const panelSections = useMemo(() => {
         // If sidebar panel is open for colors, show color picker - this takes priority
@@ -239,9 +262,43 @@ const EditorSidebar = () => {
                 "#f97316", // Dark orange
             ];
 
-            return [{
+            const documentColors = getDocumentColors();
+
+            const sections = [];
+
+            // Add Document Colors section first (if there are colors in the document)
+            if (documentColors.length > 0) {
+                sections.push({
+                    id: "document-colors",
+                    title: "Document Colors",
+                    items: documentColors.map((color, index) => ({
+                        id: `doc-color-${index}`,
+                        title: color,
+                        icon: ((props: React.HTMLAttributes<HTMLElement>) => (
+                            <div
+                                {...props}
+                                className={`w-12 h-12 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
+                                style={{ backgroundColor: color }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedElement) {
+                                        if (isBackgroundColor && selectedElement.kind === "shape") {
+                                            updateElement(selectedElement.id, { backgroundColor: color });
+                                        } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                                            updateElement(selectedElement.id, { color: color });
+                                        }
+                                    }
+                                }}
+                            />
+                        )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
+                    }))
+                });
+            }
+
+            // Add Core Colors section second
+            sections.push({
                 id: "colors",
-                title: isBackgroundColor ? "Shape Colors" : "Text Colors",
+                title: "Core Colors",
                 items: colors.map((color, index) => ({
                     id: `color-${index}`,
                     title: color,
@@ -266,7 +323,9 @@ const EditorSidebar = () => {
                         />
                     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
                 }))
-            }];
+            });
+
+            return sections;
         }
 
         // Original shape panel logic - only if color panel is not open
@@ -308,7 +367,7 @@ const EditorSidebar = () => {
                             onClick: () => addLine()
                         }
                     ]
-                })
+                });
                 break;
             case "assets":
                 sections.push({
@@ -338,7 +397,7 @@ const EditorSidebar = () => {
         }
 
         return sections;
-    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset]);
+    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset, getDocumentColors]);
 
     // Effect to fetch assets when assets panel is opened
     useEffect(() => {
