@@ -22,6 +22,10 @@ export interface Asset {
   folderId?: string;           // ID of the folder containing this asset
   createdAt: string;           // ISO timestamp of asset creation
   updatedAt: string;           // ISO timestamp of last update
+  metadata?: {
+    width?: number;            // Width of the asset (if applicable)
+    height?: number;           // Height of the asset (if applicable)
+  };                            // Additional metadata for the asset
 }
 
 /**

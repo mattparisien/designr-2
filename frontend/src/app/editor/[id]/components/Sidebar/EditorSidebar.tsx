@@ -187,6 +187,7 @@ const EditorSidebar = () => {
         }
     }, [isSidebarOpen, setSidebarWidth]);
 
+
     const panelSections = useMemo(() => {
         // If sidebar panel is open for colors, show color picker - this takes priority
         if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
@@ -299,37 +300,23 @@ const EditorSidebar = () => {
             case "assets":
                 sections.push({
                     id: "assets",
-                    title: loadingAssets ? "Loading Assets..." : "Assets",
-                    items: assets.map((asset) => ({
-                        id: asset._id,
-                        title: asset.name,
-                        icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-                            <div
-                                {...props}
-                                className={`w-full h-12 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center overflow-hidden ${props.className || ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (asset.type === 'image' || asset.mimeType.startsWith('image/')) {
-                                        addImageAsset(asset);
-                                    }
-                                }}
-                            >
-                                {asset.type === 'image' || asset.mimeType.startsWith('image/') ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={asset.thumbnail || asset.url} 
-                                        alt={asset.name}
-                                        className="w-full h-full object-cover"
-                                        style={{ width: '48px', height: '48px' }}
-                                    />
-                                ) : (
-                                    <span className="text-xs text-gray-500 text-center px-1">
-                                        {asset.name}
-                                    </span>
-                                )}
-                            </div>
-                        )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-                    }))
+                    title: "Assets",
+                    layout: 'masonry',
+                    loading: loadingAssets,
+                    emptyMessage: "No images found",
+                    items: [], // Empty items array since we're using masonryItems
+                    masonryItems: assets
+                        .filter(asset => asset.type === 'image' || asset.mimeType.startsWith('image/'))
+                        .map((asset) => ({
+                            id: asset._id,
+                            src: asset.thumbnail || asset.url,
+                            alt: asset.name,
+                            width: asset.metadata.width,
+                            height: asset.metadata.height,
+                            onClick: () => {
+                                addImageAsset(asset);
+                            }
+                        }))
                 })
                 break;
             default:
