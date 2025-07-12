@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback } from "react";
 import { Element as CanvasElement } from "../types/canvas";
 
 /**
@@ -25,6 +25,7 @@ export function useTextMeasurement() {
       isUnderlined?: boolean;
       isStrikethrough?: boolean;
       textAlign?: string;
+      lineHeight?: number;
     }
   ): number => {
     if (!measurerRef.current) return 0;
@@ -36,7 +37,8 @@ export function useTextMeasurement() {
       isItalic = false,
       isUnderlined = false,
       isStrikethrough = false,
-      textAlign = 'center'
+      textAlign = 'center',
+      lineHeight = 1.2
     } = styles;
 
     // Configure the measurer with all the styles
@@ -48,7 +50,7 @@ export function useTextMeasurement() {
     measurerRef.current.style.textDecoration =
       `${isUnderlined ? 'underline' : ''} ${isStrikethrough ? 'line-through' : ''}`.trim() || 'none';
     measurerRef.current.style.textAlign = textAlign;
-    measurerRef.current.style.lineHeight = '1.2'; // Match the actual rendered line-height
+    measurerRef.current.style.lineHeight = lineHeight.toString(); // Use dynamic line height
     measurerRef.current.style.padding = '0'; // No padding to get exact text height
     measurerRef.current.style.margin = '0'; // No margin
     measurerRef.current.style.border = 'none'; // No border
@@ -78,7 +80,8 @@ export function useTextMeasurement() {
         isItalic: element.italic,
         isUnderlined: element.underline,
         isStrikethrough: element.isStrikethrough,
-        textAlign: element.textAlign
+        textAlign: element.textAlign,
+        lineHeight: element.lineHeight
       }
     );
   }, [measureTextHeight]);
@@ -95,7 +98,7 @@ export function useTextMeasurement() {
         zIndex: -1,
         pointerEvents: 'none',
         whiteSpace: 'normal',
-        lineHeight: '1.2', // Match the measurement line-height
+        lineHeight: 'normal', // Let it be set dynamically by measureTextHeight
         wordBreak: 'break-word',
         overflow: 'auto',
         padding: '0', // No padding to match measurement
