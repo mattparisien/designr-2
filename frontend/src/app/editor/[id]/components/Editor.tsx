@@ -394,7 +394,7 @@ export default function Editor({ templateId }: EditorProps) {
     }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
     return (
         <div
-            className="flex flex-1 overflow-hidden flex-col relative"
+            className="flex flex-1 overflow-hidden flex-col relative h-full"
             ref={editorContainerRef}
             style={{
                 backgroundColor: "var(--bg-primary)"

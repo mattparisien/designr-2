@@ -21,7 +21,7 @@ export default function EditorPage() {
     <>
       <EditorSidebar />
 
-      <main className="absolute top-0 left-0 z-[var(--z-editor-main)] w-full h-full overflow-hidden"
+      <main className="absolute top-0 left-0 z-[var(--z-editor-main)] w-full h-screen overflow-hidden"
         style={{
           paddingLeft: sidebar.width + "px"
         }}
