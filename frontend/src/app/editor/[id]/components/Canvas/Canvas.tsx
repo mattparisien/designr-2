@@ -49,6 +49,43 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
   const setDragState = useCanvasStore((state: CanvasState) => state.setDragState)
   const clearAlignmentGuides = useCanvasStore((state: CanvasState) => state.clearAlignmentGuides)
 
+  /* ------------------------------------------------------------------
+   * Font preloading when elements change
+   * ------------------------------------------------------------------ */
+  useEffect(() => {
+    const preloadFonts = async () => {
+      if (!elements || elements.length === 0) return;
+      
+      // Extract unique font families from text elements
+      const fontFamilies = new Set<string>();
+      elements.forEach(element => {
+        if (element.kind === 'text' && element.fontFamily) {
+          fontFamilies.add(element.fontFamily);
+        }
+      });
+
+      // Preload fonts
+      if (fontFamilies.size > 0) {
+        try {
+          const { fontsAPI } = await import('@/lib/api/index');
+          const allFonts = await fontsAPI.getUserFonts();
+          
+          for (const fontFamily of fontFamilies) {
+            const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
+            if (font) {
+              await fontsAPI.loadFont(font);
+              console.log(`Preloaded font in Canvas: ${fontFamily}`);
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to preload fonts in Canvas:', error);
+        }
+      }
+    };
+
+    preloadFonts();
+  }, [elements]);
+
   const canvasRef = useRef<HTMLDivElement>(null) // un‑scaled logical canvas
 
   // Combine internal ref with forwarded ref

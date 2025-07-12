@@ -378,7 +378,9 @@ export default function Editor({ templateId }: EditorProps) {
             // Reset double-click state by dispatching a custom event
             window.dispatchEvent(new CustomEvent('resetDoubleClickState'));
 
+            // Always clear selections when clicking outside
             if (selectedElementIds.length > 0 || selectedElement !== null) {
+                clearSelection();
                 selectElement(null);
             }
 
@@ -389,7 +391,7 @@ export default function Editor({ templateId }: EditorProps) {
 
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
-    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement]);
+    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
     return (
         <div
             className="flex flex-1 overflow-hidden flex-col relative"

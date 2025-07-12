@@ -693,9 +693,11 @@ const useCanvasStore = create<CanvasState>((set, get) => {
   },
 
   // Helper function to check if an element is selected
-  isElementSelected: (id) => {
-    return get().selectedElementIds.includes(id);
+  isElementSelected: (elementId: string) => {
+    const state = get();
+    return state.selectedElementIds.includes(elementId);
   },
+
   // Helper to calculate zoom to fit canvas in view
   fitCanvasToView: (container: HTMLElement, canvas: HTMLElement): number => {
     if (!container || !canvas) return 1;
@@ -980,7 +982,6 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       value: color
     });
   },
-  };
 });
 
 // Create a selector to get the current page elements

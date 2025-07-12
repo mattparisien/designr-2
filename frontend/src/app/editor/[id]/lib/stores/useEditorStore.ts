@@ -408,60 +408,97 @@ const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
   loadTemplate: async (templateId: string) => {
+    const state = get();
+    
     try {
+      // Set loading indicator
       set({ isSaving: true });
-      
-      // Get the template data from API
+
+      // Import the API client
       const { apiClient } = await import('@/lib/api');
+
+      // Get the template data
       const response = await apiClient.getTemplate(templateId);
       const template = response.template;
-      
+
       if (!template) {
         throw new Error('Template not found');
       }
+
+      console.log('Template loaded:', template);
+
+      // Extract font families from template data
+      const fontFamilies = new Set<string>();
       
-      console.log('Template loaded:', template.name);
-      
-      // Set the template ID in the state
-      set({ templateId });
-      
-      // Update the design name
-      set({
-        designName: template.name || "Untitled Template",
-        isDesignSaved: true
-      });
-      
-      // Convert template data to pages format
+      // Check if template has pages data
+      if (template.templateData && template.templateData.pages) {
+        template.templateData.pages.forEach((page: any) => {
+          if (page.elements) {
+            page.elements.forEach((element: any) => {
+              if (element.kind === 'text' && element.fontFamily) {
+                fontFamilies.add(element.fontFamily);
+              }
+            });
+          }
+        });
+      }
+
+      // Preload fonts if any are found
+      if (fontFamilies.size > 0) {
+        try {
+          const { fontsAPI } = await import('@/lib/api/index');
+          const allFonts = await fontsAPI.getUserFonts();
+          
+          // Load each font that's used in the template
+          for (const fontFamily of fontFamilies) {
+            const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
+            if (font) {
+              await fontsAPI.loadFont(font);
+              console.log(`Preloaded font: ${fontFamily}`);
+            }
+          }
+        } catch (fontError) {
+          console.warn('Error preloading fonts:', fontError);
+        }
+      }
+
+      // Convert template data to frontend format
       if (template.templateData && template.templateData.pages) {
         const frontendPages = template.templateData.pages.map(convertAPIPageToFrontend);
         
         set({
+          designName: template.name || 'Untitled Template',
           pages: frontendPages,
-          currentPageId: frontendPages[0]?.id || null,
-          currentPageIndex: 0
+          currentPageId: frontendPages[0]?.id || '',
+          currentPageIndex: 0,
+          isDesignSaved: true,
+          templateId: templateId
         });
       } else {
-        // If no pages in template data, create a default page with template dimensions
-        const defaultPage: Page = {
+        // Handle legacy template format
+        const defaultPage = {
           id: `page-${Date.now()}`,
           name: 'Page 1',
           canvas: { width: template.width || 1080, height: template.height || 1080 },
-          background: { type: 'color', value: '#ffffff' },
-          elements: [],
+          background: { type: 'color' as const, value: '#ffffff' },
+          elements: template.templateData?.elements || [],
           canvasSize: {
             name: 'Custom',
             width: template.width || 1080,
             height: template.height || 1080
           }
         };
-        
+
         set({
+          designName: template.name || 'Untitled Template',
           pages: [defaultPage],
           currentPageId: defaultPage.id,
-          currentPageIndex: 0
+          currentPageIndex: 0,
+          isDesignSaved: true,
+          templateId: templateId
         });
       }
-      
+
       console.log('Template loaded successfully');
     } catch (error) {
       console.error('Error loading template:', error);

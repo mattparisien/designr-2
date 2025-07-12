@@ -78,6 +78,30 @@ export function TextEditor({
   const debouncedHeightChange = useRef<NodeJS.Timeout | null>(null);
 
   /* ----------------------------------------------------------------
+     Preload font when fontFamily changes
+     ---------------------------------------------------------------- */
+  useEffect(() => {
+    const preloadFont = async () => {
+      if (fontFamily && fontFamily !== "Inter" && fontFamily !== "Arial") {
+        try {
+          const { fontsAPI } = await import('@/lib/api/index');
+          const allFonts = await fontsAPI.getUserFonts();
+          
+          const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
+          if (font) {
+            await fontsAPI.loadFont(font);
+            console.log(`Preloaded font in TextEditor: ${fontFamily}`);
+          }
+        } catch (error) {
+          console.warn(`Failed to preload font ${fontFamily}:`, error);
+        }
+      }
+    };
+
+    preloadFont();
+  }, [fontFamily]);
+
+  /* ----------------------------------------------------------------
      Sync incoming `content` prop → local state when not editing
      ---------------------------------------------------------------- */
   useEffect(() => {

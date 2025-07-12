@@ -442,6 +442,11 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         }
     }, [element?.kind, element?.content, element?.isEditable, element?.fontSize, element?.fontFamily]);
 
+
+        useEffect(() => {
+        console.log('is selected:', isSelected, 'isHovering:', isHovering, 'shouldShowBorder:', shouldShowBorder);
+    }, [isSelected, isHovering])
+    
     if (!element || !element.rect) {
         return null;
     }
@@ -452,6 +457,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const isTextBeingEdited = element.kind === "text" && element.isEditable;
     const shouldShowBorder = (isSelected || isHovering); // Always show border when selected/hovering, even when editing
     const shouldShowHandles = isSelected && !isDragging && !element.locked && !isTextBeingEdited; // Hide handles when editing
+
 
     return (
         <div
