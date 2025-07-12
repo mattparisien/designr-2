@@ -50,41 +50,60 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
   const clearAlignmentGuides = useCanvasStore((state: CanvasState) => state.clearAlignmentGuides)
 
   /* ------------------------------------------------------------------
-   * Font preloading when elements change
+   * Font preloading - only when font families actually change
    * ------------------------------------------------------------------ */
+  // Track loaded fonts to prevent re-loading
+  const [loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
+
+  // Memoize font families string to avoid Set comparison issues
+  const fontFamiliesString = useMemo(() => {
+    if (!elements || elements.length === 0) return '';
+    
+    const families = new Set<string>();
+    elements.forEach(element => {
+      if (element.kind === 'text' && element.fontFamily) {
+        families.add(element.fontFamily);
+      }
+    });
+    
+    // Convert to sorted string for stable comparison
+    return Array.from(families).sort().join(',');
+  }, [elements]);
+
   useEffect(() => {
     const preloadFonts = async () => {
-      if (!elements || elements.length === 0) return;
+      if (!fontFamiliesString) return;
       
-      // Extract unique font families from text elements
-      const fontFamilies = new Set<string>();
-      elements.forEach(element => {
-        if (element.kind === 'text' && element.fontFamily) {
-          fontFamilies.add(element.fontFamily);
-        }
-      });
-
-      // Preload fonts
-      if (fontFamilies.size > 0) {
-        try {
-          const { fontsAPI } = await import('@/lib/api/index');
-          const allFonts = await fontsAPI.getUserFonts();
-          
-          for (const fontFamily of fontFamilies) {
-            const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
-            if (font) {
-              await fontsAPI.loadFont(font);
-              console.log(`Preloaded font in Canvas: ${fontFamily}`);
-            }
+      // Parse font families from string
+      const currentFamilies = fontFamiliesString.split(',').filter(Boolean);
+      
+      // Find fonts that haven't been loaded yet
+      const newFonts = currentFamilies.filter(family => !loadedFonts.has(family));
+      
+      if (newFonts.length === 0) return;
+      
+      // Preload only new fonts
+      try {
+        const { fontsAPI } = await import('@/lib/api/index');
+        const allFonts = await fontsAPI.getUserFonts();
+        
+        for (const fontFamily of newFonts) {
+          const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
+          if (font) {
+            await fontsAPI.loadFont(font);
+            console.log(`Preloaded font in Canvas: ${fontFamily}`);
           }
-        } catch (error) {
-          console.warn('Failed to preload fonts in Canvas:', error);
         }
+        
+        // Mark fonts as loaded
+        setLoadedFonts(prev => new Set([...prev, ...newFonts]));
+      } catch (error) {
+        console.warn('Failed to preload fonts in Canvas:', error);
       }
     };
 
     preloadFonts();
-  }, [elements]);
+  }, [fontFamiliesString, loadedFonts]);
 
   const canvasRef = useRef<HTMLDivElement>(null) // un‑scaled logical canvas
 

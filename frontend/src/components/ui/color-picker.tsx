@@ -27,6 +27,8 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
       <div
         ref={ref}
         className={cn("flex flex-col gap-3 p-4", className)}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Color preview */}
         <div className="flex items-center gap-3">
@@ -42,6 +44,8 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
           type="color"
           value={tempColor}
           onChange={handleColorChange}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           className="w-full h-10 rounded cursor-pointer border border-gray-200 bg-transparent"
           style={{
             WebkitAppearance: 'none',
@@ -65,6 +69,8 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
                 }
               }
             }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             className="px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="#000000"
           />

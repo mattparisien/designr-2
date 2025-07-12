@@ -443,10 +443,10 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     }, [element?.kind, element?.content, element?.isEditable, element?.fontSize, element?.fontFamily]);
 
 
-        useEffect(() => {
-        console.log('is selected:', isSelected, 'isHovering:', isHovering, 'shouldShowBorder:', shouldShowBorder);
-    }, [isSelected, isHovering])
-    
+    //     useEffect(() => {
+    //     console.log('is selected:', isSelected, 'isHovering:', isHovering, 'shouldShowBorder:', shouldShowBorder);
+    // }, [isSelected, isHovering])
+
     if (!element || !element.rect) {
         return null;
     }
