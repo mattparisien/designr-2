@@ -72,4 +72,37 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Update template (admin only in real app)
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, category, vibe, width, height, thumbnailUrl, templateData } = req.body;
+
+    const template = await Template.findById(id);
+    if (!template) {
+      res.status(404).json({ error: 'Template not found' });
+      return;
+    }
+
+    // Update fields if provided
+    if (name !== undefined) template.name = name;
+    if (category !== undefined) template.category = category;
+    if (vibe !== undefined) template.vibe = vibe;
+    if (width !== undefined) template.width = width;
+    if (height !== undefined) template.height = height;
+    if (thumbnailUrl !== undefined) template.thumbnailUrl = thumbnailUrl;
+    if (templateData !== undefined) template.templateData = templateData;
+
+    await template.save();
+
+    res.json({
+      message: 'Template updated successfully',
+      template
+    });
+  } catch (error) {
+    console.error('Update template error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

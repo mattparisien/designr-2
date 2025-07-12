@@ -14,12 +14,15 @@ import { ElementActionBar } from "./Canvas/ElementActionBar";
 import { ElementPropertyBar } from "./ElementPropertyBar";
 import PageNavigation from "./PageNavigation";
 
+interface EditorProps {
+  templateId: string;
+}
 
 /**
  * Editor component serves as the main wrapper for the canvas editing experience.
  * It focuses exclusively on the canvas area and related editing functionality.
  */
-export default function Editor() {
+export default function Editor({ templateId }: EditorProps) {
     // Reference for the editor container
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -298,6 +301,46 @@ export default function Editor() {
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [canvasSize.width, canvasSize.height]);
+
+    // Initialize template ID and load template data when component mounts
+    useEffect(() => {
+        if (templateId) {
+            const setTemplateId = useEditorStore.getState().setTemplateId;
+            const loadTemplate = useEditorStore.getState().loadTemplate;
+            
+            setTemplateId(templateId);
+            
+            // Load the template data
+            loadTemplate(templateId).catch((error) => {
+                console.error('Error loading template:', error);
+            });
+        }
+    }, [templateId]);
+
+    // Add keyboard shortcut for saving template with Cmd+S
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if Cmd+S (Mac) or Ctrl+S (Windows/Linux) is pressed
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault(); // Prevent browser's default save action
+                
+                // Call the save function
+                const saveTemplate = useEditorStore.getState().saveTemplate;
+                if (templateId && saveTemplate) {
+                    saveTemplate(templateId).catch((error) => {
+                        console.error('Error saving template:', error);
+                    });
+                }
+            }
+        };
+
+        // Add event listener to document
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [templateId]);
 
     useEffect(() => {
         const handleOutsideClick = (e: globalThis.MouseEvent) => {

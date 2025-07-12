@@ -98,7 +98,13 @@ const convertFrontendPageToAPI = (frontendPage: Page): APIPage => {
 // Define the store state interface
 export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   designId: string | null;
+  // Template operations
+  templateId: string | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
+  saveTemplate: (templateId: string) => Promise<void>;
+  loadTemplate: (templateId: string) => Promise<void>;
+  setTemplateId: (templateId: string) => void;
+
   sidebar: {
     width: number | null;
     isOpen: boolean;
@@ -127,6 +133,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   isDesignSaved: true,
   isSaving: false,
   designId: null,
+  templateId: null,
   sidebar: {
     width: null,
     isOpen: false,
@@ -364,6 +371,152 @@ const useEditorStore = create<EditorState>((set, get) => ({
       set({ isSaving: false });
     }
   },
+  saveTemplate: async (templateId: string) => {
+    const state = get();
+    
+    try {
+      // Set saving indicator to true
+      set({ isSaving: true });
+
+      // Prepare the template data from the current editor state
+      const templateData = {
+        pages: state.pages.map(convertFrontendPageToAPI),
+        canvasSize: state.pages[0]?.canvasSize || DEFAULT_CANVAS_SIZE,
+        elements: state.pages[0]?.elements || [],
+        background: state.pages[0]?.background || { type: 'color', value: '#ffffff' }
+      };
+
+      // Import the API client
+      const { apiClient } = await import('@/lib/api');
+
+      // Update the template using the API
+      await apiClient.updateTemplate(templateId, {
+        name: state.designName,
+        templateData: templateData
+      });
+
+      console.log('Template saved successfully:', templateId);
+      set({
+        isDesignSaved: true,
+        templateId: templateId
+      });
+    } catch (error) {
+      console.error('Error saving template:', error);
+      throw error;
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+  loadTemplate: async (templateId: string) => {
+    try {
+      set({ isSaving: true });
+      
+      // Get the template data from API
+      const { apiClient } = await import('@/lib/api');
+      const response = await apiClient.getTemplate(templateId);
+      const template = response.template;
+      
+      if (!template) {
+        throw new Error('Template not found');
+      }
+      
+      console.log('Template loaded:', template.name);
+      
+      // Set the template ID in the state
+      set({ templateId });
+      
+      // Update the design name
+      set({
+        designName: template.name || "Untitled Template",
+        isDesignSaved: true
+      });
+      
+      // Convert template data to pages format
+      if (template.templateData && template.templateData.pages) {
+        const frontendPages = template.templateData.pages.map(convertAPIPageToFrontend);
+        
+        set({
+          pages: frontendPages,
+          currentPageId: frontendPages[0]?.id || null,
+          currentPageIndex: 0
+        });
+      } else {
+        // If no pages in template data, create a default page with template dimensions
+        const defaultPage: Page = {
+          id: `page-${Date.now()}`,
+          name: 'Page 1',
+          canvas: { width: template.width || 1080, height: template.height || 1080 },
+          background: { type: 'color', value: '#ffffff' },
+          elements: [],
+          canvasSize: {
+            name: 'Custom',
+            width: template.width || 1080,
+            height: template.height || 1080
+          }
+        };
+        
+        set({
+          pages: [defaultPage],
+          currentPageId: defaultPage.id,
+          currentPageIndex: 0
+        });
+      }
+      
+      console.log('Template loaded successfully');
+    } catch (error) {
+      console.error('Error loading template:', error);
+      throw error;
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+  setTemplateId: (templateId: string) => {
+    set({ templateId });
+  },
+  openSidebarPanel: (itemId: string) =>
+    set(state => ({
+      sidebarPanel: {
+        ...state.sidebarPanel,
+        isOpen: true,
+        activeItemId: itemId,
+        content: undefined,
+      },
+    })),
+  closeSidebarPanel: () =>
+    set(state => ({
+      sidebarPanel: {
+        ...state.sidebarPanel,
+        isOpen: false,
+        activeItemId: null,
+        content: undefined,
+      },
+    })),
+  openSidebar(itemId) {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        isOpen: true,
+        activeItemId: itemId
+      },
+    }));
+  },
+  closeSidebar() {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        isOpen: false,
+        activeItemId: null,
+      },
+    }));
+  },
+  setSidebarWidth(width) {
+    set(state => ({
+      sidebar: {
+        ...state.sidebar,
+        width,
+      },
+    }));
+  },
   captureCanvasScreenshot: async (): Promise<string | undefined> => {
     return new Promise((resolve) => {
       try {
@@ -424,50 +577,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
         resolve(undefined);
       }
     });
-  },
-  openSidebarPanel: (itemId: string) =>
-    set(state => ({
-      sidebarPanel: {
-        ...state.sidebarPanel,
-        isOpen: true,
-        activeItemId: itemId,
-        content: undefined,
-      },
-    })),
-  closeSidebarPanel: () =>
-    set(state => ({
-      sidebarPanel: {
-        ...state.sidebarPanel,
-        isOpen: false,
-        activeItemId: null,
-        content: undefined,
-      },
-    })),
-  openSidebar(itemId) {
-    set(state => ({
-      sidebar: {
-        ...state.sidebar,
-        isOpen: true,
-        activeItemId: itemId
-      },
-    }));
-  },
-  closeSidebar() {
-    set(state => ({
-      sidebar: {
-        ...state.sidebar,
-        isOpen: false,
-        activeItemId: null,
-      },
-    }));
-  },
-  setSidebarWidth(width) {
-    set(state => ({
-      sidebar: {
-        ...state.sidebar,
-        width,
-      },
-    }));
   },
 }));
 

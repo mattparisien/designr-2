@@ -269,310 +269,310 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   // >
   return (
     <>
-    <Toolbar
-      onMouseEnter={handleToolbarMouseEnter}
-      onMouseLeave={handleToolbarMouseLeave}
-      onClick={handleToolbarClick}
-      className="top-5"
-      ref={ref}
-    >
-      {/* Text Element Controls - Show all text-related controls */}
-      {isTextElement && (
-        <>
-          {/* Font Family Dropdown */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition font-medium text-sm w-[100px]"
-              >
-                <span className="truncate">{fontFamily}</span>
-                <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-0" align="start">
-              <div className="max-h-60 overflow-y-auto w-full">
-                {/* Upload Font Button */}
+      <Toolbar
+        onMouseEnter={handleToolbarMouseEnter}
+        onMouseLeave={handleToolbarMouseLeave}
+        onClick={handleToolbarClick}
+        className="top-5"
+        ref={ref}
+      >
+        {/* Text Element Controls - Show all text-related controls */}
+        {isTextElement && (
+          <>
+            {/* Font Family Dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-blue-600 font-medium"
+                  className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition font-medium text-sm w-[100px]"
+                >
+                  <span className="truncate">{fontFamily}</span>
+                  <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-0" align="start">
+                <div className="max-h-60 overflow-y-auto w-full">
+                  {/* Upload Font Button */}
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-blue-600 font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFontUpload(true);
+                    }}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Font
+                  </button>
+
+                  {/* Font List */}
+                  {allFonts.map((font: string) => (
+                    <div key={font} className="flex items-center">
+                      <button
+                        className={cn(
+                          "flex-1 text-left px-4 py-2 text-sm hover:bg-gray-50",
+                          fontFamily === font ? "bg-gray-50 font-medium text-brand-blue" : "",
+                        )}
+                        style={{ fontFamily: font }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFontFamilyChange(font);
+                        }}
+                      >
+                        {font}
+                      </button>
+
+                      {/* Delete button for custom fonts */}
+                      {isCustomFont(font) && (
+                        <button
+                          className="px-2 py-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-r-xl"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Delete font "${font}"?`)) {
+                              try {
+                                await deleteFontByName(font);
+                                // If this was the active font, switch to the first available font
+                                if (fontFamily === font) {
+                                  const remainingFonts = allFonts.filter(f => f !== font);
+                                  if (remainingFonts.length > 0) {
+                                    handleFontFamilyChange(remainingFonts[0]);
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('Failed to delete font:', error);
+                              }
+                            }
+                          }}
+                          title="Delete custom font"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Divider />
+
+            {/* Font Size Controls */}
+            <div className="flex items-center">
+              <div className="flex items-stretch rounded-lg overflow-hidden border border-gray-200">
+                <button
+                  className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-r border-gray-200"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowFontUpload(true);
+                    handleFontSizeChange(fontSize - 1);
                   }}
                 >
-                  <Upload className="h-4 w-4" />
-                  Upload Font
+                  <Minus className="h-4 w-4" />
                 </button>
 
-                {/* Font List */}
-                {allFonts.map((font: string) => (
-                  <div key={font} className="flex items-center">
-                    <button
-                      className={cn(
-                        "flex-1 text-left px-4 py-2 text-sm hover:bg-gray-50",
-                        fontFamily === font ? "bg-gray-50 font-medium text-brand-blue" : "",
-                      )}
-                      style={{ fontFamily: font }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFontFamilyChange(font);
-                      }}
-                    >
-                      {font}
-                    </button>
+                <input
+                  type="number"
+                  value={fontSize}
+                  min={MIN_FONT_SIZE}
+                  max={MAX_FONT_SIZE}
+                  placeholder="– –"
+                  onChange={(e) => handleFontSizeChange(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-12 px-1.5 py-0.5 text-sm font-medium focus:ring-1 focus:ring-brand-blue focus:outline-none text-center border-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
 
-                    {/* Delete button for custom fonts */}
-                    {isCustomFont(font) && (
-                      <button
-                        className="px-2 py-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-r-xl"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (window.confirm(`Delete font "${font}"?`)) {
-                            try {
-                              await deleteFontByName(font);
-                              // If this was the active font, switch to the first available font
-                              if (fontFamily === font) {
-                                const remainingFonts = allFonts.filter(f => f !== font);
-                                if (remainingFonts.length > 0) {
-                                  handleFontFamilyChange(remainingFonts[0]);
-                                }
-                              }
-                            } catch (error) {
-                              console.error('Failed to delete font:', error);
-                            }
-                          }
-                        }}
-                        title="Delete custom font"
-                      >
-                        ×
-                      </button>
-                    )}
+                <button
+                  className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-l border-gray-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFontSizeChange(fontSize + 1);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Text Color with Hue Bar */}
+            <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color">
+              <Type className="h-4 w-4 mx-auto" />
+              <div className="w-6 h-[6px] bg-center bg-repeat bg-contain rounded-sm border-[0.8px] border-neutral-400" style={{
+                backgroundImage: `url(hue-bar.png)`
+              }}></div>
+            </ToolbarButton>
+
+            <Divider />
+
+            {/* Text Formatting */}
+            <div className="flex items-center">
+              <ToolbarButton onClick={handleFormatChange('bold')} isActive={isBold}>
+                <Bold className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={handleFormatChange('italic')} isActive={isItalic}>
+                <Italic className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={handleFormatChange('underline')} isActive={isUnderlined}>
+                <Underline className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={handleFormatChange('strikethrough')} isActive={isStrikethrough} rounded="lg">
+                <Strikethrough className="h-4 w-4" />
+              </ToolbarButton>
+            </div>
+
+            <Divider />
+
+            {/* Letter Spacing Control */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <ToolbarButton className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>Letter</span>
+                </ToolbarButton>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
+                    <span className="text-sm text-gray-500">{letterSpacing.toFixed(2)}em</span>
                   </div>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+                  <Slider
+                    value={[letterSpacing]}
+                    onValueChange={handleLetterSpacingChange}
+                    min={MIN_LETTER_SPACING}
+                    max={MAX_LETTER_SPACING}
+                    step={0.01}
+                    className="w-full"
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
 
-          <Divider />
+            {/* Line Height Control */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <ToolbarButton className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
+                  <AlignJustify className="h-4 w-4" />
+                  <span>Line</span>
+                </ToolbarButton>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Line Height</label>
+                    <span className="text-sm text-gray-500">{lineHeight.toFixed(1)}</span>
+                  </div>
+                  <Slider
+                    value={[lineHeight]}
+                    onValueChange={handleLineHeightChange}
+                    min={MIN_LINE_HEIGHT}
+                    max={MAX_LINE_HEIGHT}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
 
-          {/* Font Size Controls */}
-          <div className="flex items-center">
-            <div className="flex items-stretch rounded-lg overflow-hidden border border-gray-200">
-              <button
-                className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-r border-gray-200"
+            <Divider />
+
+            {/* Text Alignment */}
+            <div className="flex items-center">
+              <ToolbarButton
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleFontSizeChange(fontSize - 1);
+                  handleTextAlignChange("left");
                 }}
+                isActive={textAlign === "left"}
+                rounded="lg"
               >
-                <Minus className="h-4 w-4" />
-              </button>
-
-              <input
-                type="number"
-                value={fontSize}
-                min={MIN_FONT_SIZE}
-                max={MAX_FONT_SIZE}
-                placeholder="– –"
-                onChange={(e) => handleFontSizeChange(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                className="w-12 px-1.5 py-0.5 text-sm font-medium focus:ring-1 focus:ring-brand-blue focus:outline-none text-center border-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-
-              <button
-                className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-l border-gray-200"
+                <AlignLeft className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleFontSizeChange(fontSize + 1);
+                  handleTextAlignChange("center");
                 }}
+                isActive={textAlign === "center"}
+                rounded="lg"
               >
-                <Plus className="h-4 w-4" />
-              </button>
+                <AlignCenter className="h-4 w-4" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTextAlignChange("right");
+                }}
+                isActive={textAlign === "right"}
+                rounded="lg"
+              >
+                <AlignRight className="h-4 w-4" />
+              </ToolbarButton>
             </div>
-          </div>
 
-          {/* Text Color with Hue Bar */}
-          <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color">
-            <Type className="h-4 w-4 mx-auto" />
-            <div className="w-6 h-[6px] bg-center bg-repeat bg-contain rounded-sm border-[0.8px] border-neutral-400" style={{
-              backgroundImage: `url(hue-bar.png)`
-            }}></div>
-          </ToolbarButton>
+            <Divider />
+          </>
+        )}
 
-          <Divider />
-
-          {/* Text Formatting */}
-          <div className="flex items-center">
-            <ToolbarButton onClick={handleFormatChange('bold')} isActive={isBold}>
-              <Bold className="h-4 w-4" />
+        {/* Shape Element Controls - Show color control for shapes */}
+        {isShapeElement && (
+          <>
+            {/* Shape Color with Hue Wheel */}
+            <ToolbarButton onClick={handleBackgroundColorButtonClick} title="Shape Color">
+              <div className="w-5 h-5 bg-center bg-contain rounded-full border-[0.8px] border-neutral-400" style={{
+                backgroundImage: `url(hue-wheel.png)`
+              }}></div>
             </ToolbarButton>
-            <ToolbarButton onClick={handleFormatChange('italic')} isActive={isItalic}>
-              <Italic className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton onClick={handleFormatChange('underline')} isActive={isUnderlined}>
-              <Underline className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton onClick={handleFormatChange('strikethrough')} isActive={isStrikethrough} rounded="lg">
-              <Strikethrough className="h-4 w-4" />
-            </ToolbarButton>
-          </div>
 
-          <Divider />
+            <Divider />
+          </>
+        )}
 
-          {/* Letter Spacing Control */}
+        {/* Position Controls - Show for both text and shape elements */}
+        <div className="flex items-center">
           <Popover>
             <PopoverTrigger asChild>
-              <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                <span>Letter</span>
-              </button>
+              <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium">Position</button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
-                  <span className="text-sm text-gray-500">{letterSpacing.toFixed(2)}em</span>
+            <PopoverContent className="w-auto p-3 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 justify-between">
+                  <button
+                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
+                    onClick={handleAlignStart}
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                    <span className="text-xs font-medium">Left</span>
+                  </button>
+                  <button
+                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
+                    onClick={handleAlignCenter}
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                    <span className="text-xs font-medium">Center</span>
+                  </button>
+                  <button
+                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
+                    onClick={handleAlignEnd}
+                  >
+                    <AlignRight className="h-4 w-4" />
+                    <span className="text-xs font-medium">Right</span>
+                  </button>
                 </div>
-                <Slider
-                  value={[letterSpacing]}
-                  onValueChange={handleLetterSpacingChange}
-                  min={MIN_LETTER_SPACING}
-                  max={MAX_LETTER_SPACING}
-                  step={0.01}
-                  className="w-full"
-                />
               </div>
             </PopoverContent>
           </Popover>
+        </div>
+      </Toolbar>
 
-          {/* Line Height Control */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
-                <AlignJustify className="h-4 w-4" />
-                <span>Line</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Line Height</label>
-                  <span className="text-sm text-gray-500">{lineHeight.toFixed(1)}</span>
-                </div>
-                <Slider
-                  value={[lineHeight]}
-                  onValueChange={handleLineHeightChange}
-                  min={MIN_LINE_HEIGHT}
-                  max={MAX_LINE_HEIGHT}
-                  step={0.1}
-                  className="w-full"
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Divider />
-
-          {/* Text Alignment */}
-          <div className="flex items-center">
-            <ToolbarButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTextAlignChange("left");
-              }}
-              isActive={textAlign === "left"}
-              rounded="lg"
-            >
-              <AlignLeft className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTextAlignChange("center");
-              }}
-              isActive={textAlign === "center"}
-              rounded="lg"
-            >
-              <AlignCenter className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTextAlignChange("right");
-              }}
-              isActive={textAlign === "right"}
-              rounded="lg"
-            >
-              <AlignRight className="h-4 w-4" />
-            </ToolbarButton>
-          </div>
-
-          <Divider />
-        </>
+      {/* Font Upload Modal */}
+      {showFontUpload && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100001]">
+          <FontUpload
+            onFontUploaded={(fontFamily) => {
+              handleFontFamilyChange(fontFamily);
+              setShowFontUpload(false);
+            }}
+            onClose={() => setShowFontUpload(false)}
+          />
+        </div>
       )}
-
-      {/* Shape Element Controls - Show color control for shapes */}
-      {isShapeElement && (
-        <>
-          {/* Shape Color with Hue Wheel */}
-          <ToolbarButton onClick={handleBackgroundColorButtonClick} title="Shape Color">
-            <div className="w-5 h-5 bg-center bg-contain rounded-full border-[0.8px] border-neutral-400" style={{
-              backgroundImage: `url(hue-wheel.png)`
-            }}></div>
-          </ToolbarButton>
-
-          <Divider />
-        </>
-      )}
-
-      {/* Position Controls - Show for both text and shape elements */}
-      <div className="flex items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium">Position</button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-3 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 justify-between">
-                <button
-                  className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                  onClick={handleAlignStart}
-                >
-                  <AlignLeft className="h-4 w-4" />
-                  <span className="text-xs font-medium">Left</span>
-                </button>
-                <button
-                  className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                  onClick={handleAlignCenter}
-                >
-                  <AlignCenter className="h-4 w-4" />
-                  <span className="text-xs font-medium">Center</span>
-                </button>
-                <button
-                  className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                  onClick={handleAlignEnd}
-                >
-                  <AlignRight className="h-4 w-4" />
-                  <span className="text-xs font-medium">Right</span>
-                </button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </Toolbar>
-
-    {/* Font Upload Modal */}
-    {showFontUpload && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100001]">
-        <FontUpload
-          onFontUploaded={(fontFamily) => {
-            handleFontFamilyChange(fontFamily);
-            setShowFontUpload(false);
-          }}
-          onClose={() => setShowFontUpload(false)}
-        />
-      </div>
-    )}
     </>
   )
 }

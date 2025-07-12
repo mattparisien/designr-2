@@ -1,11 +1,13 @@
 "use client"
 
-
+import { useParams } from 'next/navigation'
 import Editor from "./components/Editor"
 import EditorSidebar from "./components/Sidebar/EditorSidebar"
 import useEditorStore from "./lib/stores/useEditorStore"
 
 export default function EditorPage() {
+  const params = useParams()
+  const templateId = params.id as string
 
   const sidebar = useEditorStore(state => state.sidebar)
 
@@ -25,7 +27,7 @@ export default function EditorPage() {
         }}
         onClick={handleClickOutsideSidebar}
       >
-        <Editor />
+        <Editor templateId={templateId} />
       </main>
     </>
   )

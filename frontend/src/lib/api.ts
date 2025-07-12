@@ -191,6 +191,46 @@ export class ApiClient {
     return this.request(`/templates/${id}`);
   }
 
+  async createTemplate(data: {
+    name?: string;
+    category?: string;
+    vibe?: 'playful' | 'elegant' | 'bold' | 'minimal' | 'professional';
+    width?: number;
+    height?: number;
+  }) {
+    return this.request('/templates', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: data.name || 'Untitled Template',
+        category: data.category || 'social-post',
+        vibe: data.vibe || 'minimal',
+        width: data.width || 1080,
+        height: data.height || 1080,
+        thumbnailUrl: '',
+        templateData: {
+          elements: [],
+          backgroundImage: null,
+          backgroundColor: '#ffffff'
+        }
+      })
+    });
+  }
+
+  async updateTemplate(id: string, data: {
+    name?: string;
+    category?: string;
+    vibe?: 'playful' | 'elegant' | 'bold' | 'minimal' | 'professional';
+    width?: number;
+    height?: number;
+    thumbnailUrl?: string;
+    templateData?: Record<string, unknown>;
+  }) {
+    return this.request(`/templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
   // AI endpoints
   async magicFill(data: { 
     prompt: string; 

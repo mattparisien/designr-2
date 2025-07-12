@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 
 interface ToolbarButtonProps {
-    onClick: (e: React.MouseEvent) => void
+    onClick?: (e: React.MouseEvent) => void
     isActive?: boolean
     children: React.ReactNode
     className?: string

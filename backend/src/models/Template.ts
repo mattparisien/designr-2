@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITemplate extends Document {
   name: string;
+  slug: string;
   category: string;
   vibe: 'playful' | 'elegant' | 'bold' | 'minimal' | 'professional';
   width: number;
@@ -41,7 +42,8 @@ const templateSchema = new Schema<ITemplate>({
   },
   thumbnailUrl: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   templateData: {
     type: Schema.Types.Mixed,
@@ -53,6 +55,21 @@ const templateSchema = new Schema<ITemplate>({
   }
 }, {
   timestamps: true
+});
+
+// Pre-save hook to generate slug if not provided
+templateSchema.pre('save', function(next) {
+  if (!this.slug) {
+    const baseSlug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    
+    this.slug = `${baseSlug}-${Date.now()}`;
+  }
+  next();
 });
 
 export const Template = mongoose.model<ITemplate>('Template', templateSchema);
