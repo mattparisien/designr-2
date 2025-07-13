@@ -1,7 +1,6 @@
 import { Element as CanvasElement } from "../../../lib/types/canvas";
 import { TextEditor } from "../../TextEditor";
 import useCanvasStore from "../../../lib/stores/useCanvasStore";
-import { useEffect } from "react";
 
 interface TextElementProps {
   element: CanvasElement;
@@ -94,10 +93,15 @@ export const TextElement = ({
                             element.kind === 'text';
       
       if (shouldAutoFit) {
-        // Update both content and width when editing
+        // Calculate new position to keep center fixed when width changes
+        const widthChange = calculatedAutoWidth - element.width;
+        const newX = element.x - widthChange / 2;
+        
+        // Update content, width, and position to maintain center
         updateElement(element.id, { 
           content, 
-          width: calculatedAutoWidth 
+          width: calculatedAutoWidth,
+          x: newX
         });
       } else {
         // Just update content for fixed width mode, during resize, or when manually resized

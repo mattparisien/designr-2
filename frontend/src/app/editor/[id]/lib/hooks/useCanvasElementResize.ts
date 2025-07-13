@@ -298,7 +298,7 @@ export function useCanvasElementResize() {
         // Handle edge resizing (non-uniform scaling)
         if (resizeDirection.includes("e")) {
           newWidth = Math.max(50, origWidth + deltaX);
-          if (isAltKeyPressed) {
+          if (isAltKeyPressed || element.kind === "text") {
             // Center scaling: shift position by half the width change
             const widthChange = newWidth - origWidth;
             newX = origX - widthChange / 2;
@@ -308,7 +308,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("w")) {
           newWidth = Math.max(50, origWidth - deltaX);
-          if (isAltKeyPressed) {
+          if (isAltKeyPressed || element.kind === "text") {
             // Center scaling: shift position by half the width change
             const widthChange = newWidth - origWidth;
             newX = origX - widthChange / 2;
@@ -320,7 +320,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("s")) {
           newHeight = Math.max(20, origHeight + deltaY);
-          if (isAltKeyPressed) {
+          if (isAltKeyPressed || element.kind === "text") {
             // Center scaling: shift position by half the height change
             const heightChange = newHeight - origHeight;
             newY = origY - heightChange / 2;
@@ -329,7 +329,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("n")) {
           newHeight = Math.max(20, origHeight - deltaY);
-          if (isAltKeyPressed) {
+          if (isAltKeyPressed || element.kind === "text") {
             // Center scaling: shift position by half the height change
             const heightChange = newHeight - origHeight;
             newY = origY - heightChange / 2;
