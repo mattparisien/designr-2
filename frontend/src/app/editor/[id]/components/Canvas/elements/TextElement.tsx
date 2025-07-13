@@ -61,43 +61,49 @@ export const TextElement = ({
   const lastResizeTime = useCanvasStore(state => state.lastResizeTime);
   
   const handleContentChange = (content: string) => {
-    // Calculate what the auto-fit width would be
-    const calculatedAutoWidth = calculateTextWidth(
-      content, 
-      element.fontSize || 16, 
-      element.fontFamily || 'Arial',
-      element.letterSpacing || 0
-    );
-    
-    // Check if this element is currently being resized
-    const isThisElementResizing = (isResizing || storeIsResizing) && 
-                                  (activeResizeElement === element.id || activeResizeElement === null);
-    
-    // Check if this element was recently resized (within last 2 seconds)
-    const wasRecentlyResized = Date.now() - lastResizeTime < 2000;
-    
-    // If current width is significantly larger than what auto-fit would calculate,
-    // assume it was manually resized and don't auto-fit
-    const isManuallyResized = element.width > calculatedAutoWidth + 50; // 50px threshold
-    
-    // Don't auto-fit if:
-    // 1. Currently resizing
-    // 2. Was recently resized 
-    // 3. Element appears to be manually resized (wider than auto-fit + threshold)
-    // Note: Removed the isEditable check to allow width auto-fitting during typing
-    const shouldAutoFit = !isThisElementResizing && 
-                          !wasRecentlyResized && 
-                          !isManuallyResized && 
-                          element.kind === 'text';
-    
-    if (shouldAutoFit) {
-      // Update both content and width
-      updateElement(element.id, { 
+    // Only auto-fit width when actively editing/typing
+    // This allows text to wrap properly when not editing
+    if (element.isEditable) {
+      // Calculate what the auto-fit width would be
+      const calculatedAutoWidth = calculateTextWidth(
         content, 
-        width: calculatedAutoWidth 
-      });
+        element.fontSize || 16, 
+        element.fontFamily || 'Arial',
+        element.letterSpacing || 0
+      );
+      
+      // Check if this element is currently being resized
+      const isThisElementResizing = (isResizing || storeIsResizing) && 
+                                    (activeResizeElement === element.id || activeResizeElement === null);
+      
+      // Check if this element was recently resized (within last 2 seconds)
+      const wasRecentlyResized = Date.now() - lastResizeTime < 2000;
+      
+      // If current width is significantly larger than what auto-fit would calculate,
+      // assume it was manually resized and don't auto-fit
+      const isManuallyResized = element.width > calculatedAutoWidth + 50; // 50px threshold
+      
+      // Don't auto-fit if:
+      // 1. Currently resizing
+      // 2. Was recently resized 
+      // 3. Element appears to be manually resized (wider than auto-fit + threshold)
+      const shouldAutoFit = !isThisElementResizing && 
+                            !wasRecentlyResized && 
+                            !isManuallyResized && 
+                            element.kind === 'text';
+      
+      if (shouldAutoFit) {
+        // Update both content and width when editing
+        updateElement(element.id, { 
+          content, 
+          width: calculatedAutoWidth 
+        });
+      } else {
+        // Just update content for fixed width mode, during resize, or when manually resized
+        updateElement(element.id, { content });
+      }
     } else {
-      // Just update content for fixed width mode, during resize, or when manually resized
+      // When not editing, just update content - let text wrap within existing bounds
       updateElement(element.id, { content });
     }
   };
@@ -119,7 +125,7 @@ export const TextElement = ({
         isUnderlined={element.underline}
         isStrikethrough={element.isStrikethrough}
         textColor={element.color}
-        isEditable={element.isEditable || false}
+        isEditable={(element.isEditable || false) && !isResizing}
         onEditingEnd={() => updateElement(element.id, { isEditable: false })}
       />
     </div>

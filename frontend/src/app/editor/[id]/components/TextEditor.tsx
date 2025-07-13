@@ -208,6 +208,11 @@ export function TextEditor({
     fontStyle: isItalic ? "italic" : "normal",
     textDecoration: `${isUnderlined ? "underline" : ""} ${isStrikethrough ? "line-through" : ""}`.trim() || "none",
     color: textColor,
+    // Add text wrapping properties for non-editing mode
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    width: "100%",
+    height: "100%",
   };
 
   // Styles for the editor - keep consistent with baseStyle
