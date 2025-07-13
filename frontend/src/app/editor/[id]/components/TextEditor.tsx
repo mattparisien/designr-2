@@ -153,18 +153,29 @@ export function TextEditor({
   }, [updateContentDebounced, updateHeightDebounced]);
 
   /* ----------------------------------------------------------------
+     Reset focus flag when element becomes non-editable
+     ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!isEditable) {
+      hasInitialFocus.current = false;
+    }
+  }, [isEditable]);
+
+  /* ----------------------------------------------------------------
      Focus the editor when switching to edit mode
      ---------------------------------------------------------------- */
   useEffect(() => {
     if (!isEditable || !editorRef.current) {
-      hasInitialFocus.current = false;
       return;
     }
 
     // Only select all text on the initial focus, not on content updates
     if (!hasInitialFocus.current) {
-      // Push the latest localContent into the DOM (once) before focus
-      editorRef.current.innerText = localContent;
+      // Use the current state of localContent at the time of focus
+      const currentContent = localContent;
+      
+      // Push the current content into the DOM before focus
+      editorRef.current.innerText = currentContent;
       editorRef.current.focus();
 
       // Select all text only on the very first focus event
@@ -175,6 +186,21 @@ export function TextEditor({
       sel?.addRange(range);
       
       hasInitialFocus.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditable]); // Intentionally only depend on isEditable to avoid re-triggering on content changes
+
+
+  /* ----------------------------------------------------------------
+     Sync content to DOM when editable and content changes
+     ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (isEditable && editorRef.current && hasInitialFocus.current) {
+      // Only update DOM content if the element has been initially focused
+      // and the content differs from what's currently in the DOM
+      if (editorRef.current.innerText !== localContent) {
+        editorRef.current.innerText = localContent;
+      }
     }
   }, [isEditable, localContent]);
 

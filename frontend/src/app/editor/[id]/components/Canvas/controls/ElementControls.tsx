@@ -479,8 +479,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 '--canvas-border-radius': '0.4rem', // Smaller radius for elements vs canvas
             } as React.CSSProperties}
             onClick={e => {
-                // Don't handle clicks when text is being edited
-                if (isTextBeingEdited) return;
+                // Don't handle clicks when text is being edited or element is being resized
+                if (isTextBeingEdited || isResizing) return;
                 
                 handleClick(e, element, (id: string) => {
                     if (element.kind === "text") {
@@ -502,8 +502,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 }
             }}
             onMouseDown={e => {
-                // Don't handle mouse down when text is being edited
-                if (isTextBeingEdited) return;
+                // Don't handle mouse down when text is being edited or element is being resized
+                if (isTextBeingEdited || isResizing) return;
                 handleMouseDown(e);
             }}
         >

@@ -1,6 +1,7 @@
 import { Element as CanvasElement } from "../../../lib/types/canvas";
 import { TextEditor } from "../../TextEditor";
 import useCanvasStore from "../../../lib/stores/useCanvasStore";
+import { useEffect } from "react";
 
 interface TextElementProps {
   element: CanvasElement;
@@ -107,6 +108,7 @@ export const TextElement = ({
       updateElement(element.id, { content });
     }
   };
+
 
   return (
     <div className="h-full text-element">

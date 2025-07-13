@@ -101,12 +101,12 @@ export function CanvasElement({
     updateElement(element.id, { textAlign: align as "left" | "center" | "right" });
   }, [element, updateElement]);
 
-  // Track width and fontSize for text elements to trigger height recalculation
+  // Only remount TextEditor when absolutely necessary (font family changes, etc.)
   useEffect(() => {
     if (element.kind === "text") {
       setTextEditorKey((k) => k + 1);
     }
-  }, [element.width, element.fontSize, element.kind]);
+  }, [element.fontSize, element.fontFamily, element.kind]);
 
   // Update height when fontSize changes
   useEffect(() => {
