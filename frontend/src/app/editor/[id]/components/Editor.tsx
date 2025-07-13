@@ -7,6 +7,7 @@ import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
 import useElementActionBar from "../lib/hooks/useElementActionBar";
 import useEditorStore from "../lib/stores/useEditorStore";
 import { Element } from "../lib/types/canvas";
+import { ElementFactory } from "../lib/factories/elementFactory";
 import BottomBar from "./BottomBar";
 import Canvas from "./Canvas/Canvas";
 import ElementControls from "./Canvas/controls/ElementControls";
@@ -264,30 +265,14 @@ export default function Editor({ templateId }: EditorProps) {
                 // Get addElement from store
                 const addElement = useCanvasStore.getState().addElement;
 
-                // Create a new text element at the center of the canvas
-                const newTextElement = {
-                    kind: "text" as const,
-                    x: (canvasSize.width - 300) / 2, // Center horizontally with default width
-                    y: (canvasSize.height - 100) / 2, // Center vertically with default height
-                    width: 300, // Default width
-                    height: 100, // Default height
-                    rect: { // Add viewport-relative rect
-                        x: (canvasSize.width - 300) / 2,
-                        y: (canvasSize.height - 100) / 2,
-                        width: 300,
-                        height: 100
-                    },
-                    content: "Add your text here",
-                    fontSize: 36, // Default font size
-                    fontFamily: "Inter", // Default font
-                    textAlign: "center" as const,
-                    isNew: true, // Flag as new for immediate editing
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                    isStrikethrough: false,
-                    isEditable: true // Start in editable mode
-                };
+                // Create a new text element using the factory
+                const newTextElement = ElementFactory.createTextElement(
+                    { width: canvasSize.width, height: canvasSize.height },
+                    {
+                        content: "Add your text here",
+                        isEditable: true
+                    }
+                );
 
                 // Add the element to the canvas
                 addElement(newTextElement);

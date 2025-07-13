@@ -16,7 +16,7 @@ export const HANDLE_BASE_SIZE = 18;
 // export const HANDLE_MAX_SIZE = 24;
 
 // Font sizes
-export const DEFAULT_FONT_SIZE = 200;
+export const DEFAULT_FONT_SIZE = 80;
 export const MIN_FONT_SIZE = 1;
 export const MAX_FONT_SIZE = 800;
 
@@ -49,6 +49,33 @@ export const DEFAULT_CANVAS_SIZE = {
   width: 720,
   height: 720
 };
+
+export const DEFAULT_ELEMENT_DIMENSIONS = {
+  // Text element defaults
+  TEXT_WIDTH: 400,
+  TEXT_HEIGHT: 100,
+  
+  // Shape element defaults
+  SHAPE_SIZE: 100,
+  
+  // Line element defaults
+  LINE_LENGTH: 150,
+  LINE_THICKNESS: 2,
+  
+  // Arrow element defaults
+  ARROW_LENGTH: 150,
+  ARROW_THICKNESS: 2,
+  
+  // Image element defaults
+  IMAGE_MAX_WIDTH: 400,
+  IMAGE_MAX_HEIGHT: 400,
+  IMAGE_DEFAULT_WIDTH: 200,
+  IMAGE_DEFAULT_HEIGHT: 150,
+  
+  // Small image variant (for assets added from sidebar)
+  IMAGE_SIDEBAR_MAX_WIDTH: 300,
+} as const;
+
 
 // Text alignment options
 export type TextAlignment = "left" | "center" | "right";

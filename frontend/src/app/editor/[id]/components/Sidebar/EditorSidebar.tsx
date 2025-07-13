@@ -6,6 +6,7 @@ import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type,
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
+import { ElementFactory } from "../../lib/factories/elementFactory";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
@@ -91,39 +92,21 @@ const EditorSidebar = () => {
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
 
-        // Use actual asset dimensions if available, otherwise use defaults
-        const originalWidth = asset.metadata?.width || 200;
-        const originalHeight = asset.metadata?.height || 150;
-        
-        // Calculate scaled dimensions to fit within a reasonable size on canvas
-        const maxWidth = 300; // Maximum width for added images
-        const aspectRatio = originalHeight / originalWidth;
-        
-        let finalWidth = originalWidth;
-        let finalHeight = originalHeight;
-        
-        // Scale down if the image is too large
-        if (originalWidth > maxWidth) {
-            finalWidth = maxWidth;
-            finalHeight = maxWidth * aspectRatio;
-        }
+        // Create image element using the factory
+        const imageElement = ElementFactory.createImageElement(
+            { width: canvasWidth, height: canvasHeight },
+            {
+                src: asset.url,
+                alt: asset.name,
+                originalWidth: asset.metadata?.width || 200,
+                originalHeight: asset.metadata?.height || 150
+            },
+            {
+                maxWidth: 300
+            }
+        );
 
-        const canvasCenter = {
-            x: canvasWidth / 2,
-            y: canvasHeight / 2
-        };
-
-        addElement({
-            kind: "image" as const,
-            x: canvasCenter.x - finalWidth / 2,
-            y: canvasCenter.y - finalHeight / 2,
-            width: finalWidth,
-            height: finalHeight,
-            src: asset.url,
-            alt: asset.name,
-            opacity: 1,
-            rotation: 0
-        });
+        addElement(imageElement);
     }, [addElement, pages, currentPageId]);
 
     const activeItem = useMemo(() => {
@@ -150,25 +133,16 @@ const EditorSidebar = () => {
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
 
-        const defaultShapeSize = 100;
-        const canvasCenter = {
-            x: canvasWidth / 2,
-            y: canvasHeight / 2
-        };
-
-        addElement({
-            kind: "shape" as const,
-            x: canvasCenter.x - defaultShapeSize / 2,
-            y: canvasCenter.y - defaultShapeSize / 2,
-            width: defaultShapeSize,
-            height: defaultShapeSize,
+        // Create shape element using the factory
+        const shapeElement = ElementFactory.createShapeElement(
+            { width: canvasWidth, height: canvasHeight },
             shapeType,
-            backgroundColor: "#3b82f6", // Default blue color
-            borderWidth: 0,
-            borderColor: "#000000",
-            opacity: 1,
-            rotation: 0
-        });
+            {
+                backgroundColor: "#3b82f6"
+            }
+        );
+
+        addElement(shapeElement);
     }, [addElement, pages, currentPageId]);
 
     // Helper function to add a line to the canvas
@@ -177,22 +151,32 @@ const EditorSidebar = () => {
         const canvasWidth = currentPage?.canvas?.width || 800;
         const canvasHeight = currentPage?.canvas?.height || 600;
 
-        const defaultLineLength = 150;
-        const canvasCenter = {
-            x: canvasWidth / 2,
-            y: canvasHeight / 2
-        };
+        // Create line element using the factory
+        const lineElement = ElementFactory.createLineElement(
+            { width: canvasWidth, height: canvasHeight },
+            {
+                backgroundColor: "#000000"
+            }
+        );
 
-        addElement({
-            kind: "line" as const,
-            x: canvasCenter.x - defaultLineLength / 2,
-            y: canvasCenter.y,
-            width: defaultLineLength,
-            height: 2, // Line thickness
-            backgroundColor: "#000000",
-            opacity: 1,
-            rotation: 0
-        });
+        addElement(lineElement);
+    }, [addElement, pages, currentPageId]);
+
+    // Helper function to add an arrow to the canvas
+    const addArrow = useCallback(() => {
+        const currentPage = pages.find(page => page.id === currentPageId);
+        const canvasWidth = currentPage?.canvas?.width || 800;
+        const canvasHeight = currentPage?.canvas?.height || 600;
+
+        // Create arrow element using the factory
+        const arrowElement = ElementFactory.createArrowElement(
+            { width: canvasWidth, height: canvasHeight },
+            {
+                backgroundColor: "#000000"
+            }
+        );
+
+        addElement(arrowElement);
     }, [addElement, pages, currentPageId]);
 
     useLayoutEffect(() => {

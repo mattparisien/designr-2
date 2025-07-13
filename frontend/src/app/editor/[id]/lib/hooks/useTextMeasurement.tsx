@@ -12,6 +12,49 @@ export function useTextMeasurement() {
   const measurerRef = useRef<HTMLDivElement | null>(null);
 
   /**
+   * Measures the width of text content with given styles
+   */
+  const measureTextWidth = useCallback((
+    content: string,
+    styles: {
+      fontSize?: number;
+      fontFamily?: string;
+      isBold?: boolean;
+      isItalic?: boolean;
+      letterSpacing?: number;
+    }
+  ): number => {
+    if (!measurerRef.current) return 0;
+
+    const {
+      fontSize = 36,
+      fontFamily = 'Inter',
+      isBold = false,
+      isItalic = false,
+      letterSpacing = 0
+    } = styles;
+
+    // Configure the measurer with all the styles
+    measurerRef.current.style.width = 'auto';
+    measurerRef.current.style.height = 'auto';
+    measurerRef.current.style.whiteSpace = 'nowrap'; // Prevent line breaks for width measurement
+    measurerRef.current.style.fontSize = `${fontSize}px`;
+    measurerRef.current.style.fontFamily = fontFamily;
+    measurerRef.current.style.fontWeight = isBold ? 'bold' : 'normal';
+    measurerRef.current.style.fontStyle = isItalic ? 'italic' : 'normal';
+    measurerRef.current.style.letterSpacing = `${letterSpacing}em`;
+    measurerRef.current.style.padding = '0';
+    measurerRef.current.style.margin = '0';
+    measurerRef.current.style.border = 'none';
+
+    // Set content and measure
+    measurerRef.current.innerText = content;
+
+    // Return the exact measured width
+    return measurerRef.current.scrollWidth;
+  }, []);
+
+  /**
    * Measures the height of text content with given styles
    */
   const measureTextHeight = useCallback((
@@ -116,6 +159,7 @@ export function useTextMeasurement() {
   return {
     measurerRef,
     measureTextHeight,
+    measureTextWidth,
     measureElementHeight,
     renderMeasurer
   };
