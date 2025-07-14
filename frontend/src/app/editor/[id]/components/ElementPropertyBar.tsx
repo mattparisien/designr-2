@@ -37,7 +37,7 @@ import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useC
 import useEditorStore from "../lib/stores/useEditorStore"
 import { useFonts } from "@/lib/hooks/useFonts"
 import { FontUpload } from "@/components/ui/font-upload"
-import { Toolbar, ToolbarButton } from "./Toolbar"
+import { Toolbar, ToolbarButton, ToolbarIcon } from "./Toolbar"
 
 
 
@@ -403,16 +403,16 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Text Formatting */}
             <div className="flex items-center">
               <ToolbarButton onClick={handleFormatChange('bold')} isActive={isBold}>
-                <Bold className="h-4 w-4" />
+                <ToolbarIcon icon={Bold} />
               </ToolbarButton>
               <ToolbarButton onClick={handleFormatChange('italic')} isActive={isItalic}>
-                <Italic className="h-4 w-4" />
+                <ToolbarIcon icon={Italic} />
               </ToolbarButton>
               <ToolbarButton onClick={handleFormatChange('underline')} isActive={isUnderlined}>
-                <Underline className="h-4 w-4" />
+                <ToolbarIcon icon={Underline} />
               </ToolbarButton>
               <ToolbarButton onClick={handleFormatChange('strikethrough')} isActive={isStrikethrough} rounded="lg">
-                <Strikethrough className="h-4 w-4" />
+                <ToolbarIcon icon={Strikethrough} />
               </ToolbarButton>
             </div>
 

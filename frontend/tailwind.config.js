@@ -13,6 +13,7 @@ module.exports = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         
+        
         // Design system colors - moved to root level for proper bg- class generation
         primary: "var(--bg-primary)",
         secondary: "var(--bg-secondary)",

@@ -42,7 +42,7 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
             }}
 
         >
-            <ToolbarButton onClick={onLock} title={element.locked ? "Unlock" : "Lock"}>
+            <ToolbarButton onClick={onLock} title={element.locked ? "Unlock" : "Lock"} isActive={element.locked}>
                 <LockIcon className="w-4 h-4" />
             </ToolbarButton>
 

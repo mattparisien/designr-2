@@ -4,6 +4,18 @@
   --background: #ffffff;
   --foreground: #171717;
 
+  --color-accent-10: #f6fce7;
+  --color-accent-20: #e7f8b9;
+  --color-accent-30: #d4f27d;
+  --color-accent-40: #c3ea4d;
+  --color-accent-50: #b4dc18;
+  --color-accent-60: #9ebe14;
+  --color-accent-70: #859f10;
+  --color-accent-80: #6a7f0c;
+  --color-accent-90: #505f08;
+  --color-accent-100: #374204;
+
+
 
   --bg-primary: #f3f2f100;
   --bg-secondary: #e8e8e827;
@@ -16,7 +28,7 @@
   --border-default: #0d0d0d1a;
   --border-heavy: #0d0d0d26;
   --border-light: #0d0d0d0d;
-  --border-accent: #B4DC18;
+  --border-accent: var(--color-accent-50);
   --border-status-warning: #ffe7d9;
   --border-status-error: #ffe1e0;
   --text-primary: #0d0d0d;
