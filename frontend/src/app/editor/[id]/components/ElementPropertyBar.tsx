@@ -482,7 +482,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "left"}
                 rounded="lg"
               >
-                <AlignLeft className="h-4 w-4" />
+                <ToolbarIcon icon={AlignLeft}/>
               </ToolbarButton>
               <ToolbarButton
                 onClick={(e) => {
@@ -492,7 +492,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "center"}
                 rounded="lg"
               >
-                <AlignCenter className="h-4 w-4" />
+                <ToolbarIcon icon={AlignCenter}/>
               </ToolbarButton>
               <ToolbarButton
                 onClick={(e) => {
@@ -502,7 +502,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "right"}
                 rounded="lg"
               >
-                <AlignRight className="h-4 w-4" />
+                <ToolbarIcon icon={AlignRight}/>
               </ToolbarButton>
             </div>
 
@@ -533,27 +533,15 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <PopoverContent className="w-auto p-3 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 justify-between">
-                  <button
-                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                    onClick={handleAlignStart}
-                  >
-                    <AlignLeft className="h-4 w-4" />
-                    <span className="text-xs font-medium">Left</span>
-                  </button>
-                  <button
-                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                    onClick={handleAlignCenter}
-                  >
-                    <AlignCenter className="h-4 w-4" />
-                    <span className="text-xs font-medium">Center</span>
-                  </button>
-                  <button
-                    className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue transition"
-                    onClick={handleAlignEnd}
-                  >
-                    <AlignRight className="h-4 w-4" />
-                    <span className="text-xs font-medium">Right</span>
-                  </button>
+                  <ToolbarButton onClick={handleAlignStart}>
+                    <ToolbarIcon icon={AlignLeft} />
+                  </ToolbarButton>
+                  <ToolbarButton onClick={handleAlignCenter}>
+                    <ToolbarIcon icon={AlignCenter} />
+                  </ToolbarButton>
+                  <ToolbarButton onClick={handleAlignEnd}>
+                    <ToolbarIcon icon={AlignRight} />
+                  </ToolbarButton>
                 </div>
               </div>
             </PopoverContent>
