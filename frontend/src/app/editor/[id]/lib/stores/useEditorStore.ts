@@ -62,7 +62,7 @@ const convertAPIPageToFrontend = (apiPage: APIPage): Page => {
       // Ensure frontend-specific properties exist
       isNew: false,
       locked: false,
-      isEditable: true,
+      isEditable: false, // Template elements should not be editable on load
     })),
     // Convert canvas to canvasSize for backward compatibility
     canvasSize: {
@@ -481,7 +481,10 @@ const useEditorStore = create<EditorState>((set, get) => ({
           name: 'Page 1',
           canvas: { width: template.width || 1080, height: template.height || 1080 },
           background: { type: 'color' as const, value: '#ffffff' },
-          elements: template.templateData?.elements || [],
+          elements: (template.templateData?.elements || []).map((el: APIElement) => ({
+            ...el,
+            isEditable: false // Template elements should not be editable on load
+          })),
           canvasSize: {
             name: 'Custom',
             width: template.width || 1080,

@@ -94,7 +94,7 @@ export class ElementFactory {
       underline = false,
       isStrikethrough = false,
       color = DEFAULT_ELEMENT_COLORS.TEXT_COLOR,
-      isEditable = true
+      isEditable = false
     } = options;
 
     // Calculate text dimensions dynamically based on content and styling
