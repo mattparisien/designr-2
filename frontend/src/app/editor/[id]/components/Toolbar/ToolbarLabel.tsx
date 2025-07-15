@@ -1,4 +1,5 @@
 
+
 import { cn } from "@/lib/utils";
 
 interface ToolbarLabelProps {
@@ -8,11 +9,11 @@ interface ToolbarLabelProps {
 }
 
 const ToolbarLabel = (props: ToolbarLabelProps) => {
-    const { label, className = "", isActive = false } = props;
+    const { label } = props;
 
     return (
         <span
-            className={"text-black text-sm"}
+            className={cn("text-black text-sm", props.className)}
         >
             {label}
         </span>

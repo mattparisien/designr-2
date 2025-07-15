@@ -33,11 +33,12 @@ import {
   Settings,
   AlignJustify
 } from "lucide-react"
-import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useCallback } from "react"
+import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useCallback, useMemo } from "react"
 import useEditorStore from "../lib/stores/useEditorStore"
 import { useFonts } from "@/lib/hooks/useFonts"
 import { FontUpload } from "@/components/ui/font-upload"
 import { Toolbar, ToolbarButton, ToolbarIcon, ToolbarLabel } from "./Toolbar"
+import { initial } from "lodash"
 
 
 
@@ -66,8 +67,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   onLineHeightChange,
   onFormatChange,
   onPositionChange,
-  isHovering,
-  elementId,
   canvasWidth,
 }, ref) => {
   const [fontSize, setFontSize] = useState(selectedElement?.fontSize || DEFAULT_FONT_SIZE)
@@ -130,11 +129,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const handleFontFamilyChange = (newFamily: string) => {
     setFontFamily(newFamily)
     onFontFamilyChange(newFamily)
-  }
-
-  const handleTextAlignChange = (align: TextAlignment) => {
-    setTextAlign(align)
-    onTextAlignChange(align)
   }
 
   // Handle text formatting changes - DRY approach with unified handler
@@ -273,7 +267,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
         onMouseEnter={handleToolbarMouseEnter}
         onMouseLeave={handleToolbarMouseLeave}
         onClick={handleToolbarClick}
-        className="top-5"
+        className="top-5 py-1 px-1"
         ref={ref}
       >
         {/* Text Element Controls - Show all text-related controls */}
@@ -282,9 +276,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Font Family Dropdown */}
             <Popover>
               <PopoverTrigger asChild>
-                <ToolbarButton>
-                  <ToolbarLabel label={fontFamily} />
-                  <ToolbarIcon icon={ChevronDown} />
+                <ToolbarButton className="w-[100px] border border-gray-200">
+                  <ToolbarLabel label={fontFamily} className="truncate" />
                 </ToolbarButton>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-0" align="start">
@@ -350,7 +343,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
               </PopoverContent>
             </Popover>
 
-            <Divider />
 
             {/* Font Size Controls */}
             <div className="flex items-center">
@@ -394,7 +386,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <Divider />
 
             {/* Text Formatting */}
-            <div className="flex items-center">
+            <div className="flex items-center space-x-1">
               <ToolbarButton onClick={handleFormatChange('bold')} isActive={isBold}>
                 <ToolbarIcon icon={Bold} />
               </ToolbarButton>
@@ -466,7 +458,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <Divider />
 
             {/* Text Alignment */}
-            <div className="flex items-center">
+            <TextAlignButton onTextAlignChange={onTextAlignChange} />
+            {/* <div className="flex items-center">
               <ToolbarButton
                 onClick={(e) => {
                   e.stopPropagation();
@@ -497,7 +490,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
               >
                 <ToolbarIcon icon={AlignRight} />
               </ToolbarButton>
-            </div>
+            </div> */}
 
             <Divider />
           </>
@@ -555,6 +548,56 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
         </div>
       )}
     </>
+  )
+}
+
+
+
+const TextAlignButton = ({
+  onTextAlignChange,
+  initialAlignment = "center"
+}: {
+  onTextAlignChange: (align: TextAlignment) => void
+  initialAlignment?: TextAlignment
+}) => {
+
+  const alignments: TextAlignment[] = ["left", "center", "right"];
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">(initialAlignment);
+
+  const handleTextAlignChange = () => {
+    const alignment: TextAlignment = alignments[alignments.indexOf(textAlign) + 1] || alignments[0];
+    setTextAlign(alignment);
+    onTextAlignChange(alignment)
+  }
+
+  const Icon = useMemo(() => {
+
+    switch (textAlign) {
+      case "left":
+        return AlignLeft;
+      case "center":
+        return AlignCenter;
+      case "right":
+        return AlignRight;
+      default:
+        return AlignLeft; // Fallback
+    }
+
+  }, [textAlign])
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleTextAlignChange();
+  }, [handleTextAlignChange])
+
+
+  return (
+    <ToolbarButton
+      onClick={handleClick}
+      rounded="lg"
+    >
+      <ToolbarIcon icon={Icon} />
+    </ToolbarButton>
   )
 }
 

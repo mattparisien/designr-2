@@ -18,7 +18,7 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
     return (
         <div
             ref={ref}
-            className={cn("z-40 flex items-center bg-white/95 px-2.5 gap-1", className)}
+            className={cn("z-40 flex items-center bg-white/95 gap-1", className)}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
