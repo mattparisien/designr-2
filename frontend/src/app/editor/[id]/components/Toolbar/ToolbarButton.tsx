@@ -8,14 +8,15 @@ interface ToolbarButtonProps {
     isActive?: boolean
     children: React.ReactNode
     className?: string
+    direction?: 'row' | 'col'
     title?: string
     icon?: LucideIcon,
     rounded?: 'xl' | 'lg'
 }
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
-    ({ onClick, isActive, children, className = "", title, rounded = 'xl', icon: Icon }, ref) => {
-        const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-100 transition cursor-pointer"
+    ({ onClick, isActive, children, className = "", title, rounded = 'xl', icon: Icon, direction = "row" }, ref) => {
+        const BUTTON_BASE_CLASSES = "flex text-gray-500 hover:bg-gray-100 transition cursor-pointer"
         const BUTTON_ICON_CLASSES = "p-1.5"
         const BUTTON_ACTIVE_CLASSES = "bg-gray-100 [&>*]:stroke-[var(--color-accent-90)]"
         const BUTTON_ROUNDED_XL = "rounded-lg"
@@ -32,6 +33,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
                     roundedClass,
                     isActive && BUTTON_ACTIVE_CLASSES,
                     !isActive && "[&>*]:stroke-black",
+                    direction === "col" ? "flex-col items-center" : "flex-row items-center space-x-2",
                     className
                 )}
                 onClick={onClick}

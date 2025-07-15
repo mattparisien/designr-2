@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Search, ChevronRight, Circle, Palette, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import useCanvasStore from "@/lib/stores/useCanvasStore";
-import useEditorStore from "@/lib/stores/useEditorStore";
+import useCanvasStore from "../../lib/stores/useCanvasStore";
+import useEditorStore from "../../lib/stores/useEditorStore";
 import { useQuery } from "@tanstack/react-query";
 import { Brand } from "@/lib/types/brands";
 import { brandsAPI } from "@/lib/api";
+
+// Export the new DesignPanelContent component
+export { DesignPanelContent } from "./DesignPanelContent";
 
 export const ElementsPanelContent = ({ handleAddShape }: { handleAddShape: (shapeType: "rectangle" | "circle" | "line" | "arrow") => void }) => (
     <div className="flex flex-col p-6">

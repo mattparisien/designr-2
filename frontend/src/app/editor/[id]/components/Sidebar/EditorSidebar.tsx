@@ -8,6 +8,7 @@ import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
 import { ElementFactory } from "../../lib/factories/elementFactory";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
+import { DesignPanelContent } from "./DesignPanelContent";
 import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
 
@@ -444,6 +445,9 @@ const EditorSidebar = () => {
         const sections: EditorSidebarPanelSection[] = [];
 
         switch (activeItem.id) {
+            case "design":
+                // Design panel will be handled by custom content rendering
+                return [];
             case "shape":
                 sections.push({
                     id: "shapes",
@@ -532,6 +536,7 @@ const EditorSidebar = () => {
                     activeItem?.title
                 }
                 sections={panelSections}
+                customContent={activeItem?.id === "design" ? <DesignPanelContent /> : undefined}
             />
         )}
 

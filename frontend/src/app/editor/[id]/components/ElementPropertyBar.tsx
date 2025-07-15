@@ -37,7 +37,7 @@ import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useC
 import useEditorStore from "../lib/stores/useEditorStore"
 import { useFonts } from "@/lib/hooks/useFonts"
 import { FontUpload } from "@/components/ui/font-upload"
-import { Toolbar, ToolbarButton, ToolbarIcon } from "./Toolbar"
+import { Toolbar, ToolbarButton, ToolbarIcon, ToolbarLabel } from "./Toolbar"
 
 
 
@@ -282,12 +282,10 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Font Family Dropdown */}
             <Popover>
               <PopoverTrigger asChild>
-                <button
-                  className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition font-medium text-sm w-[100px]"
-                >
-                  <span className="truncate">{fontFamily}</span>
-                  <ChevronDown className="h-3 w-3 opacity-70 flex-shrink-0" />
-                </button>
+                <ToolbarButton>
+                  <ToolbarLabel label={fontFamily} />
+                  <ToolbarIcon icon={ChevronDown} />
+                </ToolbarButton>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-0" align="start">
                 <div className="max-h-60 overflow-y-auto w-full">
@@ -357,15 +355,13 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Font Size Controls */}
             <div className="flex items-center">
               <div className="flex items-stretch rounded-lg overflow-hidden border border-gray-200">
-                <button
-                  className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-r border-gray-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFontSizeChange(fontSize - 1);
-                  }}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
+
+                <ToolbarButton onClick={(e) => {
+                  e.stopPropagation();
+                  handleFontSizeChange(fontSize - 1);
+                }}>
+                  <ToolbarIcon icon={Minus} />
+                </ToolbarButton>
 
                 <input
                   type="number"
@@ -378,23 +374,20 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                   className="w-12 px-1.5 py-0.5 text-sm font-medium focus:ring-1 focus:ring-brand-blue focus:outline-none text-center border-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
 
-                <button
-                  className="px-2 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-brand-blue transition flex items-center justify-center border-l border-gray-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFontSizeChange(fontSize + 1);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+                <ToolbarButton onClick={(e) => {
+                  e.stopPropagation();
+                  handleFontSizeChange(fontSize + 1);
+                }}>
+                  <ToolbarIcon icon={Plus} />
+                </ToolbarButton>
               </div>
             </div>
 
             {/* Text Color with Hue Bar */}
-            <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color">
+            <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color" direction="col">
               <ToolbarIcon icon={Type} className="mx-auto" />
               <div className="w-6 h-[6px] bg-center bg-repeat bg-contain rounded-sm border-[0.8px] border-neutral-400" style={{
-                backgroundImage: `url(hue-bar.png)`
+                backgroundImage: `url("hue-bar.png")`
               }}></div>
             </ToolbarButton>
 
@@ -482,7 +475,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "left"}
                 rounded="lg"
               >
-                <ToolbarIcon icon={AlignLeft}/>
+                <ToolbarIcon icon={AlignLeft} />
               </ToolbarButton>
               <ToolbarButton
                 onClick={(e) => {
@@ -492,7 +485,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "center"}
                 rounded="lg"
               >
-                <ToolbarIcon icon={AlignCenter}/>
+                <ToolbarIcon icon={AlignCenter} />
               </ToolbarButton>
               <ToolbarButton
                 onClick={(e) => {
@@ -502,7 +495,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 isActive={textAlign === "right"}
                 rounded="lg"
               >
-                <ToolbarIcon icon={AlignRight}/>
+                <ToolbarIcon icon={AlignRight} />
               </ToolbarButton>
             </div>
 
