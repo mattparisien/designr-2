@@ -392,7 +392,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
             {/* Text Color with Hue Bar */}
             <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color">
-              <Type className="h-4 w-4 mx-auto" />
+              <ToolbarIcon icon={Type} className="mx-auto" />
               <div className="w-6 h-[6px] bg-center bg-repeat bg-contain rounded-sm border-[0.8px] border-neutral-400" style={{
                 backgroundImage: `url(hue-bar.png)`
               }}></div>
@@ -422,7 +422,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <Popover>
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
+                  <ToolbarIcon icon={Settings} />
                   <span>Letter</span>
                 </ToolbarButton>
               </PopoverTrigger>
@@ -448,7 +448,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <Popover>
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
-                  <AlignJustify className="h-4 w-4" />
+                  <ToolbarIcon icon={AlignJustify} />
                   <span>Line</span>
                 </ToolbarButton>
               </PopoverTrigger>

@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils"
+import { LucideIcon } from "lucide-react"
 import { forwardRef } from "react"
+import ToolbarIcon from "./ToolbarIcon"
 
 interface ToolbarButtonProps {
     onClick?: (e: React.MouseEvent) => void
@@ -7,11 +9,12 @@ interface ToolbarButtonProps {
     children: React.ReactNode
     className?: string
     title?: string
+    icon?: LucideIcon,
     rounded?: 'xl' | 'lg'
 }
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
-    ({ onClick, isActive, children, className = "", title, rounded = 'xl' }, ref) => {
+    ({ onClick, isActive, children, className = "", title, rounded = 'xl', icon: Icon }, ref) => {
         const BUTTON_BASE_CLASSES = "text-gray-500 hover:bg-gray-100 transition cursor-pointer"
         const BUTTON_ICON_CLASSES = "p-1.5"
         const BUTTON_ACTIVE_CLASSES = "bg-gray-100 [&>*]:stroke-[var(--color-accent-90)]"
@@ -37,6 +40,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
                     backgroundColor: isActive ? 'var(--color-accent-20)' : 'transparent'
                 }}
             >
+                {Icon && <ToolbarIcon icon={Icon} />}
                 {children}
             </button>
         )
