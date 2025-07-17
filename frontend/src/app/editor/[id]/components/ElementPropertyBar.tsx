@@ -1,44 +1,40 @@
 "use client"
 
+import { FontUpload } from "@/components/ui/font-upload"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
-import type { Element } from "../lib/types/canvas" // Update import to use types directly
-import {
-  DEFAULT_FONT_SIZE,
-  DEFAULT_TEXT_ALIGN,
-  MAX_FONT_SIZE,
-  MIN_FONT_SIZE,
-  DEFAULT_LETTER_SPACING,
-  MIN_LETTER_SPACING,
-  MAX_LETTER_SPACING,
-  DEFAULT_LINE_HEIGHT,
-  MIN_LINE_HEIGHT,
-  MAX_LINE_HEIGHT,
-  type TextAlignment
-} from "../lib/constants"
+import { useFonts } from "@/lib/hooks/useFonts"
 import { cn } from "@/lib/utils"
 import {
   AlignCenter,
+  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
-  ChevronDown,
   Italic,
   Minus,
   Plus,
-  Strikethrough,
-  Type,
-  Underline,
-  Upload,
   Settings,
-  AlignJustify
+  Strikethrough,
+  Underline,
+  Upload
 } from "lucide-react"
-import { useEffect, useRef, useState, forwardRef, ForwardRefRenderFunction, useCallback, useMemo } from "react"
+import { forwardRef, ForwardRefRenderFunction, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_LETTER_SPACING,
+  DEFAULT_LINE_HEIGHT,
+  MAX_FONT_SIZE,
+  MAX_LETTER_SPACING,
+  MAX_LINE_HEIGHT,
+  MIN_FONT_SIZE,
+  MIN_LETTER_SPACING,
+  MIN_LINE_HEIGHT,
+  type TextAlignment
+} from "../lib/constants"
 import useEditorStore from "../lib/stores/useEditorStore"
-import { useFonts } from "@/lib/hooks/useFonts"
-import { FontUpload } from "@/components/ui/font-upload"
+import type { Element } from "../lib/types/canvas"; // Update import to use types directly
 import { Toolbar, ToolbarButton, ToolbarIcon, ToolbarLabel } from "./Toolbar"
-import { initial } from "lodash"
 
 
 
@@ -73,9 +69,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const [letterSpacing, setLetterSpacing] = useState(selectedElement?.letterSpacing || DEFAULT_LETTER_SPACING)
   const [lineHeight, setLineHeight] = useState(selectedElement?.lineHeight || DEFAULT_LINE_HEIGHT)
   const [showFontUpload, setShowFontUpload] = useState(false)
-  const [textAlign, setTextAlign] = useState<TextAlignment>(
-    selectedElement?.textAlign || DEFAULT_TEXT_ALIGN
-  )
+
   // Add text formatting states
   const [isBold, setIsBold] = useState(selectedElement?.bold || false)
   const [isItalic, setIsItalic] = useState(selectedElement?.italic || false)
@@ -100,7 +94,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
     if (selectedElement?.kind === "text") {
       setFontSize(selectedElement.fontSize || DEFAULT_FONT_SIZE)
       setFontFamily(selectedElement.fontFamily || allFonts[0] || "Inter")
-      setTextAlign(selectedElement.textAlign || DEFAULT_TEXT_ALIGN)
       setLetterSpacing(selectedElement.letterSpacing || DEFAULT_LETTER_SPACING)
       setLineHeight(selectedElement.lineHeight || DEFAULT_LINE_HEIGHT)
       setIsBold(selectedElement.bold || false)
@@ -248,19 +241,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const isTextElement = selectedElement?.kind === "text";
   const isShapeElement = selectedElement && !isTextElement;
 
-
-  // <div
-  //   ref={handleRef}
-  //   className="absolute left-1/2 -translate-x-1/2 z-40 flex items-center bg-white/95 backdrop-blur-sm rounded-md shadow-toolbar-float px-2.5 py-1.5 gap-1 border border-gray-100 z-editor-popover"
-  //   onMouseEnter={handleToolbarMouseEnter}
-  //   onMouseLeave={handleToolbarMouseLeave}
-  //   onClick={handleToolbarClick}
-  //   data-editor-interactive="true"
-  //   style={{
-  //     height: "var(--editor-propertyBar-height)",
-  //     top: "var(--editor-propertyBar-topOffset)",
-  //   }}
-  // >
   return (
     <>
       <Toolbar
@@ -377,9 +357,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
             {/* Text Color with Hue Bar */}
             <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color" direction="col">
-              <ToolbarIcon icon={Type} className="mx-auto" />
-              <div className="w-6 h-[6px] bg-center bg-repeat bg-contain rounded-sm border-[0.8px] border-neutral-400" style={{
-                backgroundImage: `url("hue-bar.png")`
+              <div className="w-6 h-6 rounded-full bg-center bg-repeat bg-contain border-[0.8px] border-neutral-400" style={{
+                backgroundImage: `url(/hue-bar.png)`,
               }}></div>
             </ToolbarButton>
 
@@ -408,7 +387,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
                   <ToolbarIcon icon={Settings} />
-                  <span>Letter</span>
                 </ToolbarButton>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
@@ -434,7 +412,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
                   <ToolbarIcon icon={AlignJustify} />
-                  <span>Line</span>
                 </ToolbarButton>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-4 bg-white border border-gray-100 rounded-xl shadow-lg" data-editor-interactive="true">
