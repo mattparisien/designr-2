@@ -36,6 +36,11 @@ export interface CanvasState extends Omit<CanvasContextType, 'elements' | 'canva
   activeResizeElement: string | null;
   lastResizeTime: number;
   setResizeState: (isResizing: boolean, elementId?: string | null) => void;
+  // Manual resize tracking - maps element IDs to whether they've been manually resized
+  manuallyResizedElements: Record<string, boolean>;
+  setElementManuallyResized: (elementId: string, isManuallyResized: boolean) => void;
+  isElementManuallyResized: (elementId: string) => boolean;
+  clearManuallyResizedFlag: (elementId: string) => void;
   // Helper function to check if element is selected
   isElementSelected: (elementId: string) => boolean;
 }
@@ -73,6 +78,8 @@ const useCanvasStore = create<CanvasState>((set, get) => {
     isResizing: false,
     activeResizeElement: null,
     lastResizeTime: 0,
+    // Manual resize tracking
+    manuallyResizedElements: {},
 
     // Alignment guides methods
     setAlignmentGuides: (alignments) => {
@@ -984,8 +991,30 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       });
     },
 
-    // Helper to check if an element is selected
-    isElementSelected: (elementId: string) => get().selectedElementIds.includes(elementId),
+    // Manual resize tracking methods
+    setElementManuallyResized: (elementId: string, isManuallyResized: boolean) => {
+      set(state => ({
+        manuallyResizedElements: {
+          ...state.manuallyResizedElements,
+          [elementId]: isManuallyResized
+        }
+      }));
+    },
+
+    isElementManuallyResized: (elementId: string) => {
+      const state = get();
+      return state.manuallyResizedElements[elementId] === true;
+    },
+
+    clearManuallyResizedFlag: (elementId: string) => {
+      set(state => {
+        const { [elementId]: _removed, ...rest } = state.manuallyResizedElements;
+        void _removed; // Suppress unused variable warning
+        return {
+          manuallyResizedElements: rest
+        };
+      });
+    },
   }
 
 });

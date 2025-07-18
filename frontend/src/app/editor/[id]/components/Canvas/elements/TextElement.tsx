@@ -59,6 +59,8 @@ export const TextElement = ({
   const storeIsResizing = useCanvasStore(state => state.isResizing);
   const activeResizeElement = useCanvasStore(state => state.activeResizeElement);
   const lastResizeTime = useCanvasStore(state => state.lastResizeTime);
+  const isElementManuallyResized = useCanvasStore(state => state.isElementManuallyResized);
+  const clearManuallyResizedFlag = useCanvasStore(state => state.clearManuallyResizedFlag);
   
   const handleContentChange = (content: string) => {
     console.log('calledQ')
@@ -82,7 +84,7 @@ export const TextElement = ({
       
       // If current width is significantly larger than what auto-fit would calculate,
       // assume it was manually resized and don't auto-fit
-      const isManuallyResized = false;
+      const isManuallyResized = isElementManuallyResized(element.id);
       
       // Don't auto-fit if:
       // 1. Currently resizing
@@ -97,6 +99,9 @@ export const TextElement = ({
         // Calculate new position to keep center fixed when width changes
         const widthChange = calculatedAutoWidth - element.width;
         const newX = element.x - widthChange / 2;
+        
+        // Clear the manually resized flag since we're auto-fitting now
+        clearManuallyResizedFlag(element.id);
         
         // Update content, width, and position to maintain center
         updateElement(element.id, { 

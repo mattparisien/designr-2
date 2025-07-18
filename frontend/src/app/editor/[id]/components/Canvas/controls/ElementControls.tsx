@@ -30,6 +30,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const setDragState = useCanvasStore(state => state.setDragState);
     const clearAlignmentGuides = useCanvasStore(state => state.clearAlignmentGuides);
     const setResizeState = useCanvasStore(state => state.setResizeState);
+    const setElementManuallyResized = useCanvasStore(state => state.setElementManuallyResized);
     
     // Editor store - get sidebar width for responsive positioning
     const sidebarWidth = useEditorStore(state => state.sidebar.width);
@@ -384,6 +385,11 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 selectElement(element.id, false);
                 setJustFinishedResizing(true);
 
+                // Mark text elements as manually resized when resize operation finishes
+                if (element.kind === "text") {
+                    setElementManuallyResized(element.id, true);
+                }
+
                 // Reset the flag after a short delay
                 setTimeout(() => {
                     setJustFinishedResizing(false);
@@ -407,7 +413,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 cancelAnimationFrame(animationFrameId);
             }
         };
-    }, [isResizing, element, scale, updateElement, calculateResize, endResize, selectElement, isAltKeyPressed, isShiftKeyPressed, setJustFinishedResizing, isDragging, measurementHook]);
+    }, [isResizing, element, scale, updateElement, calculateResize, endResize, selectElement, isAltKeyPressed, isShiftKeyPressed, setJustFinishedResizing, isDragging, measurementHook, setElementManuallyResized]);
 
     // For text elements, get the actual DOM dimensions to ensure selection border matches
     const getActualDimensions = useCallback(() => {
