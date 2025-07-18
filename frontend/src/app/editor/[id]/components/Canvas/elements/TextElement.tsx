@@ -63,7 +63,6 @@ export const TextElement = ({
   const clearManuallyResizedFlag = useCanvasStore(state => state.clearManuallyResizedFlag);
   
   const handleContentChange = (content: string) => {
-    console.log('calledQ')
     // Only auto-fit width when actively editing/typing
     // This allows text to wrap properly when not editing
     if (element.isEditable) {

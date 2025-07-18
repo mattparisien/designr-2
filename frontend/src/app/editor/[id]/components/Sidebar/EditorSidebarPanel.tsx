@@ -24,6 +24,7 @@ export interface EditorSidebarPanelSection {
     layout?: 'grid' | 'masonry';
     loading?: boolean;
     emptyMessage?: string;
+    onFilesDrop?: (files: File[]) => void; // Add this for drag and drop
 }
 
 interface EditorSidebarPanelProps {
@@ -60,6 +61,8 @@ const EditorSidebarPanel = ({ title, sections, customContent }: EditorSidebarPan
                                             gap={8}
                                             loading={section.loading}
                                             emptyMessage={section.emptyMessage}
+                                            onFilesDrop={section.onFilesDrop}
+                                            enableDragDrop={section.id === "assets" && !!section.onFilesDrop}
                                         />
                                     ) : (
                                         /* Render regular grid layout */

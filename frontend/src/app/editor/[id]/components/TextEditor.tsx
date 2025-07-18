@@ -121,7 +121,7 @@ export function TextEditor({
     }
     debouncedOnChange.current = setTimeout(() => {
       onChange(newValue);
-    }, 150);
+    }, 0);
   }, [onChange]);
 
   const updateHeightDebounced = useCallback(() => {
@@ -134,7 +134,7 @@ export function TextEditor({
       if (!editorRef.current) return;
       const newHeight = editorRef.current.scrollHeight;
       onHeightChange(newHeight);
-    }, 100);
+    }, 16);
   }, [onHeightChange]);
 
   /* ----------------------------------------------------------------
@@ -147,10 +147,15 @@ export function TextEditor({
     const newValue = editorRef.current.innerText;
     setLocalContent(newValue);
     
-    // Debounce the expensive operations
+    // Debounce content changes but update height immediately
     updateContentDebounced(newValue);
-    updateHeightDebounced();
-  }, [updateContentDebounced, updateHeightDebounced]);
+    
+    // Update height immediately to prevent text wrapping
+    if (onHeightChange) {
+      const newHeight = editorRef.current.scrollHeight;
+      onHeightChange(newHeight);
+    }
+  }, [updateContentDebounced, onHeightChange]);
 
   /* ----------------------------------------------------------------
      Reset focus flag when element becomes non-editable

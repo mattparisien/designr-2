@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Upload } from 'lucide-react';
 
 interface MasonryItem {
   id: string;
@@ -17,6 +18,8 @@ interface MasonryLayoutProps {
   gap?: number;
   loading?: boolean;
   emptyMessage?: string;
+  onFilesDrop?: (files: File[]) => void;
+  enableDragDrop?: boolean;
 }
 
 const MasonryLayout = ({ 
@@ -26,12 +29,13 @@ const MasonryLayout = ({
   columnCount = 2,
   gap = 8,
   loading = false,
-  emptyMessage = 'No items to display'
+  emptyMessage = 'No items to display',
+  onFilesDrop,
+  enableDragDrop = false
 }: MasonryLayoutProps) => {
 
-
-
   const [columns, setColumns] = useState<MasonryItem[][]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate column width based on container width
@@ -40,6 +44,47 @@ const MasonryLayout = ({
     const containerWidth = containerRef.current.offsetWidth;
     return (containerWidth - (gap * (columnCount - 1))) / columnCount;
   }, [gap, columnCount]);
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (enableDragDrop) {
+      setIsDragOver(true);
+    }
+  }, [enableDragDrop]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (enableDragDrop && !e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }, [enableDragDrop]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!enableDragDrop || !onFilesDrop) return;
+    
+    setIsDragOver(false);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const imageFiles = droppedFiles.filter(file => 
+      file.type.startsWith('image/') && 
+      ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)
+    );
+    
+    if (imageFiles.length > 0) {
+      onFilesDrop(imageFiles);
+    }
+  }, [enableDragDrop, onFilesDrop]);
 
   // Distribute items across columns based on provided dimensions
   useEffect(() => {
@@ -103,8 +148,32 @@ const MasonryLayout = ({
   // Show empty state
   if (items.length === 0) {
     return (
-      <div className={`flex items-center justify-center py-8 ${className}`}>
-        <div className="text-sm text-gray-500">{emptyMessage}</div>
+      <div 
+        ref={containerRef}
+        className={`flex items-center justify-center py-8 ${className} ${
+          enableDragDrop ? 'border-2 border-dashed border-gray-300 rounded-lg min-h-[200px] transition-colors' : ''
+        } ${
+          isDragOver ? 'border-blue-400 bg-blue-50' : ''
+        }`}
+        onDragEnter={enableDragDrop ? handleDragEnter : undefined}
+        onDragLeave={enableDragDrop ? handleDragLeave : undefined}
+        onDragOver={enableDragDrop ? handleDragOver : undefined}
+        onDrop={enableDragDrop ? handleDrop : undefined}
+      >
+        <div className="text-center">
+          {enableDragDrop ? (
+            <div className="flex flex-col items-center gap-3">
+              <Upload className="h-8 w-8 text-gray-400" />
+              <div className="text-sm text-gray-500">
+                <span className="font-medium text-blue-600">Drop images here</span>
+                <br />
+                <span>Only image files are supported</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">{emptyMessage}</div>
+          )}
+        </div>
       </div>
     );
   }
@@ -112,9 +181,25 @@ const MasonryLayout = ({
   return (
     <div 
       ref={containerRef}
-      className={`flex ${className}`}
+      className={`flex ${className} ${
+        enableDragDrop ? 'relative' : ''
+      }`}
       style={{ gap: `${gap}px` }}
+      onDragEnter={enableDragDrop ? handleDragEnter : undefined}
+      onDragLeave={enableDragDrop ? handleDragLeave : undefined}
+      onDragOver={enableDragDrop ? handleDragOver : undefined}
+      onDrop={enableDragDrop ? handleDrop : undefined}
     >
+      {/* Drag overlay */}
+      {enableDragDrop && isDragOver && (
+        <div className="absolute inset-0 bg-blue-50 bg-opacity-90 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center z-10">
+          <div className="text-center">
+            <Upload className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+            <div className="text-sm font-medium text-blue-600">Drop images to upload</div>
+          </div>
+        </div>
+      )}
+      
       {columns.map((column, columnIndex) => (
         <div
           key={columnIndex}

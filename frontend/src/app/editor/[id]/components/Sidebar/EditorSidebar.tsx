@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/ui";
 import { SidebarItem } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera } from "lucide-react";
+import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera, Download } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
@@ -47,6 +47,12 @@ const sections = [
                 href: "/editor/assets",
                 icon: Camera
             },
+            {
+                id: "export",
+                title: "Export",
+                href: "/editor/export",
+                icon: Download
+            },
         ],
     },
 ];
@@ -86,6 +92,49 @@ const EditorSidebar = () => {
             setLoadingAssets(false);
         }
     }, []);
+
+    // Function to upload multiple image files
+    const uploadAssets = useCallback(async (files: File[]) => {
+        try {
+            // Filter only image files
+            const imageFiles = files.filter(file => 
+                file.type.startsWith('image/') && 
+                ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)
+            );
+
+            if (imageFiles.length === 0) {
+                console.warn('No valid image files to upload');
+                return;
+            }
+
+            // Upload each file
+            const uploadPromises = imageFiles.map(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('name', file.name);
+                formData.append('userId', 'mock-user'); // TODO: Get actual user ID
+                
+                const response = await fetch('/api/assets', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to upload ${file.name}`);
+                }
+                
+                return response.json();
+            });
+
+            await Promise.all(uploadPromises);
+            
+            // Refresh assets list after upload
+            await fetchAssets();
+            console.log(`Successfully uploaded ${imageFiles.length} assets`);
+        } catch (error) {
+            console.error('Error uploading assets:', error);
+        }
+    }, [fetchAssets]);
 
     // Function to add an image asset to the canvas
     const addImageAsset = useCallback((asset: Asset) => {
@@ -161,23 +210,6 @@ const EditorSidebar = () => {
         );
 
         addElement(lineElement);
-    }, [addElement, pages, currentPageId]);
-
-    // Helper function to add an arrow to the canvas
-    const addArrow = useCallback(() => {
-        const currentPage = pages.find(page => page.id === currentPageId);
-        const canvasWidth = currentPage?.canvas?.width || 800;
-        const canvasHeight = currentPage?.canvas?.height || 600;
-
-        // Create arrow element using the factory
-        const arrowElement = ElementFactory.createArrowElement(
-            { width: canvasWidth, height: canvasHeight },
-            {
-                backgroundColor: "#000000"
-            }
-        );
-
-        addElement(arrowElement);
     }, [addElement, pages, currentPageId]);
 
     useLayoutEffect(() => {
@@ -491,6 +523,7 @@ const EditorSidebar = () => {
                     loading: loadingAssets,
                     emptyMessage: "No images found",
                     items: [], // Empty regular items array since we're using masonryItems
+                    onFilesDrop: uploadAssets, // Add drag and drop functionality
                     masonryItems: assets
                         .filter(asset => asset.type === 'image' || asset.mimeType.startsWith('image/'))
                         .filter(asset => asset.metadata?.width && asset.metadata?.height) // Only include assets with dimensions
@@ -511,7 +544,7 @@ const EditorSidebar = () => {
         }
 
         return sections;
-    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset, getDocumentColors]);
+    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset, getDocumentColors, uploadAssets]);
 
     // Effect to fetch assets when assets panel is opened
     useEffect(() => {

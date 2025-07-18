@@ -20,7 +20,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
         const BUTTON_ICON_CLASSES = "p-1.5"
         const BUTTON_ACTIVE_CLASSES = "bg-gray-100 [&>*]:stroke-[var(--color-accent-90)]"
 
-        const roundedClass = "rounded-[var(--elevated-surface-radius)]";
+        const roundedClass = "rounded-[8px]";
 
         return (
             <button
