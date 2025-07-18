@@ -247,7 +247,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
         onMouseEnter={handleToolbarMouseEnter}
         onMouseLeave={handleToolbarMouseLeave}
         onClick={handleToolbarClick}
-        className="top-5 py-1 px-1"
+        className="top-5 py-[3px] px-[4px]"
         ref={ref}
       >
         {/* Text Element Controls - Show all text-related controls */}
@@ -358,7 +358,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Text Color with Hue Bar */}
             <ToolbarButton onClick={handleTextColorButtonClick} title="Text Color" direction="col">
               <div className="w-6 h-6 rounded-full bg-center bg-repeat bg-contain border-[0.8px] border-neutral-400" style={{
-                backgroundImage: `url(/hue-bar.png)`,
+                backgroundColor: selectedElement?.color || 'var(--color-text-primary)',
               }}></div>
             </ToolbarButton>
 
@@ -479,7 +479,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Shape Color with Hue Wheel */}
             <ToolbarButton onClick={handleBackgroundColorButtonClick} title="Shape Color">
               <div className="w-5 h-5 bg-center bg-contain rounded-full border-[0.8px] border-neutral-400" style={{
-                backgroundImage: `url(hue-wheel.png)`
+                backgroundImage: `url(/assets/hue-wheel.png)`
               }}></div>
             </ToolbarButton>
 

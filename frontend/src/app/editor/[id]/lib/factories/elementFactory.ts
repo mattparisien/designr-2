@@ -107,7 +107,7 @@ export class ElementFactory {
     });
 
     // Add some padding to the width for better visual appearance
-    const width = Math.max(textWidth + 20, 100); // Minimum width of 100px
+    const width = Math.max(textWidth, 100); // Minimum width of 100px
     
     // Calculate height based on the calculated width and line height
     const height = measureTextHeight(content, width, {

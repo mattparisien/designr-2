@@ -13,34 +13,63 @@ interface TextElementProps {
 }
 
 // Calculate text width based on content and font size
-const calculateTextWidth = (content: string, fontSize: number, fontFamily: string = 'Arial', letterSpacing: number = 0): number => {
+const calculateTextWidth = (
+  content: string, 
+  fontSize: number, 
+  fontFamily: string = 'Arial', 
+  letterSpacing: number = 0,
+  fontWeight: string = 'normal',
+  fontStyle: string = 'normal'
+): number => {
   // Create a temporary canvas element to measure text
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   
   if (!context) return content.length * fontSize * 0.6; // Fallback calculation
   
-  // Set font properties
-  context.font = `${fontSize}px ${fontFamily}`;
+  // Set high DPI for better accuracy
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 2000 * dpr;
+  canvas.height = 200 * dpr;
+  context.scale(dpr, dpr);
+  
+  // Set comprehensive font properties including weight and style
+  context.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+  context.textBaseline = 'top';
   
   // Split content by lines and measure the widest line
   const lines = content.split('\n');
   let maxWidth = 0;
   
   lines.forEach(line => {
+    if (line.length === 0) {
+      // Empty line still takes up space
+      maxWidth = Math.max(maxWidth, fontSize * 0.5);
+      return;
+    }
+    
     const metrics = context.measureText(line);
     let lineWidth = metrics.width;
     
-    // Add letter spacing if specified
+    // Add letter spacing if specified (convert em to pixels)
     if (letterSpacing > 0 && line.length > 1) {
-      lineWidth += letterSpacing * (line.length - 1);
+      const letterSpacingPx = letterSpacing * fontSize;
+      lineWidth += letterSpacingPx * (line.length - 1);
+    }
+    
+    // Account for special characters and punctuation that might extend bounds
+    // Use actualBoundingBoxRight if available for better accuracy
+    if (metrics.actualBoundingBoxLeft !== undefined && metrics.actualBoundingBoxRight !== undefined) {
+      const actualWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+      lineWidth = Math.max(lineWidth, actualWidth);
     }
     
     maxWidth = Math.max(maxWidth, lineWidth);
   });
   
-  // Add some padding and ensure minimum width
-  const calculatedWidth = Math.max(maxWidth, 100);
+  // Add small padding to prevent text clipping and ensure minimum width
+  const padding = fontSize * 0.1; // 10% of font size as padding
+  const calculatedWidth = Math.max(maxWidth + padding, fontSize * 2); // Minimum 2x font size
   
   // Cleanup
   canvas.remove();
@@ -71,7 +100,9 @@ export const TextElement = ({
         content, 
         element.fontSize || 16, 
         element.fontFamily || 'Arial',
-        element.letterSpacing || 0
+        element.letterSpacing || 0,
+        element.bold ? 'bold' : 'normal',
+        element.italic ? 'italic' : 'normal'
       );
       
       // Check if this element is currently being resized

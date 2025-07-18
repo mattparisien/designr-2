@@ -16,11 +16,11 @@ interface ToolbarButtonProps {
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
     ({ onClick, isActive, children, className = "", title, icon: Icon, direction = "row" }, ref) => {
-        const BUTTON_BASE_CLASSES = "flex text-gray-500 transition cursor-pointer"
-        const BUTTON_ICON_CLASSES = "p-1.5"
+        const BUTTON_BASE_CLASSES = "m-0 flex text-gray-500 transition cursor-pointer"
+        const BUTTON_ICON_CLASSES = "px-1.5 py-2"
         const BUTTON_ACTIVE_CLASSES = "bg-gray-100 [&>*]:stroke-[var(--color-accent-90)]"
 
-        const roundedClass = "rounded-[8px]";
+        const roundedClass = "rounded-[11px]";
 
         return (
             <button
