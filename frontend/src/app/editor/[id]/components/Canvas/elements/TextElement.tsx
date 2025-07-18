@@ -61,6 +61,7 @@ export const TextElement = ({
   const lastResizeTime = useCanvasStore(state => state.lastResizeTime);
   
   const handleContentChange = (content: string) => {
+    console.log('calledQ')
     // Only auto-fit width when actively editing/typing
     // This allows text to wrap properly when not editing
     if (element.isEditable) {
@@ -81,7 +82,7 @@ export const TextElement = ({
       
       // If current width is significantly larger than what auto-fit would calculate,
       // assume it was manually resized and don't auto-fit
-      const isManuallyResized = element.width > calculatedAutoWidth + 50; // 50px threshold
+      const isManuallyResized = false;
       
       // Don't auto-fit if:
       // 1. Currently resizing
