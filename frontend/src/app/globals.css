@@ -47,6 +47,8 @@
   --icon-accent: #0285ff;
   --icon-status-warning: #e25507;
   --icon-status-error: #e02e2a;
+
+  --interactive-bg-accent: var(--color-accent-50);
   --interactive-bg-primary-default: #0d0d0d;
   --interactive-bg-primary-hover: #0d0d0dcc;
   --interactive-bg-primary-press: #0d0d0de5;

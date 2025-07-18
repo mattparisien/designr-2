@@ -443,7 +443,7 @@ export default function Editor({ templateId }: EditorProps) {
                     ref={canvasRef}
                 />
                 {/* Page Navigation Controls with refined styling */}
-                <PageNavigation
+                {/* <PageNavigation
                     pages={pages}
                     currentPageId={currentPageId}
                     goToPage={goToPage}
@@ -451,7 +451,7 @@ export default function Editor({ templateId }: EditorProps) {
                     deletePage={deletePage}
                     selectedPageThumbnail={selectedPageThumbnail}
                     setSelectedPageThumbnail={setSelectedPageThumbnail}
-                />
+                /> */}
 
                 {elements.map(element => (
                     <ElementControls

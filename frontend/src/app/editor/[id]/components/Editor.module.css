@@ -1,6 +1,6 @@
 /* Canvas border shared variables */
 :root {
-    --canvas-border-width: 2px;
+    --canvas-border-width: var(--canvas-border-width, 2px);
     --canvas-border-radius: var(--radius-editor-canvas); /* Default to the global canvas radius */
 }
 

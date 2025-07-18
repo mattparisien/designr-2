@@ -476,7 +476,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 pointerEvents: isTextBeingEdited ? "none" : "auto",
                 transform: 'translate3d(0, 0, 0)',// Force hardware acceleration for smoother rendering
                 zIndex: element.kind === "text" ? 1 : 0, // Ensure text elements are always on top
-                '--canvas-border-radius': '0.4rem', // Smaller radius for elements vs canvas
+                '--canvas-border-radius': '0px', // Smaller radius for elements vs canvas
+                '--canvas-border-width': '2px'
             } as React.CSSProperties}
             onClick={e => {
                 // Don't handle clicks when text is being edited or element is being resized
@@ -571,7 +572,7 @@ const Handles = memo(({
     // Helper function to get the background color with null-safety
     const getHandleBackground = (direction: string) => {
         const baseBg = getHandleBg(direction, resizeDirection || "", isResizing);
-        return baseBg === "var(--handle-hover)" ? "#1E88E5" : "#ffffff";
+        return baseBg === "var(--handle-hover)" ? "var(--interactive-bg-accent)" : "#ffffff";
     };
 
     return <>
@@ -586,8 +587,8 @@ const Handles = memo(({
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 1000000,
-                    top: 0,
-                    left: 0,
+                    top: "var(--canvas-border-width)",
+                    left: "var(--canvas-border-width)",
                     transform: `translate(-50%, -50%) scale(${1})`,
                     background: getHandleBackground("nw"),
                 }}
@@ -633,8 +634,8 @@ const Handles = memo(({
                             boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                             border: "1px solid var(--handle-border)",
                             zIndex: 1000000,
-                            top: 0,
-                            right: 0,
+                            top: "var(--canvas-border-width)",
+                            right: "var(--canvas-border-width)",
                             transform: `translate(50%, -50%) scale(${1})`,
                             background: getHandleBackground("ne"),
                         }}
@@ -655,8 +656,8 @@ const Handles = memo(({
                             boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                             border: "1px solid var(--handle-border)",
                             zIndex: 1000000,
-                            bottom: 0,
-                            left: 0,
+                            bottom: "var(--canvas-border-width)",
+                            left: "var(--canvas-border-width)",
                             transform: `translate(-50%, 50%) scale(${1})`,
                             background: getHandleBackground("sw"),
                         }}
@@ -679,8 +680,8 @@ const Handles = memo(({
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 1000000,
-                    bottom: 0,
-                    right: 0,
+                    bottom: "var(--canvas-border-width)",
+                    right: "var(--canvas-border-width)",
                     transform: `translate(50%, 50%) scale(${1})`,
                     background: getHandleBackground("se"),
                 }}
@@ -723,10 +724,10 @@ const Handles = memo(({
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 1000000,
-                    right: 0,
+                    right: "calc(var(--canvas-border-width) / 2)",
                     top: `calc(50% + ${(effectiveHeight < handleSize * 2.2 ? (effectiveHeight - handleSize * 2.2) / 2 : 0)}px)`,
                     transform: `translate(50%, -50%) scale(${1})`,
-                    background: (rightBorderHover || getHandleBackground("e") === "#1E88E5") ? "#1E88E5" : "#ffffff",
+                    background: (getHandleBackground("e"))
                 }}
                 onMouseDown={(e) => handleResizeStart(e, "e")}
                 onMouseEnter={() => setHandleHoverState("e", true)}
@@ -745,10 +746,10 @@ const Handles = memo(({
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 1000000,
-                    left: 0,
+                    left: "calc(var(--canvas-border-width) / 2)",
                     top: `calc(50% + ${(effectiveHeight < handleSize * 2.2 ? (effectiveHeight - handleSize * 2.2) / 2 : 0)}px)`,
                     transform: `translate(-50%, -50%) scale(${1})`,
-                    background: (leftBorderHover || getHandleBackground("w") === "#1E88E5") ? "#1E88E5" : "#ffffff",
+                    background: getHandleBackground("w")
                 }}
                 onMouseDown={(e) => handleResizeStart(e, "w")}
                 onMouseEnter={() => setHandleHoverState("w", true)}
