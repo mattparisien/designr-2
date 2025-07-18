@@ -75,7 +75,6 @@ export function TextEditor({
   
   // Debounced callbacks for performance
   const debouncedOnChange = useRef<NodeJS.Timeout | null>(null);
-  const debouncedHeightChange = useRef<NodeJS.Timeout | null>(null);
 
   /* ----------------------------------------------------------------
      Preload font when fontFamily changes
@@ -123,19 +122,6 @@ export function TextEditor({
       onChange(newValue);
     }, 0);
   }, [onChange]);
-
-  const updateHeightDebounced = useCallback(() => {
-    if (!onHeightChange) return;
-    
-    if (debouncedHeightChange.current) {
-      clearTimeout(debouncedHeightChange.current);
-    }
-    debouncedHeightChange.current = setTimeout(() => {
-      if (!editorRef.current) return;
-      const newHeight = editorRef.current.scrollHeight;
-      onHeightChange(newHeight);
-    }, 16);
-  }, [onHeightChange]);
 
   /* ----------------------------------------------------------------
      Handle user typing inside the contentEditable div
@@ -296,9 +282,6 @@ export function TextEditor({
     return () => {
       if (debouncedOnChange.current) {
         clearTimeout(debouncedOnChange.current);
-      }
-      if (debouncedHeightChange.current) {
-        clearTimeout(debouncedHeightChange.current);
       }
     };
   }, []);

@@ -40,7 +40,7 @@ const calculateTextWidth = (content: string, fontSize: number, fontFamily: strin
   });
   
   // Add some padding and ensure minimum width
-  const calculatedWidth = Math.max(maxWidth + 20, 100);
+  const calculatedWidth = Math.max(maxWidth, 100);
   
   // Cleanup
   canvas.remove();
