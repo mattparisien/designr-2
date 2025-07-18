@@ -609,7 +609,7 @@ const Handles = memo(({
                     boxShadow: "0 2px 8px 2px rgba(0,0,0,0.15)",
                     border: "1px solid var(--handle-border)",
                     zIndex: 1000000,
-                    top: 0,
+                    top: "calc(var(--canvas-border-width) / 2)",
                     left: "50%",
                     transform: `translate(-50%, -50%) scale(${1})`,
                     background: getHandleBackground("n"),
@@ -635,7 +635,7 @@ const Handles = memo(({
                             border: "1px solid var(--handle-border)",
                             zIndex: 1000000,
                             top: "var(--canvas-border-width)",
-                            right: "var(--canvas-border-width)",
+                            right: "calc(var(--canvas-border-width) / 2)",
                             transform: `translate(50%, -50%) scale(${1})`,
                             background: getHandleBackground("ne"),
                         }}
