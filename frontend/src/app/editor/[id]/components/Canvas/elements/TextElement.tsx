@@ -30,18 +30,15 @@ export const TextElement = ({
   const clearManuallyResizedFlag = useCanvasStore(state => state.clearManuallyResizedFlag);
 
   const autoFitElement = useCallback((content: string) => {
-    // Only auto-fit width when actively editing/typing
-    // This allows text to wrap properly when not editing
-    console.log(element.isEditable)
-      // Calculate what the auto-fit width would be
-      const calculatedAutoWidth = calculateTextWidth(
-        content,
-        element.fontSize || 16,
-        element.fontFamily || 'Arial',
-        element.letterSpacing || 0,
-        element.bold ? 'bold' : 'normal',
-        element.italic ? 'italic' : 'normal'
-      );
+    // Calculate what the auto-fit width would be
+    const calculatedAutoWidth = calculateTextWidth(
+      content,
+      element.fontSize || 16,
+      element.fontFamily || 'Arial',
+      element.letterSpacing || 0,
+      element.bold ? 'bold' : 'normal',
+      element.italic ? 'italic' : 'normal'
+    );
 
       // Check if this element is currently being resized
       const isThisElementResizing = (isResizing || storeIsResizing) &&
@@ -84,7 +81,6 @@ export const TextElement = ({
       // When not editing, just update content - let text wrap within existing bounds
       // updateElement(element.id, { content });
   }, [
-    element.isEditable,
     element.fontSize,
     element.fontFamily,
     element.letterSpacing,
@@ -108,12 +104,17 @@ export const TextElement = ({
     autoFitElement(content);
   };
 
-  // Auto-fit when font family changes (if element has content)
+  // Auto-fit when font properties change (but not content, since that's handled in handleContentChange)
   useEffect(() => {
-    if (element.content && element.content.trim() !== '') {
-      autoFitElement(element.content);
+    // Use a function to get current content to avoid adding it as dependency
+    const getCurrentContent = () => element.content;
+    const currentContent = getCurrentContent();
+    
+    if (currentContent && currentContent.trim() !== '') {
+      autoFitElement(currentContent);
     }
-  }, [element.fontFamily, element.fontSize, element.bold, element.italic, element.letterSpacing, element.content, autoFitElement]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [element.fontFamily, element.fontSize, element.bold, element.italic, element.letterSpacing, autoFitElement]);
 
   return (
     <div className="h-full text-element">
