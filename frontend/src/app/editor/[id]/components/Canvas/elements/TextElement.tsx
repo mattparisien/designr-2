@@ -104,7 +104,7 @@ export const TextElement = ({
   ]);
 
   const handleContentChange = (content: string) => {
-    console.log('hello!');
+  //   console.log('hello!');
     autoFitElement(content);
   };
 
