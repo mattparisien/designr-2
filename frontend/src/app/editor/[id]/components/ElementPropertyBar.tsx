@@ -327,6 +327,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Font Size Controls */}
             <div className="flex items-center">
               <div className="flex items-stretch rounded-lg overflow-hidden border border-gray-200">
+                <div className="flex itmems-center rounded-g overflo-hiddn border border-gray-200"></div>
 
                 <ToolbarButton onClick={(e) => {
                   e.stopPropagation();
