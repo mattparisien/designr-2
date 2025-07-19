@@ -1,6 +1,6 @@
 import React from 'react';
 import { Element as CanvasElement } from "../../../lib/types/canvas";
-import { getLineStyles } from './utils/elementStyles';
+import { getLineStyles } from './utils/styles';
 
 interface LineElementProps {
   element: CanvasElement;

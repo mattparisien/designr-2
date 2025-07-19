@@ -1,6 +1,6 @@
 import React from 'react';
 import { Element as CanvasElement } from "../../../lib/types/canvas";
-import { getShapeStyles } from './utils/elementStyles';
+import { getShapeStyles } from './utils/styles';
 
 interface CircleElementProps {
   element: CanvasElement;

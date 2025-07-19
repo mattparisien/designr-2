@@ -20,6 +20,15 @@ export const DEFAULT_FONT_SIZE = 80;
 export const MIN_FONT_SIZE = 1;
 export const MAX_FONT_SIZE = 800;
 
+// Font families
+export const DEFAULT_FONT_FAMILY = "Inter";
+
+// Font weights
+export const DEFAULT_FONT_WEIGHT = "normal";
+
+// Font styles
+export const DEFAULT_FONT_STYLE = "normal";
+
 // Letter spacing (in em units)
 export const DEFAULT_LETTER_SPACING = 0;
 export const MIN_LETTER_SPACING = -0.1;

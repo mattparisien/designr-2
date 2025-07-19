@@ -4,19 +4,18 @@ import { addToRefArrayOfObjects } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useCanvasStore, { useCurrentCanvasSize } from "../lib//stores/useCanvasStore";
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
+import { ElementFactory } from "../lib/factories/elementFactory";
 import useElementActionBar from "../lib/hooks/useElementActionBar";
 import useEditorStore from "../lib/stores/useEditorStore";
 import { Element } from "../lib/types/canvas";
-import { ElementFactory } from "../lib/factories/elementFactory";
 import BottomBar from "./BottomBar";
 import Canvas from "./Canvas/Canvas";
 import ElementControls from "./Canvas/controls/ElementControls";
 import { ElementActionBar } from "./Canvas/ElementActionBar";
 import { ElementPropertyBar } from "./ElementPropertyBar";
-import PageNavigation from "./PageNavigation";
 
 interface EditorProps {
-  templateId: string;
+    templateId: string;
 }
 
 /**
@@ -292,9 +291,9 @@ export default function Editor({ templateId }: EditorProps) {
         if (templateId) {
             const setTemplateId = useEditorStore.getState().setTemplateId;
             const loadTemplate = useEditorStore.getState().loadTemplate;
-            
+
             setTemplateId(templateId);
-            
+
             // Load the template data
             loadTemplate(templateId).catch((error) => {
                 console.error('Error loading template:', error);
@@ -308,7 +307,7 @@ export default function Editor({ templateId }: EditorProps) {
             // Check if Cmd+S (Mac) or Ctrl+S (Windows/Linux) is pressed
             if ((e.metaKey || e.ctrlKey) && e.key === 's') {
                 e.preventDefault(); // Prevent browser's default save action
-                
+
                 // Call the save function
                 const saveTemplate = useEditorStore.getState().saveTemplate;
                 if (templateId && saveTemplate) {
