@@ -65,8 +65,8 @@ export const DEFAULT_ELEMENT_DIMENSIONS = {
   TEXT_HEIGHT: 100,
   
   // Shape element defaults
-  SHAPE_SIZE: 100,
-  
+  SHAPE_SCALE: 0.55,
+
   // Line element defaults
   LINE_LENGTH: 150,
   LINE_THICKNESS: 2,

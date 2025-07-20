@@ -161,7 +161,7 @@ export class ElementFactory {
     canvasSize: CanvasSize,
     shapeType: "rect" | "circle" | "triangle",
     options: {
-      size?: number;
+      scale?: number;
       position?: ElementPosition;
       backgroundColor?: string;
       borderWidth?: number;
@@ -171,7 +171,7 @@ export class ElementFactory {
     } = {}
   ): Omit<Element, 'id'> {
     const {
-      size = DEFAULT_ELEMENT_DIMENSIONS.SHAPE_SIZE,
+      scale = DEFAULT_ELEMENT_DIMENSIONS.SHAPE_SCALE,
       position,
       backgroundColor = DEFAULT_ELEMENT_COLORS.SHAPE_BACKGROUND,
       borderWidth = 0,
@@ -180,18 +180,21 @@ export class ElementFactory {
       rotation = 0
     } = options;
 
+    const width = canvasSize.width * scale;
+    const height = canvasSize.height * scale; 
+
     // Calculate centered position if not provided
     const elementPosition = position || {
-      x: (canvasSize.width - size) / 2,
-      y: (canvasSize.height - size) / 2
+      x: (canvasSize.width - width) / 2,
+      y: (canvasSize.height - height) / 2
     };
 
     return {
       kind: "shape" as const,
       x: elementPosition.x,
       y: elementPosition.y,
-      width: size,
-      height: size,
+      width,
+      height,
       shapeType,
       backgroundColor,
       borderWidth,

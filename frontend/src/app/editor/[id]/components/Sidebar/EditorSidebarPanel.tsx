@@ -75,7 +75,7 @@ const EditorSidebarPanel = ({ title, sections, customContent }: EditorSidebarPan
                                                     key={item.id}
                                                     className={cn(
                                                         "flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-200",
-                                                        section.id === "colors" || section.id.startsWith("colors-") || section.id === "document-colors" ? "p-1" : "space-x-2"
+                                                        section.id === "colors" || section.id.startsWith("colors-") || section.id === "document-colors" ? "p-0" : "space-x-2"
                                                     )}
                                                     onClick={e => {
                                                         if ((!section.id.startsWith("colors-") && section.id !== "document-colors") && item.onClick) {
@@ -83,12 +83,11 @@ const EditorSidebarPanel = ({ title, sections, customContent }: EditorSidebarPan
                                                             e.stopPropagation();
                                                             item.onClick();
                                                         }
-                                                        // For color items (including document-colors), the onClick is handled by the icon itself
                                                     }}
                                                 >
                                                     <item.icon
                                                         className={cn(
-                                                            section.id === "colors" || section.id.startsWith("colors-") || section.id === "document-colors" ? "w-12 h-12" : "w-full h-full",
+                                                            section.id === "colors" || section.id.startsWith("colors-") || section.id === "document-colors" ? "w-10 h-10" : "w-full h-full",
                                                             item.fill && !section.id.startsWith("colors-") && section.id !== "document-colors" ? "stroke-none" : null
                                                         )}
                                                         style={!section.id.startsWith("colors-") && section.id !== "document-colors" ? {
