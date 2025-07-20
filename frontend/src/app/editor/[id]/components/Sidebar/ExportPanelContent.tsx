@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { toPng } from 'html-to-image';
 import { Download, FileImage, FileText, Settings } from "lucide-react";
 import { useState } from "react";
 import useEditorStore from "../../lib/stores/useEditorStore";
-import { apiClient } from "@/lib/api";
 
 interface ExportPanelContentProps {
   onExport?: (format: string) => void;
@@ -10,77 +10,80 @@ interface ExportPanelContentProps {
 
 export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
   const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
+  const [quality, setQuality] = useState('high');
   const pages = useEditorStore(state => state.pages);
   const currentPageId = useEditorStore(state => state.currentPageId);
-  
+
   const currentPage = pages.find(page => page.id === currentPageId);
 
-  const handleExport = async (format: 'png' | 'jpg' | 'pdf') => {
-    if (!currentPage) return;
-    
-    setIsExporting(format);
-    
-    try {
-      // Prepare template data for export - convert Element[] to TemplateElement[]
-      const templateData = {
-        width: currentPage.canvas?.width || 800,
-        height: currentPage.canvas?.height || 600,
-        backgroundColor: currentPage.background?.type === 'color' ? currentPage.background.value : '#ffffff',
-        elements: currentPage.elements?.map(element => ({
-          type: element.kind, // Map 'kind' to 'type'
-          content: element.content,
-          style: {
-            fontSize: element.fontSize ? `${element.fontSize}px` : undefined,
-            fontWeight: element.bold ? 'bold' : 'normal',
-            fontFamily: element.fontFamily,
-            color: element.color,
-            backgroundColor: element.backgroundColor,
-          },
-          x: element.x,
-          y: element.y,
-          width: element.width,
-          height: element.height,
-        })) || [],
-      };
+  async function exportNode(node: HTMLElement, w: number, h: number) {
+    console.log('Starting export...')
+    // Important: force the size you want **before** capture
+    const originalWidth = node.style.width;
+    const originalHeight = node.style.height;
 
-      let blob: Blob;
+    node.style.width = `${w}px`;
+    node.style.height = `${h}px`;
+
+    try {
+      const dataUrl = await toPng(node, {
+        cacheBust: true,       // picks up freshly-loaded images
+        width: w,
+        height: h,
+        pixelRatio: scale,     // use the scale from the slider
+        backgroundColor: 'white'  // fallback background
+      });
+
+      // download helper
+      const link = document.createElement('a');
+      link.download = 'design.png';
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      // Restore original dimensions
+      node.style.width = originalWidth;
+      node.style.height = originalHeight;
+    }
+  }
+
+  const handleExport = async (format: string) => {
+    console.log('Export clicked for format:', format);
+    setIsExporting(format);
+    try {
+      // Find the canvas element using the data-canvas attribute
+      const canvasElement = document.querySelector('[data-canvas]') as HTMLElement
+      if (!canvasElement) {
+        console.error('Could not find canvas element to export')
+        return
+      }
+
+      const width = currentPage?.canvas?.width || 1080;
+      const height = currentPage?.canvas?.height || 1080;
 
       switch (format) {
         case 'png':
-          blob = await apiClient.exportPNG({ templateData });
-          downloadBlob(blob, `design.png`);
-          break;
+          await exportNode(canvasElement, width * scale, height * scale)
+          break
         case 'jpg':
-          // For JPG, we might need a different endpoint or conversion
-          blob = await apiClient.exportPNG({ templateData });
-          downloadBlob(blob, `design.jpg`);
-          break;
+          // Add JPG export logic when available
+          console.log('JPG export not yet implemented')
+          break
         case 'pdf':
-          // PDF export would need a separate implementation
-          console.log('PDF export not yet implemented');
-          break;
+          // Add PDF export logic when available
+          console.log('PDF export not yet implemented')
+          break
       }
 
-      if (onExport) {
-        onExport(format);
-      }
+      // Call onExport callback if provided
+      onExport?.(format);
     } catch (error) {
-      console.error(`Error exporting as ${format}:`, error);
+      console.error('Export failed:', error)
     } finally {
-      setIsExporting(null);
+      setIsExporting(null)
     }
-  };
+  }
 
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  };
 
   return (
     <div className="flex flex-col p-6">
@@ -118,8 +121,8 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
               <FileImage className="h-4 w-4 mr-2" />
               {isExporting === 'png' ? 'Exporting PNG...' : 'Export as PNG'}
             </Button>
-            
-            <Button
+
+            {/* <Button
               onClick={() => handleExport('jpg')}
               disabled={isExporting === 'jpg'}
               className="w-full justify-start"
@@ -127,7 +130,7 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
             >
               <FileImage className="h-4 w-4 mr-2" />
               {isExporting === 'jpg' ? 'Exporting JPG...' : 'Export as JPG'}
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -156,16 +159,24 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Quality</span>
-              <select className="text-sm border border-gray-300 rounded px-2 py-1">
+              <select
+                className="text-sm border border-gray-300 rounded px-2 py-1"
+                value={quality}
+                onChange={(e) => setQuality(e.target.value)}
+              >
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Scale</span>
-              <select className="text-sm border border-gray-300 rounded px-2 py-1">
+              <select
+                className="text-sm border border-gray-300 rounded px-2 py-1"
+                value={scale}
+                onChange={(e) => setScale(Number(e.target.value))}
+              >
                 <option value="1">1x</option>
                 <option value="2">2x</option>
                 <option value="3">3x</option>
