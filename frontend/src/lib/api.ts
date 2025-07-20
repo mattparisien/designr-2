@@ -77,7 +77,6 @@ export class ApiClient {
     }
 
     try {
-      console.log(url)
       const response = await fetch(url, config);
       
       
@@ -277,7 +276,6 @@ export class ApiClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
       },
       body: JSON.stringify(data),
     });

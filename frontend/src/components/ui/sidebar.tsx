@@ -132,7 +132,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
                 <ScrollArea className="flex-1">
                     <div className="p-1">
-                        <aside className="mb-6">
+                        {/* <aside className="mb-6">
                             <div className="flex justify-end">
                                 <MenuButton
                                     isActive={false}
@@ -145,7 +145,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 
 
                             </div>
-                        </aside>
+                        </aside> */}
                         {filteredSections.map((section) => (
                             <aside key={section.title} className="mb-6">
 

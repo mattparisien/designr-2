@@ -21,12 +21,26 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
     setIsExporting(format);
     
     try {
-      // Prepare template data for export
+      // Prepare template data for export - convert Element[] to TemplateElement[]
       const templateData = {
         width: currentPage.canvas?.width || 800,
         height: currentPage.canvas?.height || 600,
         backgroundColor: currentPage.background?.type === 'color' ? currentPage.background.value : '#ffffff',
-        elements: currentPage.elements || [],
+        elements: currentPage.elements?.map(element => ({
+          type: element.kind, // Map 'kind' to 'type'
+          content: element.content,
+          style: {
+            fontSize: element.fontSize ? `${element.fontSize}px` : undefined,
+            fontWeight: element.bold ? 'bold' : 'normal',
+            fontFamily: element.fontFamily,
+            color: element.color,
+            backgroundColor: element.backgroundColor,
+          },
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+        })) || [],
       };
 
       let blob: Blob;

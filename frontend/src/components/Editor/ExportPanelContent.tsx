@@ -38,10 +38,20 @@ export const ExportPanelContent: React.FC<ExportPanelContentProps> = ({ template
     try {
       switch (exportFormat) {
         case 'png':
-          await apiClient.exportPNG({ 
+          const blob = await apiClient.exportPNG({ 
             templateData, 
             includeWatermark: false 
           })
+          
+          // Create download link
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'design.png'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
           break
         case 'jpg':
           // Add JPG export logic when available

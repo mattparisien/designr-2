@@ -1,7 +1,5 @@
 import { Sidebar } from "@/components/ui";
 import { SidebarItem } from "@/components/ui/sidebar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ColorPicker } from "@/components/ui/color-picker";
 import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera, Download } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
@@ -9,6 +7,7 @@ import useEditorStore from "../../lib/stores/useEditorStore";
 import { ElementFactory } from "../../lib/factories/elementFactory";
 import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { DesignPanelContent } from "./DesignPanelContent";
+import { ExportPanelContent } from "./ExportPanelContent";
 import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
 import { CORE_COLORS } from "../../lib/constants/colors";
@@ -245,15 +244,11 @@ const EditorSidebar = () => {
     }, [pages, currentPageId]);
 
     const handleSwatchClick = useCallback((color: string) => {
-
-        const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
-
-
         if (selectedElement) {
-            if (isBackgroundColor && selectedElement.kind === "shape") {
+            if (sidebarPanel.activeItemId === "background-color" && selectedElement.kind === "shape") {
                 // Update shape background color
                 updateElement(selectedElement.id, { backgroundColor: color });
-            } else if (!isBackgroundColor && selectedElement.kind === "text") {
+            } else if (sidebarPanel.activeItemId === "text-color" && selectedElement.kind === "text") {
                 // Update text color
                 updateElement(selectedElement.id, { color: color });
             }
@@ -263,8 +258,6 @@ const EditorSidebar = () => {
     const panelSections = useMemo(() => {
         // If sidebar panel is open for colors, show color picker - this takes priority
         if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
-            const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
-
             const documentColors = getDocumentColors();
 
             const sections = [];
@@ -453,12 +446,15 @@ const EditorSidebar = () => {
                         }))
                 })
                 break;
+            case "export":
+                // Export panel will be handled by custom content rendering
+                return [];
             default:
                 break;
         }
 
         return sections;
-    }, [activeItem, addShape, addLine, sidebarPanel, selectedElement, updateElement, assets, loadingAssets, addImageAsset, getDocumentColors, uploadAssets]);
+    }, [activeItem, addShape, addLine, sidebarPanel, assets, loadingAssets, addImageAsset, getDocumentColors, uploadAssets, handleSwatchClick]);
 
     // Effect to fetch assets when assets panel is opened
     useEffect(() => {
@@ -483,7 +479,9 @@ const EditorSidebar = () => {
                     activeItem?.title
                 }
                 sections={panelSections}
-                customContent={activeItem?.id === "design" ? <DesignPanelContent /> : undefined}
+                customContent={activeItem?.id === "design" ? <DesignPanelContent /> : 
+                             activeItem?.id === "export" ? <ExportPanelContent /> : 
+                             undefined}
             />
         )}
 
