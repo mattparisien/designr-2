@@ -437,39 +437,6 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
             {/* Text Alignment */}
             <TextAlignButton onTextAlignChange={onTextAlignChange} />
-            {/* <div className="flex items-center">
-              <ToolbarButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTextAlignChange("left");
-                }}
-                isActive={textAlign === "left"}
-                rounded="lg"
-              >
-                <ToolbarIcon icon={AlignLeft} />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTextAlignChange("center");
-                }}
-                isActive={textAlign === "center"}
-                rounded="lg"
-              >
-                <ToolbarIcon icon={AlignCenter} />
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTextAlignChange("right");
-                }}
-                isActive={textAlign === "right"}
-                rounded="lg"
-              >
-                <ToolbarIcon icon={AlignRight} />
-              </ToolbarButton>
-            </div> */}
-
             <Divider />
           </>
         )}
@@ -480,7 +447,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Shape Color with Hue Wheel */}
             <ToolbarButton onClick={handleBackgroundColorButtonClick} title="Shape Color">
               <div className="w-5 h-5 bg-center bg-contain rounded-full border-[0.8px] border-neutral-400" style={{
-                backgroundImage: `url(/assets/hue-wheel.png)`
+                backgroundColor: selectedElement?.backgroundColor || 'var(--color-shape-default)',
               }}></div>
             </ToolbarButton>
 
