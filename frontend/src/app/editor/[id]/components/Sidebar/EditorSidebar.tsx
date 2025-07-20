@@ -12,6 +12,7 @@ import { DesignPanelContent } from "./DesignPanelContent";
 import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
 import { CORE_COLORS } from "../../lib/constants/colors";
+import ColorSwatch from "@/components/ui/color-swatch";
 
 
 const sections = [
@@ -98,8 +99,8 @@ const EditorSidebar = () => {
     const uploadAssets = useCallback(async (files: File[]) => {
         try {
             // Filter only image files
-            const imageFiles = files.filter(file => 
-                file.type.startsWith('image/') && 
+            const imageFiles = files.filter(file =>
+                file.type.startsWith('image/') &&
                 ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)
             );
 
@@ -114,21 +115,21 @@ const EditorSidebar = () => {
                 formData.append('file', file);
                 formData.append('name', file.name);
                 formData.append('userId', 'mock-user'); // TODO: Get actual user ID
-                
+
                 const response = await fetch('/api/assets', {
                     method: 'POST',
                     body: formData,
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`Failed to upload ${file.name}`);
                 }
-                
+
                 return response.json();
             });
 
             await Promise.all(uploadPromises);
-            
+
             // Refresh assets list after upload
             await fetchAssets();
             console.log(`Successfully uploaded ${imageFiles.length} assets`);
@@ -226,7 +227,7 @@ const EditorSidebar = () => {
         if (!currentPage?.elements) return [];
 
         const colorsSet = new Set<string>();
-        
+
         currentPage.elements.forEach(element => {
             // Extract colors based on element type
             if (element.kind === "shape" && element.backgroundColor) {
@@ -243,6 +244,21 @@ const EditorSidebar = () => {
         return Array.from(colorsSet);
     }, [pages, currentPageId]);
 
+    const handleSwatchClick = useCallback((color: string) => {
+
+        const isBackgroundColor = sidebarPanel.activeItemId === "background-color";
+
+
+        if (selectedElement) {
+            if (isBackgroundColor && selectedElement.kind === "shape") {
+                // Update shape background color
+                updateElement(selectedElement.id, { backgroundColor: color });
+            } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                // Update text color
+                updateElement(selectedElement.id, { color: color });
+            }
+        }
+    }, [selectedElement, sidebarPanel.activeItemId, updateElement]);
 
     const panelSections = useMemo(() => {
         // If sidebar panel is open for colors, show color picker - this takes priority
@@ -300,44 +316,48 @@ const EditorSidebar = () => {
                         ...documentColors.map((color, index) => ({
                             id: `doc-color-${index}`,
                             title: color,
-                            icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <div
-                                            {...props}
-                                            className={`w-6 h-6 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (selectedElement) {
-                                                    if (isBackgroundColor && selectedElement.kind === "shape") {
-                                                        updateElement(selectedElement.id, { backgroundColor: color });
-                                                    } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                                                        updateElement(selectedElement.id, { color: color });
-                                                    }
-                                                }
-                                            }}
-                                            onContextMenu={(e) => {
-                                                e.preventDefault();
-                                                // Right-click will open the popover automatically
-                                            }}
-                                        />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <ColorPicker
-                                            color={color}
-                                            onChange={(newColor) => {
-                                                if (selectedElement) {
-                                                    if (isBackgroundColor && selectedElement.kind === "shape") {
-                                                        updateElement(selectedElement.id, { backgroundColor: newColor });
-                                                    } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                                                        updateElement(selectedElement.id, { color: newColor });
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                            icon: (() => (
+                                <ColorSwatch
+                                    color={color}
+                                    onClick={handleSwatchClick}
+                                />
+                                // <Popover>
+                                //     <PopoverTrigger asChild>
+                                //         <div
+                                //             {...props}
+                                //             className={`w-6 h-6 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
+                                //             style={{ backgroundColor: color }}
+                                //             onClick={(e) => {
+                                //                 e.stopPropagation();
+                                //                 if (selectedElement) {
+                                //                     if (isBackgroundColor && selectedElement.kind === "shape") {
+                                //                         updateElement(selectedElement.id, { backgroundColor: color });
+                                //                     } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                                //                         updateElement(selectedElement.id, { color: color });
+                                //                     }
+                                //                 }
+                                //             }}
+                                //             onContextMenu={(e) => {
+                                //                 e.preventDefault();
+                                //                 // Right-click will open the popover automatically
+                                //             }}
+                                //         />
+                                //     </PopoverTrigger>
+                                //     <PopoverContent className="w-auto p-0" align="start">
+                                //         <ColorPicker
+                                //             color={color}
+                                //             onChange={(newColor) => {
+                                //                 if (selectedElement) {
+                                //                     if (isBackgroundColor && selectedElement.kind === "shape") {
+                                //                         updateElement(selectedElement.id, { backgroundColor: newColor });
+                                //                     } else if (!isBackgroundColor && selectedElement.kind === "text") {
+                                //                         updateElement(selectedElement.id, { color: newColor });
+                                //                     }
+                                //                 }
+                                //             }}
+                                //         />
+                                //     </PopoverContent>
+                                // </Popover>
                             )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
                         }))
                     ]
@@ -349,88 +369,14 @@ const EditorSidebar = () => {
                 id: "colors",
                 title: "Default Colors",
                 items: [
-                    // Add custom color picker as first item
-                    // {
-                    //     id: "custom-color-picker",
-                    //     title: "Custom Color",
-                    //     icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-                    //         <Popover>
-                    //             <PopoverTrigger asChild>
-                    //                 <div
-                    //                     {...props}
-                    //                     className={`w-6 h-6 rounded-full border-2 border-dashed border-gray-400 cursor-pointer hover:border-gray-600 transition-colors flex items-center justify-center ${props.className || ''}`}
-                    //                 >
-                    //                     <Palette className="w-6 h-6 text-gray-400" />
-                    //                 </div>
-                    //             </PopoverTrigger>
-                    //             <PopoverContent className="w-auto p-0" align="start">
-                    //                 <ColorPicker
-                    //                     color={selectedElement ? (
-                    //                         isBackgroundColor && selectedElement.kind === "shape" 
-                    //                             ? selectedElement.backgroundColor || "#000000"
-                    //                             : !isBackgroundColor && selectedElement.kind === "text"
-                    //                             ? selectedElement.color || "#000000"
-                    //                             : "#000000"
-                    //                     ) : "#000000"}
-                    //                     onChange={(color) => {
-                    //                         if (selectedElement) {
-                    //                             if (isBackgroundColor && selectedElement.kind === "shape") {
-                    //                                 updateElement(selectedElement.id, { backgroundColor: color });
-                    //                             } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                    //                                 updateElement(selectedElement.id, { color: color });
-                    //                             }
-                    //                         }
-                    //                     }}
-                    //                 />
-                    //             </PopoverContent>
-                    //         </Popover>
-                    //     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-                    // },
-                    // Add preset colors
                     ...CORE_COLORS.map((color, index) => ({
                         id: `color-${index}`,
                         title: color,
-                        icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <div
-                                        {...props}
-                                        className={`w-6 h-6 rounded-full border-[0.5px] border-gray-400 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
-                                        style={{ backgroundColor: color }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (selectedElement) {
-                                                if (isBackgroundColor && selectedElement.kind === "shape") {
-                                                    // Update shape background color
-                                                    updateElement(selectedElement.id, { backgroundColor: color });
-                                                } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                                                    // Update text color
-                                                    updateElement(selectedElement.id, { color: color });
-                                                }
-                                            }
-                                            // Don't close the panel - keep it open for multiple color selections
-                                        }}
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            // Right-click will open the popover automatically
-                                        }}
-                                    />
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <ColorPicker
-                                        color={color}
-                                        onChange={(newColor) => {
-                                            if (selectedElement) {
-                                                if (isBackgroundColor && selectedElement.kind === "shape") {
-                                                    updateElement(selectedElement.id, { backgroundColor: newColor });
-                                                } else if (!isBackgroundColor && selectedElement.kind === "text") {
-                                                    updateElement(selectedElement.id, { color: newColor });
-                                                }
-                                            }
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                        icon: (() => (
+                            <ColorSwatch
+                                color={color}
+                                onClick={handleSwatchClick}
+                            />
                         )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
                     }))
                 ]
