@@ -2,14 +2,35 @@ import { Axios } from 'axios';
 import { APIService, Template, TemplatePreset } from '../types/api';
 import { APIBase } from './base';
 
+// Utility type for API error handling
+interface APIError {
+  response?: {
+    data?: unknown;
+  };
+  message: string;
+}
+
+// Return type for template usage
+interface TemplateUsageResult {
+  projectId: string;
+  message: string;
+}
+
 export class TemplatesAPI extends APIBase implements APIService<Template> {
 
-  API_URL: string = '/templates';
+  API_URL: string = '/api/templates';
   apiClient: Axios; // Assuming apiClient is an instance of Axios or similar HTTP client
 
   constructor(apiClient: Axios) {
     super();
     this.apiClient = apiClient;
+  }
+
+  // Helper method to handle API errors consistently
+  private handleError(error: unknown, context: string): never {
+    const apiError = error as APIError;
+    console.error(`${context}:`, apiError.response?.data || apiError.message);
+    throw apiError.response?.data || new Error(context);
   }
 
   // Get all templates
@@ -26,42 +47,38 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
       const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
       const response = await this.apiClient.get<Template[]>(`/templates${query}`);
       return response.data;
-    } catch (error: any) {
-      console.error('Error fetching templates:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch templates');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch templates');
     }
   }
 
   // Get template by ID
   async getById(id: string): Promise<Template> {
     try {
-      const response = await this.apiClient.get<Template>(`/templates/${id}`);
+      const response = await this.apiClient.get<Template>(`/api/templates/${id}`);
       return response.data;
-    } catch (error: any) {
-      console.error(`Error fetching template ${id}:`, error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch template');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch template');
     }
   }
 
   // Get featured templates
   async getFeatured(): Promise<Template[]> {
     try {
-      const response = await this.apiClient.get<Template[]>('/templates/featured/all');
+      const response = await this.apiClient.get<Template[]>('/templates/featured');
       return response.data;
-    } catch (error: any) {
-      console.error('Error fetching featured templates:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch featured templates');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch featured templates');
     }
   }
 
   // Get popular templates
   async getPopular(): Promise<Template[]> {
     try {
-      const response = await this.apiClient.get<Template[]>('/templates/popular/all');
+      const response = await this.apiClient.get<Template[]>('/templates/popular');
       return response.data;
-    } catch (error: any) {
-      console.error('Error fetching popular templates:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch popular templates');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch popular templates');
     }
   }
 
@@ -70,20 +87,18 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
     try {
       const response = await this.apiClient.get<Template[]>(`/templates/category/${category}`);
       return response.data;
-    } catch (error: any) {
-      console.error(`Error fetching templates for category ${category}:`, error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch templates by category');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch templates by category');
     }
   }
 
   // Get template presets
   async getPresets(): Promise<TemplatePreset[]> {
     try {
-      const response = await this.apiClient.get<TemplatePreset[]>('/templates/presets/all');
+      const response = await this.apiClient.get<TemplatePreset[]>('/templates/presets');
       return response.data;
-    } catch (error: any) {
-      console.error('Error fetching template presets:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to fetch template presets');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to fetch template presets');
     }
   }
 
@@ -92,9 +107,8 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
     try {
       const response = await this.apiClient.post<Template>('/templates', data);
       return response.data;
-    } catch (error: any) {
-      console.error('Error creating template:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to create template');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to create template');
     }
   }
 
@@ -103,20 +117,20 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
     try {
       const response = await this.apiClient.post<Template>(`/templates/from-project/${projectId}`, data);
       return response.data;
-    } catch (error: any) {
-      console.error('Error creating template from project:', error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to create template from project');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to create template from project');
     }
   }
 
   // Use a template to create a project
-  async use(templateId: string, ownerId: string): Promise<any> {
+  async use(templateId: string, ownerId: string): Promise<TemplateUsageResult> {
     try {
       const response = await this.apiClient.post(`/templates/${templateId}/use`, { ownerId });
       return response.data;
-    } catch (error: any) {
-      console.error(`Error using template ${templateId}:`, error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to use template');
+    } catch (error: unknown) {
+      const apiError = error as APIError;
+      console.error(`Error using template ${templateId}:`, apiError.response?.data || apiError.message);
+      throw apiError.response?.data || new Error('Failed to use template');
     }
   }
 
@@ -125,9 +139,8 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
     try {
       const response = await this.apiClient.put<Template>(`/templates/${id}`, data);
       return response.data;
-    } catch (error: any) {
-      console.error(`Error updating template ${id}:`, error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to update template');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to update template');
     }
   }
 
@@ -135,9 +148,19 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
   async delete(id: string): Promise<void> {
     try {
       await this.apiClient.delete(`/templates/${id}`);
-    } catch (error: any) {
-      console.error(`Error deleting template ${id}:`, error.response?.data || error.message);
-      throw error.response?.data || new Error('Failed to delete template');
+    } catch (error: unknown) {
+      this.handleError(error, 'Failed to delete template');
+    }
+  }
+
+  // Delete multiple templates
+  async deleteMultiple(ids: string[]): Promise<void> {
+    try {
+      await this.apiClient.delete('/templates/bulk', { data: { ids } });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error deleting multiple templates:', errorMessage);
+      throw new Error('Failed to delete multiple templates');
     }
   }
 
@@ -145,7 +168,7 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
   async getPaginated(
     page: number = 1,
     limit: number = 10,
-    filters: Record<string, any> = {},
+    filters: Record<string, string | number | boolean> = {},
   ): Promise<{
     templates: Template[];
     totalTemplates: number;
@@ -178,14 +201,13 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
         totalPages: response.data.totalPages,
         currentPage: response.data.currentPage,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(
         "Error fetching paginated templates:",
-        error.response?.data || error.message
+        errorMessage
       );
-      throw (
-        error.response?.data || new Error("Failed to fetch paginated templates")
-      );
+      throw new Error("Failed to fetch paginated templates");
     }
   }
 }
