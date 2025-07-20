@@ -11,159 +11,161 @@ import { useInfiniteTemplates } from "@/lib/hooks/useInfiniteTemplates"
 import { useTemplateQuery } from "@/lib/hooks/useTemplates"
 import { useRouter } from "next/navigation"
 import { useSelection } from "@/lib/context/selection"
+import { Section } from "@/components/ui/section"
+import { getRelativeTime } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
+import { type Template } from "@/lib/types/api"
+import { StickyControlsBar } from "@/components/StickyControlsBar"
+import { upperFirst } from "lodash"
+import { Filter, SlidersHorizontal, Plus } from "lucide-react"
+import { LazyGrid } from "@/components/LazyGrid"
+import ListView from "@/components/ui/list-view"
 
-// Mock project type for demonstration
-interface Project {
-  id: string
-  title: string
-  thumbnail: string
-  updatedAt: string
-}
 
-export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const { toast } = useToast();
+// export default function TemplatesPage() {
+//   const [projects, setProjects] = useState<Project[]>([])
+//   const [isLoading, setIsLoading] = useState(true)
+//   const { toast } = useToast();
 
-  useEffect(() => {
-    // Mock fetch projects
-    const mockProjects = [
-      {
-        id: "1",
-        title: "Marketing Campaign",
-        thumbnail: "/placeholder.jpg",
-        updatedAt: "2023-05-10T14:48:00.000Z",
-      },
-      {
-        id: "2",
-        title: "Brand Guidelines",
-        thumbnail: "/placeholder.jpg",
-        updatedAt: "2023-05-09T10:30:00.000Z",
-      },
-      {
-        id: "3",
-        title: "Social Media Pack",
-        thumbnail: "/placeholder.jpg",
-        updatedAt: "2023-05-08T09:15:00.000Z",
-      },
-      {
-        id: "4",
-        title: "Product Launch",
-        thumbnail: "/placeholder.jpg",
-        updatedAt: "2023-05-07T16:22:00.000Z",
-      },
-    ]
+//   useEffect(() => {
+//     // Mock fetch projects
+//     const mockProjects = [
+//       {
+//         id: "1",
+//         title: "Marketing Campaign",
+//         thumbnail: "/placeholder.jpg",
+//         updatedAt: "2023-05-10T14:48:00.000Z",
+//       },
+//       {
+//         id: "2",
+//         title: "Brand Guidelines",
+//         thumbnail: "/placeholder.jpg",
+//         updatedAt: "2023-05-09T10:30:00.000Z",
+//       },
+//       {
+//         id: "3",
+//         title: "Social Media Pack",
+//         thumbnail: "/placeholder.jpg",
+//         updatedAt: "2023-05-08T09:15:00.000Z",
+//       },
+//       {
+//         id: "4",
+//         title: "Product Launch",
+//         thumbnail: "/placeholder.jpg",
+//         updatedAt: "2023-05-07T16:22:00.000Z",
+//       },
+//     ]
 
-    setProjects(mockProjects)
-    setIsLoading(false)
-  }, [])
+//     setProjects(mockProjects)
+//     setIsLoading(false)
+//   }, [])
 
-  const handleSelectProject = (id: string, isSelected: boolean) => {
-    console.log(`Project ${id} is ${isSelected ? "selected" : "unselected"}`)
-  }
+//   const handleSelectProject = (id: string, isSelected: boolean) => {
+//     console.log(`Project ${id} is ${isSelected ? "selected" : "unselected"}`)
+//   }
 
-  const handleOpenProject = (id: string) => {
-    console.log(`Opening project ${id}`)
-    // Navigate to project
-  }
+//   const handleOpenProject = (id: string) => {
+//     console.log(`Opening project ${id}`)
+//     // Navigate to project
+//   }
 
-  const handleDeleteSelected = async () => {
-    // In a real implementation, you'd call your API to delete the projects
-    console.log("Delete selected projects")
-    return Promise.resolve();
-  }
+//   const handleDeleteSelected = async () => {
+//     // In a real implementation, you'd call your API to delete the projects
+//     console.log("Delete selected projects")
+//     return Promise.resolve();
+//   }
 
-  const handleDuplicateSelected = async () => {
-    console.log("Duplicate selected projects")
-    return Promise.resolve();
-  }
+//   const handleDuplicateSelected = async () => {
+//     console.log("Duplicate selected projects")
+//     return Promise.resolve();
+//   }
 
-  const handleMoveSelected = async () => {
-    console.log("Move selected projects")
-    return Promise.resolve();
-  }
+//   const handleMoveSelected = async () => {
+//     console.log("Move selected projects")
+//     return Promise.resolve();
+//   }
 
-  // Handle project title update
-  const handleTitleChange = async (id: string, newTitle: string) => {
-    try {
-      // Call API to update project title
-      //   await apiClient.updateTemplate(id, { title: newTitle });
+//   // Handle project title update
+//   const handleTitleChange = async (id: string, newTitle: string) => {
+//     try {
+//       // Call API to update project title
+//       //   await apiClient.updateTemplate(id, { title: newTitle });
 
-      // Update the project title in the local state
-      setProjects(prevProjects =>
-        prevProjects.map(project =>
-          project.id === id
-            ? { ...project, title: newTitle }
-            : project
-        )
-      );
+//       // Update the project title in the local state
+//       setProjects(prevProjects =>
+//         prevProjects.map(project =>
+//           project.id === id
+//             ? { ...project, title: newTitle }
+//             : project
+//         )
+//       );
 
-      // Show success toast
-      toast({
-        title: "Success",
-        description: "Project title updated successfully",
-      });
-    } catch (error) {
-      console.error("Failed to update project title:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update project title. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
+//       // Show success toast
+//       toast({
+//         title: "Success",
+//         description: "Project title updated successfully",
+//       });
+//     } catch (error) {
+//       console.error("Failed to update project title:", error);
+//       toast({
+//         title: "Error",
+//         description: "Failed to update project title. Please try again.",
+//         variant: "destructive"
+//       });
+//     }
+//   };
 
-  const formatUpdatedAt = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-    }).format(date)
-  }
+//   const formatUpdatedAt = (dateString: string) => {
+//     const date = new Date(dateString)
+//     return new Intl.DateTimeFormat("en-US", {
+//       month: "short",
+//       day: "numeric",
+//     }).format(date)
+//   }
 
-  if (isLoading) {
-    return <div className="p-8">Loading projects...</div>
-  }
+//   if (isLoading) {
+//     return <div className="p-8">Loading projects...</div>
+//   }
 
-  return (
-    <SelectionProvider>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Templates</h1>
-          <Button>Create New Project</Button>
-        </div>
+//   return (
+//     <SelectionProvider>
+//       <div className="p-8">
+//         <div className="flex justify-between items-center mb-6">
+//           <h1 className="text-2xl font-bold">My Templates</h1>
+//           <Button>Create New Project</Button>
+//         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {projects.map((project) => (
-            <InteractiveCard
-              key={project.id}
-              id={project.id}
-              image={{
-                src: project.thumbnail,
-                alt: project.title,
-              }}
-              title={project.title}
-              subtitleLeft="Project"
-              subtitleRight={formatUpdatedAt(project.updatedAt)}
-              onClick={() => handleOpenProject(project.id)}
-              onSelect={handleSelectProject}
-              onTitleChange={handleTitleChange}
-            />
-          ))}
-        </div>
+//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+//           {projects.map((project) => (
+//             <InteractiveCard
+//               key={project.id}
+//               id={project.id}
+//               image={{
+//                 src: project.thumbnail,
+//                 alt: project.title,
+//               }}
+//               title={project.title}
+//               subtitleLeft="Project"
+//               subtitleRight={formatUpdatedAt(project.updatedAt)}
+//               onClick={() => handleOpenProject(project.id)}
+//               onSelect={handleSelectProject}
+//               onTitleChange={handleTitleChange}
+//             />
+//           ))}
+//         </div>
 
-        <SelectionActionBar
-          onDelete={handleDeleteSelected}
-          onDuplicate={handleDuplicateSelected}
-          onMove={handleMoveSelected}
-        />
-      </div>
-    </SelectionProvider>
-  )
-}
+//         <SelectionActionBar
+//           onDelete={handleDeleteSelected}
+//           onDuplicate={handleDuplicateSelected}
+//           onMove={handleMoveSelected}
+//         />
+//       </div>
+//     </SelectionProvider>
+//   )
+// }
 
 // Main Dashboard component that wraps everything with SelectionProvider
-export default function GridView() {
+export default function TemplatesPage() {
   return (
     <SelectionProvider>
       <Grid />
@@ -179,7 +181,6 @@ function Grid() {
   const {
     createTemplate,
     deleteTemplate,
-    toggleStar,
     deleteMultipleTemplates,
     updateTemplate
   } = useTemplateQuery()
@@ -217,59 +218,9 @@ function Grid() {
     return;
   }, [fetchNextPage]);
 
-  // Create new presentation
-  const handleCreatePresentation = async () => {
-    try {
-      setIsCreating(true)
 
-      // Create default presentation document
-      const newProject = {
-        title: 'Untitled Project',
-        description: "",
-        type: "presentation",
-        ownerId: "user123", // Replace with actual user ID from auth
-        starred: false,
-        tags: [],
-        layout: {
-          pages: [
-            {
-              name: "Page 1",
-              canvas: {
-                width: 1920,
-                height: 1080
-              },
-              elements: [],
-              background: {
-                type: "color",
-                value: "#ffffff"
-              }
-            }
-          ]
-        }
-      }
-
-      // Now we can directly await the result since we're using mutateAsync
-      const template = await createTemplate(newProject)
-
-      // Refresh the template list after creation
-      refetch()
-
-      // Navigate to editor with the new template ID
-      router.push(`/editor?id=${template._id}`)
-
-    } catch (error) {
-      console.error("Failed to create template:", error)
-      toast({
-        title: "Error",
-        description: "Failed to create template. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsCreating(false)
-    }
-  }
   // Open existing template
-  const handleOpenTemplates = useCallback((id: string) => {
+  const handleOpenTemplate = useCallback((id: string) => {
     router.push(`/editor/${id}`)
   }, [router])
 
@@ -292,19 +243,19 @@ function Grid() {
     refetch()
   }, [templates, toggleStar, refetch])
 
-  // Handle deleting multiple projects with better error handling and UI updates
-  const handleDeleteSelectedProjects = useCallback(async () => {
+  // Handle deleting multiple templates with better error handling and UI updates
+  const handleDeleteSelectedTemplates = useCallback(async () => {
     if (selectedIds.length === 0) return;
 
     try {
       // Show a loading toast
       toast({
-        title: "Deleting projects...",
-        description: `Deleting ${selectedIds.length} selected projects.`
+        title: "Deleting templates...",
+        description: `Deleting ${selectedIds.length} selected templates.`
       });
 
       // Delete the templates
-      const result = await deleteMultipleTemplates(selectedIds);
+      await deleteMultipleTemplates(selectedIds);
 
       // Clear the selection after successful deletion
       clearSelection();
@@ -328,9 +279,9 @@ function Grid() {
       // Still try to refresh the data to get the current state
       refetch();
     }
-  }, [deleteMultipleProjects, refetch, selectedIds, toast, clearSelection]);
+  }, [deleteMultipleTemplates, refetch, selectedIds, toast, clearSelection]);
 
-  // Handle project title change
+  // Handle template title change
   const handleTitleChange = useCallback(async (id: string, newTitle: string) => {
 
     try {
@@ -355,29 +306,29 @@ function Grid() {
         variant: "destructive"
       });
     }
-  }, [projects, updateProject, refetch, toast]);
+  }, [templates, updateTemplate, refetch, toast]);
 
   // Render a grid item for LazyGrid
-  const renderGridItem = useCallback((project: Project, index: number) => {
+  const renderGridItem = useCallback((template: Template) => {
     return (
       <InteractiveCard
-        key={project._id}
-        id={project._id}
-        image={project.thumbnail ? {
-          src: project.thumbnail,
-          alt: project.title || "Project thumbnail"
+        key={template._id}
+        id={template._id}
+        image={template.thumbnail ? {
+          src: template.thumbnail,
+          alt: template.title || "Template thumbnail"
         } : undefined}
-        title={project.title || "Untitled Design"}
-        subtitleLeft={upperFirst(project.type)}
-        subtitleRight={`Last updated ${getRelativeTime(project.updatedAt)}`}
-        onClick={() => handleOpenProject(project._id)}
+        title={template.title || "Untitled Template"}
+        subtitleLeft={upperFirst(template.type)}
+        subtitleRight={`Last updated ${getRelativeTime(template.updatedAt)}`}
+        onClick={() => handleOpenTemplate(template._id)}
         onSelect={(id, isSelected) => {
-          console.log(`Project ${id} selection state: ${isSelected}`);
+          console.log(`Template ${id} selection state: ${isSelected}`);
         }}
         onTitleChange={handleTitleChange}
       />
     );
-  }, [handleOpenProject, handleTitleChange]);
+  }, [handleOpenTemplate, handleTitleChange]);
 
   return (
     <>
@@ -386,7 +337,7 @@ function Grid() {
 
         {/* Sticky Controls Bar */}
         <StickyControlsBar
-          showCondition={projects.length > 0}
+          showCondition={templates.length > 0}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           showViewToggle={true}
@@ -425,7 +376,6 @@ function Grid() {
             <p className="text-gray-500 mb-6 max-w-sm">There was an error loading your projects. Please try again.</p>
             <Button
               onClick={() => refetch()}
-              variant="gradient"
               className="rounded-2xl"
             >
               Try Again
@@ -439,26 +389,26 @@ function Grid() {
             {viewMode === "grid" ? (
               <div className="space-y-6">
                 <LazyGrid
-                  items={projects}
+                  items={templates}
                   renderItem={renderGridItem}
                   loadMore={handleFetchNextPage}
                   hasMore={!!hasNextPage}
                   isLoading={isFetchingNextPage}
-                  isInitialLoading={isLoading && projects.length === 0}
+                  isInitialLoading={isLoading && templates.length === 0}
                   loadingVariant="grid"
-                  loadingText="Loading your projects..."
+                  loadingText="Loading your templates..."
                   className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full"
                 />
               </div>
             ) : (
               <ListView
-                getVisibleDesigns={() => projects}
-                handleOpenDesign={handleOpenProject}
-                designs={projects}
-                handleDeleteDesign={handleDeleteProject}
+                getVisibleDesigns={() => templates}
+                handleOpenDesign={handleOpenTemplate}
+                designs={templates}
+                handleDeleteDesign={handleDeleteTemplate}
                 toggleStar={handleToggleStar}
                 getDefaultThumbnail={(index: number) => `/placeholder${index % 2 === 0 ? '.jpg' : '.svg'}`}
-                toggleDesignSelection={(id, e) => {
+                toggleDesignSelection={(id) => {
                   // Handle selection toggle here
                   console.log(`Toggling selection for ${id}`);
                 }}
@@ -470,7 +420,7 @@ function Grid() {
             )}
 
             {/* Empty state */}
-            {projects.length === 0 && !isLoading && (
+            {templates.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                 <div className="rounded-full bg-gradient-to-r from-brand-blue-light/20 to-brand-teal-light/20 p-6 mb-4">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-blue">
@@ -494,9 +444,8 @@ function Grid() {
                         : "No recent projects found."}
                 </p>
                 <Button
-                  onClick={handleCreatePresentation}
+                  onClick={handleCreateTemplate}
                   disabled={isCreating}
-                  variant="gradient"
                   className="rounded-2xl font-medium py-3 h-auto"
                 >
                   {isCreating ? (
@@ -520,9 +469,9 @@ function Grid() {
       </Section>
 
       {/* Recently Used Templates */}
-      {hasUsedTemplates && <Section heading="Recently Used Templates">
+      {<Section heading="Recently Used Templates">
         {/* Recently used templates section */}
-        {activeTab === "all" && hasUsedTemplates && (
+        {activeTab === "all" &&  (
           <div className="mt-16">
             <h1 className="text-3xl font-bold tracking-tight mb-4 text-black">Recently Used Templates</h1>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -549,14 +498,14 @@ function Grid() {
 
 
       {/* Selection Actions */}
-      <SelectionActions
-        onDelete={handleDeleteSelectedProjects}
+      <SelectionActionBar
+        onDelete={handleDeleteSelectedTemplates}
         onDuplicate={async () => {
-          console.log("Duplicate selected projects");
+          console.log("Duplicate selected templates");
           return Promise.resolve();
         }}
         onMove={async () => {
-          console.log("Move selected projects");
+          console.log("Move selected templates");
           return Promise.resolve();
         }}
         className="z-50"
