@@ -19,7 +19,7 @@ export function SelectionCheckbox({ selected, visible, onSelect }: SelectionChec
             }}
         >
             <div className={`h-6 w-6 flex items-center justify-center rounded-md ${selected
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-[var(--color-accent)]'
                 : 'bg-white/80 border border-gray-400 shadow-sm'}`}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}

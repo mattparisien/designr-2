@@ -125,7 +125,7 @@ export default function ProjectsPage() {
     <SelectionProvider>
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Projects</h1>
+          <h1 className="text-2xl font-bold">My Templates</h1>
           <Button>Create New Project</Button>
         </div>
 
