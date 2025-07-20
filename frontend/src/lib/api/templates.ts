@@ -140,4 +140,52 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
       throw error.response?.data || new Error('Failed to delete template');
     }
   }
+
+
+  async getPaginated(
+    page: number = 1,
+    limit: number = 10,
+    filters: Record<string, any> = {},
+  ): Promise<{
+    templates: Template[];
+    totalTemplates: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    try {
+
+      const params = new URLSearchParams();
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+
+      // Add any filters to the query params
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+
+      const response = await this.apiClient.get<{
+        templates: Template[];
+        totalTemplates: number;
+        totalPages: number;
+        currentPage: number;
+      }>(`/templates/paginated?${params.toString()}`);
+
+      return {
+        templates: response.data.templates,
+        totalTemplates: response.data.totalTemplates,
+        totalPages: response.data.totalPages,
+        currentPage: response.data.currentPage,
+      };
+    } catch (error: any) {
+      console.error(
+        "Error fetching paginated templates:",
+        error.response?.data || error.message
+      );
+      throw (
+        error.response?.data || new Error("Failed to fetch paginated templates")
+      );
+    }
+  }
 }
