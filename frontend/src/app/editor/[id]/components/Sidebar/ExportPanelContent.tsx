@@ -22,7 +22,7 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
     // Important: force the size you want **before** capture
     const originalWidth = node.style.width;
     const originalHeight = node.style.height;
-
+    
     node.style.width = `${w}px`;
     node.style.height = `${h}px`;
 
@@ -32,7 +32,9 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
         width: w,
         height: h,
         pixelRatio: scale,     // use the scale from the slider
-        backgroundColor: 'white'  // fallback background
+        backgroundColor: 'white',  // fallback background
+        skipFonts: false,      // don't skip fonts
+        includeQueryParams: true // include query params for font URLs
       });
 
       // download helper
@@ -45,9 +47,7 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
       node.style.width = originalWidth;
       node.style.height = originalHeight;
     }
-  }
-
-  const handleExport = async (format: string) => {
+  }  const handleExport = async (format: string) => {
     console.log('Export clicked for format:', format);
     setIsExporting(format);
     try {
@@ -57,6 +57,20 @@ export const ExportPanelContent = ({ onExport }: ExportPanelContentProps) => {
         console.error('Could not find canvas element to export')
         return
       }
+
+      // Ensure all fonts are loaded before export
+      console.log('Loading fonts before export...');
+      try {
+        const { fontsAPI } = await import('@/lib/api/index');
+        await fontsAPI.loadAllUserFonts();
+        console.log('Fonts loaded successfully');
+      } catch (fontError) {
+        console.warn('Failed to load fonts:', fontError);
+        // Continue with export even if fonts fail to load
+      }
+
+      // Wait a bit for fonts to be fully applied
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const width = currentPage?.canvas?.width || 1080;
       const height = currentPage?.canvas?.height || 1080;
