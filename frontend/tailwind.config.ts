@@ -12,7 +12,7 @@ module.exports = {
         // CSS custom property references
         background: "var(--background)",
         foreground: "var(--foreground)",
-        
+        "interactive-border-accent": "var(--interactive-border-accent)",
         
         // Design system colors - moved to root level for proper bg- class generation
         primary: "var(--bg-primary)",
@@ -117,6 +117,7 @@ module.exports = {
       
       // Custom border colors
       borderColor: {
+        accent: "var(--border-accent)",
         DEFAULT: "var(--border-default)",
         heavy: "var(--border-heavy)",
         light: "var(--border-light)",

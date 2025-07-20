@@ -14,7 +14,7 @@
   --color-accent-80: #6a7f0c;
   --color-accent-90: #505f08;
   --color-accent-100: #374204;
-
+  --color-accent: var(--color-accent-50);
 
 
   --bg-primary: #f3f2f100;
@@ -28,7 +28,7 @@
   --border-default: #0d0d0d1a;
   --border-heavy: #0d0d0d26;
   --border-light: #0d0d0d0d;
-  --border-accent: var(--color-accent-50);
+  --border-accent: var(--color-accent);
   --border-status-warning: #ffe7d9;
   --border-status-error: #ffe1e0;
   --text-primary: #0d0d0d;
@@ -70,6 +70,7 @@
   --interactive-bg-accent-press: #99ceff;
   --interactive-bg-accent-muted-press: #e7f4ff;
   --interactive-bg-accent-inactive: #e5f3ff;
+  --interactive-border-accent: var(--color-accent);
 
   --border-elevated-editor: var(--border-heavy);
   --interactive-border-editor: var(--border-accent);
