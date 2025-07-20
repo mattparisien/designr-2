@@ -175,6 +175,7 @@ export interface Template {
   author: string;              // Creator of the template
   featured: boolean;           // Whether this is a featured template
   popular: boolean;            // Whether this is a popular template
+  starred?: boolean;           // Whether this template is starred by the user
   canvasSize: {                // Canvas dimensions
     name?: string;             // Named size (e.g., 'Instagram Post', 'Letter')
     width: number;             // Width in pixels

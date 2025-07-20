@@ -32,6 +32,7 @@ import { nanoid } from 'nanoid';
 import { Element } from '../types/canvas';
 import { DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_LETTER_SPACING, DEFAULT_LINE_HEIGHT, DEFAULT_ELEMENT_DIMENSIONS } from '../constants';
 import { measureTextWidth, measureTextHeight } from '../utils/textMeasurement';
+import type { Template } from '@/lib/types/api';
 
 export interface ElementPosition {
   x: number;
@@ -371,6 +372,46 @@ export class ElementFactory {
       id: ElementFactory.generateId()
     };
   }
+
+  /**
+   * Creates a new template with default values
+   */
+  static createNewTemplate(options: {
+    title?: string;
+    description?: string;
+    type?: "presentation" | "social" | "print" | "custom";
+    category?: string;
+    author?: string;
+    canvasWidth?: number;
+    canvasHeight?: number;
+  } = {}): Omit<Template, '_id' | 'createdAt' | 'updatedAt'> {
+    const {
+      title = "Untitled Template",
+      description = "",
+      type = "custom",
+      category = "custom",
+      author = "current-user",
+      canvasWidth = 800,
+      canvasHeight = 600
+    } = options;
+
+    return {
+      title,
+      description,
+      type,
+      category,
+      author,
+      featured: false,
+      popular: false,
+      canvasSize: {
+        width: canvasWidth,
+        height: canvasHeight
+      },
+      pages: [],
+      tags: [],
+      starred: false
+    };
+  }
 }
 
 /**
@@ -436,4 +477,63 @@ export const createQuickImageElement = (canvasSize: CanvasSize, imageData: {
   return ElementFactory.createCompleteElement(
     ElementFactory.createImageElement(canvasSize, imageData)
   );
+};
+
+/**
+ * Template factory functions
+ */
+export const createDefaultTemplate = (options?: {
+  title?: string;
+  description?: string;
+  type?: "presentation" | "social" | "print" | "custom";
+  category?: string;
+  author?: string;
+  canvasWidth?: number;
+  canvasHeight?: number;
+}) => {
+  return ElementFactory.createNewTemplate(options);
+};
+
+/**
+ * Predefined template factories for common use cases
+ */
+export const createSocialMediaTemplate = (platform: "instagram" | "facebook" | "twitter" = "instagram") => {
+  const dimensions = {
+    instagram: { width: 1080, height: 1080 },
+    facebook: { width: 1200, height: 630 },
+    twitter: { width: 1200, height: 675 }
+  };
+
+  return ElementFactory.createNewTemplate({
+    title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} Post`,
+    type: "social",
+    category: "social-media",
+    canvasWidth: dimensions[platform].width,
+    canvasHeight: dimensions[platform].height
+  });
+};
+
+export const createPresentationTemplate = () => {
+  return ElementFactory.createNewTemplate({
+    title: "Presentation Slide",
+    type: "presentation",
+    category: "presentation",
+    canvasWidth: 1920,
+    canvasHeight: 1080
+  });
+};
+
+export const createPrintTemplate = (format: "letter" | "a4" = "letter") => {
+  const dimensions = {
+    letter: { width: 816, height: 1056 }, // 8.5x11 inches at 96 DPI
+    a4: { width: 794, height: 1123 } // A4 at 96 DPI
+  };
+
+  return ElementFactory.createNewTemplate({
+    title: `${format.toUpperCase()} Document`,
+    type: "print",
+    category: "document",
+    canvasWidth: dimensions[format].width,
+    canvasHeight: dimensions[format].height
+  });
 };

@@ -6,11 +6,12 @@ import { ViewMode } from "@/components/StickyControlsBar"
 import { Button } from "@/components/ui/button"
 import { SelectionProvider } from "@/lib/context/selection"
 import { useToast } from "@/lib/hooks/useToast"
-import { useEffect, useState, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { useInfiniteTemplates } from "@/lib/hooks/useInfiniteTemplates"
 import { useTemplateQuery } from "@/lib/hooks/useTemplates"
 import { useRouter } from "next/navigation"
 import { useSelection } from "@/lib/context/selection"
+import Image from "next/image"
 import { Section } from "@/components/ui/section"
 import { getRelativeTime } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
@@ -20,6 +21,12 @@ import { upperFirst } from "lodash"
 import { Filter, SlidersHorizontal, Plus } from "lucide-react"
 import { LazyGrid } from "@/components/LazyGrid"
 import ListView from "@/components/ui/list-view"
+import { 
+  createDefaultTemplate, 
+  createSocialMediaTemplate, 
+  createPresentationTemplate, 
+  createPrintTemplate 
+} from "@/app/editor/[id]/lib/factories/elementFactory"
 
 
 // export default function TemplatesPage() {
@@ -186,9 +193,9 @@ function Grid() {
   } = useTemplateQuery()
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
-  const [activeTab, setActiveTab] = useState("all")
+  const [activeTab] = useState("all")
   const [isCreating, setIsCreating] = useState(false)
-  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [searchQuery] = useState<string>("")
 
   // Build filters for infinite query based on active tab and search query
   const filters = {
@@ -224,7 +231,53 @@ function Grid() {
     router.push(`/editor/${id}`)
   }, [router])
 
-  // Handle template deletion
+  // Create new template
+  const handleCreateTemplate = useCallback(async (templateType: "custom" | "social" | "presentation" | "print" = "custom") => {
+    try {
+      setIsCreating(true)
+      
+      // Use the appropriate factory function based on template type
+      let newTemplate;
+      switch (templateType) {
+        case "social":
+          newTemplate = createSocialMediaTemplate("instagram");
+          break;
+        case "presentation":
+          newTemplate = createPresentationTemplate();
+          break;
+        case "print":
+          newTemplate = createPrintTemplate("letter");
+          break;
+        default:
+          newTemplate = createDefaultTemplate({
+            title: "Untitled Template",
+            description: "",
+            type: "custom",
+            category: "custom",
+            author: "current-user",
+            canvasWidth: 800,
+            canvasHeight: 600
+          });
+      }
+      
+      const template = await createTemplate(newTemplate)
+      router.push(`/editor/${template._id}`)
+    } catch (error) {
+      console.error("Failed to create template:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create template. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsCreating(false)
+    }
+  }, [createTemplate, router, toast, setIsCreating])
+
+  // Handle create template button click
+  const handleCreateTemplateClick = useCallback(() => {
+    handleCreateTemplate("custom");
+  }, [handleCreateTemplate])  // Handle template deletion
   const handleDeleteTemplate = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent triggering the card click
     await deleteTemplate(id)
@@ -238,10 +291,12 @@ function Grid() {
 
     const template = templates.find(p => p._id === id)
     if (!template) return
-    await toggleStar({ id, starred: !template.starred })
+    
+    // Update the template with the new starred status
+    await updateTemplate({ id, data: { starred: !template.starred } })
     // Refresh the data after starring
     refetch()
-  }, [templates, toggleStar, refetch])
+  }, [templates, updateTemplate, refetch])
 
   // Handle deleting multiple templates with better error handling and UI updates
   const handleDeleteSelectedTemplates = useCallback(async () => {
@@ -444,7 +499,7 @@ function Grid() {
                         : "No recent projects found."}
                 </p>
                 <Button
-                  onClick={handleCreateTemplate}
+                  onClick={handleCreateTemplateClick}
                   disabled={isCreating}
                   className="rounded-2xl font-medium py-3 h-auto"
                 >
@@ -478,9 +533,11 @@ function Grid() {
               {[1, 2, 3, 4, 5, 6].map((item) => (
                 <Card key={item} className="cursor-pointer overflow-hidden group h-40 transition-all rounded-2xl border-gray-100">
                   <div className="h-full bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                    <img
+                    <Image
                       src={`/placeholder${item % 2 === 0 ? '.jpg' : '.svg'}`}
                       alt={`Template ${item}`}
+                      width={200}
+                      height={160}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/70 to-brand-teal/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
