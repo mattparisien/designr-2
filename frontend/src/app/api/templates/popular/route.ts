@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 
+interface TemplateData {
+  _id: string;
+  popular?: boolean;
+  [key: string]: unknown;
+}
+
 const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3001';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
@@ -28,9 +34,14 @@ async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
 // GET /api/templates/popular - Get popular templates
 export async function GET() {
   try {
-    const data = await makeBackendRequest('/templates/popular/all');
+    // Since backend doesn't have /popular endpoint, we'll get all templates and filter for popular ones
+    const data = await makeBackendRequest('/templates?limit=100');
     
-    return NextResponse.json(data);
+    // Filter for popular templates (assuming templates have a popular property)
+    const allTemplates = data.templates || [];
+    const popularTemplates = allTemplates.filter((template: TemplateData) => template.popular === true);
+    
+    return NextResponse.json({ templates: popularTemplates });
   } catch (error) {
     console.error('Error fetching popular templates:', error);
     return NextResponse.json(

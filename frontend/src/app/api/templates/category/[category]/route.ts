@@ -32,7 +32,9 @@ export async function GET(
 ) {
   try {
     const { category } = params;
-    const data = await makeBackendRequest(`/templates/category/${category}`);
+    
+    // Use the backend's category filtering
+    const data = await makeBackendRequest(`/templates?category=${encodeURIComponent(category)}&limit=100`);
     
     return NextResponse.json(data);
   } catch (error) {

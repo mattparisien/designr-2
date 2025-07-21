@@ -21,161 +21,21 @@ import { upperFirst } from "lodash"
 import { Filter, SlidersHorizontal, Plus } from "lucide-react"
 import { LazyGrid } from "@/components/LazyGrid"
 import ListView from "@/components/ui/list-view"
-import { 
-  createDefaultTemplate, 
-  createSocialMediaTemplate, 
-  createPresentationTemplate, 
-  createPrintTemplate 
+import {
+  createDefaultTemplate,
+  createSocialMediaTemplate,
+  createPresentationTemplate,
+  createPrintTemplate
 } from "@/app/editor/[id]/lib/factories/elementFactory"
 
-
-// export default function TemplatesPage() {
-//   const [projects, setProjects] = useState<Project[]>([])
-//   const [isLoading, setIsLoading] = useState(true)
-//   const { toast } = useToast();
-
-//   useEffect(() => {
-//     // Mock fetch projects
-//     const mockProjects = [
-//       {
-//         id: "1",
-//         title: "Marketing Campaign",
-//         thumbnail: "/placeholder.jpg",
-//         updatedAt: "2023-05-10T14:48:00.000Z",
-//       },
-//       {
-//         id: "2",
-//         title: "Brand Guidelines",
-//         thumbnail: "/placeholder.jpg",
-//         updatedAt: "2023-05-09T10:30:00.000Z",
-//       },
-//       {
-//         id: "3",
-//         title: "Social Media Pack",
-//         thumbnail: "/placeholder.jpg",
-//         updatedAt: "2023-05-08T09:15:00.000Z",
-//       },
-//       {
-//         id: "4",
-//         title: "Product Launch",
-//         thumbnail: "/placeholder.jpg",
-//         updatedAt: "2023-05-07T16:22:00.000Z",
-//       },
-//     ]
-
-//     setProjects(mockProjects)
-//     setIsLoading(false)
-//   }, [])
-
-//   const handleSelectProject = (id: string, isSelected: boolean) => {
-//     console.log(`Project ${id} is ${isSelected ? "selected" : "unselected"}`)
-//   }
-
-//   const handleOpenProject = (id: string) => {
-//     console.log(`Opening project ${id}`)
-//     // Navigate to project
-//   }
-
-//   const handleDeleteSelected = async () => {
-//     // In a real implementation, you'd call your API to delete the projects
-//     console.log("Delete selected projects")
-//     return Promise.resolve();
-//   }
-
-//   const handleDuplicateSelected = async () => {
-//     console.log("Duplicate selected projects")
-//     return Promise.resolve();
-//   }
-
-//   const handleMoveSelected = async () => {
-//     console.log("Move selected projects")
-//     return Promise.resolve();
-//   }
-
-//   // Handle project title update
-//   const handleTitleChange = async (id: string, newTitle: string) => {
-//     try {
-//       // Call API to update project title
-//       //   await apiClient.updateTemplate(id, { title: newTitle });
-
-//       // Update the project title in the local state
-//       setProjects(prevProjects =>
-//         prevProjects.map(project =>
-//           project.id === id
-//             ? { ...project, title: newTitle }
-//             : project
-//         )
-//       );
-
-//       // Show success toast
-//       toast({
-//         title: "Success",
-//         description: "Project title updated successfully",
-//       });
-//     } catch (error) {
-//       console.error("Failed to update project title:", error);
-//       toast({
-//         title: "Error",
-//         description: "Failed to update project title. Please try again.",
-//         variant: "destructive"
-//       });
-//     }
-//   };
-
-//   const formatUpdatedAt = (dateString: string) => {
-//     const date = new Date(dateString)
-//     return new Intl.DateTimeFormat("en-US", {
-//       month: "short",
-//       day: "numeric",
-//     }).format(date)
-//   }
-
-//   if (isLoading) {
-//     return <div className="p-8">Loading projects...</div>
-//   }
-
-//   return (
-//     <SelectionProvider>
-//       <div className="p-8">
-//         <div className="flex justify-between items-center mb-6">
-//           <h1 className="text-2xl font-bold">My Templates</h1>
-//           <Button>Create New Project</Button>
-//         </div>
-
-//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-//           {projects.map((project) => (
-//             <InteractiveCard
-//               key={project.id}
-//               id={project.id}
-//               image={{
-//                 src: project.thumbnail,
-//                 alt: project.title,
-//               }}
-//               title={project.title}
-//               subtitleLeft="Project"
-//               subtitleRight={formatUpdatedAt(project.updatedAt)}
-//               onClick={() => handleOpenProject(project.id)}
-//               onSelect={handleSelectProject}
-//               onTitleChange={handleTitleChange}
-//             />
-//           ))}
-//         </div>
-
-//         <SelectionActionBar
-//           onDelete={handleDeleteSelected}
-//           onDuplicate={handleDuplicateSelected}
-//           onMove={handleMoveSelected}
-//         />
-//       </div>
-//     </SelectionProvider>
-//   )
-// }
 
 // Main Dashboard component that wraps everything with SelectionProvider
 export default function TemplatesPage() {
   return (
     <SelectionProvider>
-      <Grid />
+      <main className="px-4 lg:px-8 xl:px-10 2xl:px-12 pt-20 flex flex-col items-center">
+        <Grid />
+      </main>
     </SelectionProvider>
   )
 }
@@ -235,7 +95,7 @@ function Grid() {
   const handleCreateTemplate = useCallback(async (templateType: "custom" | "social" | "presentation" | "print" = "custom") => {
     try {
       setIsCreating(true)
-      
+
       // Use the appropriate factory function based on template type
       let newTemplate;
       switch (templateType) {
@@ -259,7 +119,7 @@ function Grid() {
             canvasHeight: 600
           });
       }
-      
+
       const template = await createTemplate(newTemplate)
       router.push(`/editor/${template._id}`)
     } catch (error) {
@@ -291,7 +151,7 @@ function Grid() {
 
     const template = templates.find(p => p._id === id)
     if (!template) return
-    
+
     // Update the template with the new starred status
     await updateTemplate({ id, data: { starred: !template.starred } })
     // Refresh the data after starring
@@ -391,7 +251,7 @@ function Grid() {
       <Section heading="My Designs">
 
         {/* Sticky Controls Bar */}
-        <StickyControlsBar
+        {/* <StickyControlsBar
           showCondition={templates.length > 0}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -414,7 +274,7 @@ function Grid() {
               },
             }
           ]}
-        />
+        /> */}
 
         {/* Loading state */}
         {/* Removed - now handled inside LazyGrid */}
@@ -522,36 +382,6 @@ function Grid() {
           </>
         ) : null}
       </Section>
-
-      {/* Recently Used Templates */}
-      {<Section heading="Recently Used Templates">
-        {/* Recently used templates section */}
-        {activeTab === "all" &&  (
-          <div className="mt-16">
-            <h1 className="text-3xl font-bold tracking-tight mb-4 text-black">Recently Used Templates</h1>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((item) => (
-                <Card key={item} className="cursor-pointer overflow-hidden group h-40 transition-all rounded-2xl border-gray-100">
-                  <div className="h-full bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                    <Image
-                      src={`/placeholder${item % 2 === 0 ? '.jpg' : '.svg'}`}
-                      alt={`Template ${item}`}
-                      width={200}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/70 to-brand-teal/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Button size="sm" variant="secondary" className="bg-white hover:bg-white/90 text-sm rounded-xl">
-                        Use
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-      </Section>}
 
 
       {/* Selection Actions */}
