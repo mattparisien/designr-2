@@ -1,5 +1,4 @@
 import Image from "next/image";
-import classNames from "classnames";
 import { ReactNode } from "react";
 
 interface CardMediaProps {
@@ -13,10 +12,7 @@ interface CardMediaProps {
 
 export function CardMedia({ image, selected, children }: CardMediaProps) {
     return (
-        <div className={classNames("relative aspect-video p-4 bg-gray-100 overflow-hidden rounded-lg group-hover:bg-gray-200 transition-colors duration-200 border-2", {
-            'border-gray-100 hover:border-gray-200': !selected,
-            'border-[var(--border-accent)]': selected,
-        })}
+        <div className={`relative aspect-video p-4 bg-gray-100 overflow-hidden rounded-lg group-hover:bg-gray-200 transition-colors duration-200 border-2 ${selected ? 'border-[var(--border-accent)]' : 'border-transparent'}`}
         >
             {image && (
                     <Image
