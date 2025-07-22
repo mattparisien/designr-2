@@ -39,7 +39,7 @@ export function Section({
   }
 
   return (
-    <section className={cn("container mb-10", className)}>
+    <section className={cn("container mb-10 mx-auto", className)}>
       <div
         className={cn(
           "flex items-center cursor-pointer group ",
