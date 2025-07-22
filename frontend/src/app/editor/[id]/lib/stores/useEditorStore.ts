@@ -373,7 +373,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   },
   saveTemplate: async (templateId: string) => {
     const state = get();
-    
+
     try {
       // Set saving indicator to true
       set({ isSaving: true });
@@ -423,7 +423,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   },
   loadTemplate: async (templateId: string) => {
     const state = get();
-    
+
     try {
       // Set loading indicator
       set({ isSaving: true });
@@ -443,7 +443,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       // Extract font families from template data
       const fontFamilies = new Set<string>();
-      
+
       // Check if template has pages data
       if (template.templateData && template.templateData.pages) {
         template.templateData.pages.forEach((page: any) => {
@@ -462,7 +462,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
         try {
           const { fontsAPI } = await import('@/lib/api/index');
           const allFonts = await fontsAPI.getUserFonts();
-          
+
           // Load each font that's used in the template
           for (const fontFamily of fontFamilies) {
             const font = allFonts.find((f: { family: string }) => f.family === fontFamily);
@@ -479,7 +479,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Convert template data to frontend format
       if (template.templateData && template.templateData.pages) {
         const frontendPages = template.templateData.pages.map(convertAPIPageToFrontend);
-        
+
         set({
           designName: template.name || 'Untitled Template',
           pages: frontendPages,
@@ -572,94 +572,78 @@ const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
   captureCanvasScreenshot: async (): Promise<string | undefined> => {
-    return new Promise((resolve) => {
-      try {
-        // Use a longer delay to ensure all rendering and text calculations are complete
-        setTimeout(async () => {
-          // Find the canvas element in the DOM - targeting the specific canvas element
-          const canvasElement = document.querySelector('[data-canvas]') as HTMLElement;
-          console.log('Canvas element found:', canvasElement);
-          
-          if (!canvasElement) {
-            console.error('Canvas element not found for screenshot');
-            resolve(undefined);
-            return;
-          }
+    try {
+      /* ── 1. Wait one frame so the last paint completes ─────────────────────── */
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-          // Debug: Log all child elements to see what we're capturing
-          console.log('Canvas children:', canvasElement.children);
-          const allElements = canvasElement.querySelectorAll('*');
-          console.log('Total elements to capture:', allElements.length);
-          
-          // Debug: Check for specific element types
-          const textElements = canvasElement.querySelectorAll('.text-element, [data-element-id]');
-          const shapeElements = canvasElement.querySelectorAll('[data-element-id]');
-          console.log('Text elements found:', textElements.length);
-          console.log('Shape elements found:', shapeElements.length);
-
-          try {
-            // Use html-to-image directly on the original canvas element
-            const { toPng } = await import('html-to-image');
-            
-            // Get the actual canvas dimensions
-            const canvasRect = canvasElement.getBoundingClientRect();
-            console.log('Canvas dimensions:', {
-              width: canvasRect.width,
-              height: canvasRect.height,
-              offsetWidth: canvasElement.offsetWidth,
-              offsetHeight: canvasElement.offsetHeight
-            });
-
-            // Ensure all fonts are loaded before capturing
-            await document.fonts.ready;
-
-            const thumbnailDataUrl = await toPng(canvasElement, {
-              cacheBust: true,
-              width: canvasElement.offsetWidth,
-              height: canvasElement.offsetHeight,
-              pixelRatio: 2, // Higher scale for better quality
-              backgroundColor: getComputedStyle(canvasElement).backgroundColor || '#ffffff',
-              skipFonts: false,
-              includeQueryParams: true,
-              // Add filter to ensure we capture all child elements
-              filter: (node) => {
-                // Include all nodes except script and style tags
-                if (node.tagName) {
-                  const tagName = node.tagName.toLowerCase();
-                  return tagName !== 'script' && tagName !== 'style';
-                }
-                return true;
-              },
-              // Ensure styles are properly captured
-              style: {
-                margin: '0',
-                padding: '0',
-              }
-            });
-
-            console.log('Screenshot data URL generated');
-            console.log('Data URL length:', thumbnailDataUrl.length);
-            console.log('Data URL preview:', thumbnailDataUrl.substring(0, 100) + '...');
-            
-            // Validate that we got a valid image
-            if (thumbnailDataUrl && thumbnailDataUrl.startsWith('data:image/png;base64,')) {
-              console.log('✅ Screenshot captured successfully');
-              resolve(thumbnailDataUrl);
-            } else {
-              console.error('❌ Invalid screenshot data');
-              resolve(undefined);
-            }
-          } catch (err) {
-            console.error('Failed to generate canvas screenshot:', err);
-            console.error('Error details:', err);
-            resolve(undefined);
-          }
-        }, 500); // Longer delay to ensure rendering is complete
-      } catch (error) {
-        console.error('Error in screenshot capture process:', error);
-        resolve(undefined);
+      /* ── 2. Find the live canvas element ──────────────────────────────────── */
+      const canvasEl = document.querySelector<HTMLElement>("[data-canvas]");
+      if (!canvasEl) {
+        console.error("[captureCanvasScreenshot] canvas element not found");
+        return;
       }
-    });
+
+      /* ── 3. Derive logical size + current UI zoom ─────────────────────────── */
+      const state = typeof get === "function" ? get() : {};
+
+      const { width, height } = canvasEl.getBoundingClientRect();
+
+      const parseScale = (tx: string | null): number => {
+        if (!tx || tx === "none") return 1;
+        const m = tx.match(/matrix\(([^)]+)\)/);
+        if (!m) return 1;
+        const [a, , , d] = m[1].split(",").map(Number);
+        return (a + d) / 2 || 1; // assume uniform scaling
+      };
+      const uiScale = 1;
+
+      /* ── 4. Build an off‑screen clone at 1:1 logical size ─────────────────── */
+      const wrapper = document.createElement("div");
+      Object.assign(wrapper.style, {
+        position: "fixed",
+        left: "-10000px",
+        top: "0",
+        width: `${width}px`,
+        height: `${height}px`,
+        overflow: "hidden",
+        background: getComputedStyle(canvasEl).backgroundColor || "#ffffff",
+        // "--canvas-scale": "1", // neutralise any style‑based scale variables
+      } as CSSStyleDeclaration);
+
+      const clone = canvasEl.cloneNode(true) as HTMLElement;
+      Object.assign(clone.style, {
+        transform: `scale(${1 / uiScale})`, // cancel the editor zoom
+        transformOrigin: "top left",
+        width: `${width}px`,
+        height: `${height}px`,
+        margin: "0",
+        padding: "0",
+        boxSizing: "content-box",
+      } as CSSStyleDeclaration);
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      /* ── 5. Render PNG with html‑to‑image ─────────────────────────────────── */
+      await document.fonts.ready;
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(wrapper, {
+        width: width,
+        height: height,
+        pixelRatio: 1,                       // 1 CSS‑px → 1 bitmap px
+        cacheBust: true,
+        backgroundColor: getComputedStyle(canvasEl).backgroundColor || "#ffffff",
+      });
+
+      console.log("[captureCanvasScreenshot] captured screenshot:", dataUrl);
+
+      document.body.removeChild(wrapper);
+
+      return dataUrl?.startsWith("data:image/png;base64,") ? dataUrl : undefined;
+    } catch (err) {
+      console.error("[captureCanvasScreenshot] failed:", err);
+      return;
+    }
   },
 }));
 

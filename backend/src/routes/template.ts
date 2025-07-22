@@ -144,4 +144,49 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
   }
 });
 
+// Bulk delete templates
+router.delete('/bulk', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('Bulk delete request body:', req.body);
+    
+    // Handle different possible formats the frontend might send
+    const templateIds = req.body.templateIds || req.body.ids || req.body;
+    
+    console.log('Extracted templateIds:', templateIds);
+
+    if (!templateIds) {
+      console.log('No templateIds found in request');
+      res.status(400).json({ error: 'Template IDs are required' });
+      return;
+    }
+
+    // Ensure it's an array
+    const idsArray = Array.isArray(templateIds) ? templateIds : [templateIds];
+    
+    if (idsArray.length === 0) {
+      console.log('Empty templateIds array');
+      res.status(400).json({ error: 'At least one template ID is required' });
+      return;
+    }
+
+    console.log('Attempting to delete templates with IDs:', idsArray);
+
+    // Delete templates with the provided IDs
+    const deleteResult = await Template.deleteMany({
+      _id: { $in: idsArray }
+    });
+
+    console.log('Delete result:', deleteResult);
+
+    res.json({
+      message: `${deleteResult.deletedCount} template(s) deleted successfully`,
+      deletedCount: deleteResult.deletedCount,
+      requestedCount: idsArray.length
+    });
+  } catch (error) {
+    console.error('Bulk delete templates error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
