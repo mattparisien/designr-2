@@ -230,6 +230,15 @@ export class ApiClient {
     });
   }
 
+  async uploadTemplateThumbnail(templateId: string, thumbnailDataUrl: string) {
+    return this.request(`/templates/${templateId}/thumbnail`, {
+      method: 'POST',
+      body: JSON.stringify({
+        thumbnailData: thumbnailDataUrl
+      })
+    });
+  }
+
   // AI endpoints
   async magicFill(data: { 
     prompt: string; 

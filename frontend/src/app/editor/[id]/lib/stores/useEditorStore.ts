@@ -378,6 +378,9 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Set saving indicator to true
       set({ isSaving: true });
 
+      // Capture canvas screenshot for thumbnail
+      const thumbnailImage = await get().captureCanvasScreenshot();
+
       // Prepare the template data from the current editor state
       const templateData = {
         pages: state.pages.map(convertFrontendPageToAPI),
@@ -394,6 +397,17 @@ const useEditorStore = create<EditorState>((set, get) => ({
         name: state.designName,
         templateData: templateData
       });
+
+      // Upload thumbnail if captured
+      if (thumbnailImage) {
+        try {
+          const thumbnailResult = await apiClient.uploadTemplateThumbnail(templateId, thumbnailImage);
+          console.log('Thumbnail uploaded successfully:', thumbnailResult.thumbnailUrl);
+        } catch (thumbnailError) {
+          console.error('Error uploading thumbnail:', thumbnailError);
+          // Don't fail the entire save if thumbnail upload fails
+        }
+      }
 
       console.log('Template saved successfully:', templateId);
       set({
@@ -588,23 +602,22 @@ const useEditorStore = create<EditorState>((set, get) => ({
               el.style.overflow = 'visible'; // Ensure text isn't clipped
             });
 
-            // Use html2canvas to capture the clone
-            const { default: html2canvas } = await import('html2canvas');
-            const canvas = await html2canvas(canvasClone, {
-              scale: 2, // Higher scale for better quality
+            // Use html-to-image to capture the clone
+            const { toPng } = await import('html-to-image');
+            const thumbnailDataUrl = await toPng(canvasClone, {
+              cacheBust: true,
+              width: canvasClone.offsetWidth,
+              height: canvasClone.offsetHeight,
+              pixelRatio: 2, // Higher scale for better quality
               backgroundColor: '#ffffff',
-              logging: false,
-              useCORS: true,
-              allowTaint: true,
-              windowWidth: canvasClone.offsetWidth * 2,
-              windowHeight: canvasClone.offsetHeight * 2
+              skipFonts: false,
+              includeQueryParams: true
             });
 
             // Clean up the clone
             document.body.removeChild(canvasClone);
 
-            // Convert canvas to data URL (PNG format with good quality)
-            const thumbnailDataUrl = canvas.toDataURL('image/png', 0.9);
+            // Return the data URL directly from html-to-image
             console.log('Screenshot captured successfully');
             resolve(thumbnailDataUrl);
           } catch (err) {
