@@ -577,54 +577,84 @@ const useEditorStore = create<EditorState>((set, get) => ({
         // Use a longer delay to ensure all rendering and text calculations are complete
         setTimeout(async () => {
           // Find the canvas element in the DOM - targeting the specific canvas element
-          const canvasElement = document.querySelector('[data-canvas]');
-          console.log(canvasElement)
+          const canvasElement = document.querySelector('[data-canvas]') as HTMLElement;
+          console.log('Canvas element found:', canvasElement);
+          
           if (!canvasElement) {
             console.error('Canvas element not found for screenshot');
             resolve(undefined);
             return;
           }
 
+          // Debug: Log all child elements to see what we're capturing
+          console.log('Canvas children:', canvasElement.children);
+          const allElements = canvasElement.querySelectorAll('*');
+          console.log('Total elements to capture:', allElements.length);
+          
+          // Debug: Check for specific element types
+          const textElements = canvasElement.querySelectorAll('.text-element, [data-element-id]');
+          const shapeElements = canvasElement.querySelectorAll('[data-element-id]');
+          console.log('Text elements found:', textElements.length);
+          console.log('Shape elements found:', shapeElements.length);
+
           try {
-            // Create a clone of the canvas for screenshot to avoid modifying the visible one
-            const canvasClone = canvasElement.cloneNode(true) as HTMLElement;
-            document.body.appendChild(canvasClone);
-            canvasClone.style.position = 'absolute';
-            canvasClone.style.left = '-9999px';
-            canvasClone.style.top = '-9999px';
-
-            // Make sure all text elements are properly sized with adequate padding
-            const textElements = canvasClone.querySelectorAll('.text-element');
-            textElements.forEach((textEl) => {
-              const el = textEl as HTMLElement;
-              el.style.padding = '4px';
-              el.style.lineHeight = '1.5';
-              el.style.overflow = 'visible'; // Ensure text isn't clipped
-            });
-
-            // Use html-to-image to capture the clone
+            // Use html-to-image directly on the original canvas element
             const { toPng } = await import('html-to-image');
-            const thumbnailDataUrl = await toPng(canvasClone, {
-              cacheBust: true,
-              width: canvasClone.offsetWidth,
-              height: canvasClone.offsetHeight,
-              pixelRatio: 2, // Higher scale for better quality
-              backgroundColor: '#ffffff',
-              skipFonts: false,
-              includeQueryParams: true
+            
+            // Get the actual canvas dimensions
+            const canvasRect = canvasElement.getBoundingClientRect();
+            console.log('Canvas dimensions:', {
+              width: canvasRect.width,
+              height: canvasRect.height,
+              offsetWidth: canvasElement.offsetWidth,
+              offsetHeight: canvasElement.offsetHeight
             });
 
-            // Clean up the clone
-            document.body.removeChild(canvasClone);
+            // Ensure all fonts are loaded before capturing
+            await document.fonts.ready;
 
-            // Return the data URL directly from html-to-image
-            console.log('Screenshot captured successfully');
-            resolve(thumbnailDataUrl);
+            const thumbnailDataUrl = await toPng(canvasElement, {
+              cacheBust: true,
+              width: canvasElement.offsetWidth,
+              height: canvasElement.offsetHeight,
+              pixelRatio: 2, // Higher scale for better quality
+              backgroundColor: getComputedStyle(canvasElement).backgroundColor || '#ffffff',
+              skipFonts: false,
+              includeQueryParams: true,
+              // Add filter to ensure we capture all child elements
+              filter: (node) => {
+                // Include all nodes except script and style tags
+                if (node.tagName) {
+                  const tagName = node.tagName.toLowerCase();
+                  return tagName !== 'script' && tagName !== 'style';
+                }
+                return true;
+              },
+              // Ensure styles are properly captured
+              style: {
+                margin: '0',
+                padding: '0',
+              }
+            });
+
+            console.log('Screenshot data URL generated');
+            console.log('Data URL length:', thumbnailDataUrl.length);
+            console.log('Data URL preview:', thumbnailDataUrl.substring(0, 100) + '...');
+            
+            // Validate that we got a valid image
+            if (thumbnailDataUrl && thumbnailDataUrl.startsWith('data:image/png;base64,')) {
+              console.log('✅ Screenshot captured successfully');
+              resolve(thumbnailDataUrl);
+            } else {
+              console.error('❌ Invalid screenshot data');
+              resolve(undefined);
+            }
           } catch (err) {
             console.error('Failed to generate canvas screenshot:', err);
+            console.error('Error details:', err);
             resolve(undefined);
           }
-        }, 300); // Longer delay to ensure rendering is complete
+        }, 500); // Longer delay to ensure rendering is complete
       } catch (error) {
         console.error('Error in screenshot capture process:', error);
         resolve(undefined);

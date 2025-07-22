@@ -8,25 +8,32 @@ import { Template } from '../models/Template';
 
 const router = express.Router();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Function to ensure Cloudinary is configured
+function ensureCloudinaryConfig() {
+  if (!cloudinary.config().cloud_name) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+  }
+}
 
-// Configure Cloudinary storage for template thumbnails
-const thumbnailStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'design-tool-thumbnails',
-    resource_type: 'image',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
-    transformation: [
-      { width: 400, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
-    ]
-  } as any,
-});
+// Function to get Cloudinary storage (lazy initialization)
+function getCloudinaryStorage() {
+  ensureCloudinaryConfig();
+  return new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'design-tool-thumbnails',
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png'],
+      transformation: [
+        { width: 400, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
+      ]
+    } as any,
+  });
+}
 
 // Fallback to local storage if Cloudinary is not configured
 const localThumbnailStorage = multer.diskStorage({
@@ -43,24 +50,28 @@ const localThumbnailStorage = multer.diskStorage({
   }
 });
 
-// Use Cloudinary if configured, otherwise fall back to local storage
-const storage = process.env.CLOUDINARY_CLOUD_NAME ? thumbnailStorage : localThumbnailStorage;
+// Function to get the appropriate storage based on configuration
+function getStorage() {
+  return process.env.CLOUDINARY_CLOUD_NAME ? getCloudinaryStorage() : localThumbnailStorage;
+}
 
-// Configure multer for thumbnail uploads
-const uploadThumbnail = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    // Only allow image files for thumbnails
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed for thumbnails'));
+// Function to get multer upload configuration
+function getUploadThumbnail() {
+  return multer({
+    storage: getStorage(),
+    fileFilter: (req, file, cb) => {
+      // Only allow image files for thumbnails
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for thumbnails'));
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit for thumbnails
     }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for thumbnails
-  }
-});
+  });
+}
 
 // Utility function to convert base64 to buffer
 function base64ToBuffer(base64String: string): Buffer {
@@ -174,6 +185,11 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
 // Upload thumbnail for template (accepts base64 data URL)
 router.post('/:id/thumbnail', async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('Thumbnail upload route - Environment check:');
+    console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+    console.log('CLOUDINARY_API_KEY present:', !!process.env.CLOUDINARY_API_KEY);
+    console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
+    
     const { id } = req.params;
     const { thumbnailData } = req.body;
 
@@ -192,6 +208,9 @@ router.post('/:id/thumbnail', async (req: Request, res: Response): Promise<void>
     let thumbnailUrl: string;
 
     if (process.env.CLOUDINARY_CLOUD_NAME) {
+      // Ensure Cloudinary is configured before uploading
+      ensureCloudinaryConfig();
+      
       // Upload to Cloudinary
       try {
         const uploadResult = await cloudinary.uploader.upload(thumbnailData, {

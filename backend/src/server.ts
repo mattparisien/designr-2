@@ -23,6 +23,9 @@ console.log('Current working directory:', process.cwd());
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('PORT:', process.env.PORT);
 console.log('OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('CLOUDINARY_API_KEY present:', !!process.env.CLOUDINARY_API_KEY);
+console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
 console.log('OPENAI_API_KEY value (first 10 chars):', process.env.OPENAI_API_KEY?.substring(0, 10));
 
 const app = express();

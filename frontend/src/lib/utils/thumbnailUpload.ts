@@ -31,6 +31,8 @@
 
 // Test function to verify thumbnail upload (for development)
 export async function testThumbnailUpload(templateId: string) {
+  console.log('Testing thumbnail upload for template:', templateId);
+  
   // Create a simple test image as base64
   const canvas = document.createElement('canvas');
   canvas.width = 400;
@@ -69,6 +71,34 @@ export async function testThumbnailUpload(templateId: string) {
     } catch (error) {
       console.error('❌ Thumbnail upload test error:', error);
     }
+  }
+}
+
+// Test function to capture actual canvas screenshot
+export async function testCanvasScreenshot() {
+  console.log('Testing canvas screenshot capture...');
+  
+  // Import useEditorStore to access the capture function
+  try {
+    const useEditorStore = (await import('@/app/editor/[id]/lib/stores/useEditorStore')).default;
+    const captureFunction = useEditorStore.getState().captureCanvasScreenshot;
+    
+    const result = await captureFunction();
+    
+    if (result) {
+      console.log('✅ Canvas screenshot captured successfully!');
+      console.log('Data URL length:', result.length);
+      console.log('Preview:', result.substring(0, 100) + '...');
+      
+      // You can copy this data URL and paste it in browser address bar to see the image
+      console.log('📋 Copy this data URL to see the captured image:');
+      console.log(result);
+      return result;
+    } else {
+      console.error('❌ Canvas screenshot capture failed');
+    }
+  } catch (error) {
+    console.error('❌ Canvas screenshot test error:', error);
   }
 }
 
