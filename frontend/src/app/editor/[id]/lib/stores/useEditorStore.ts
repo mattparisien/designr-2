@@ -583,68 +583,160 @@ const useEditorStore = create<EditorState>((set, get) => ({
         return;
       }
 
-      /* ── 3. Derive logical size + current UI zoom ─────────────────────────── */
-      const state = typeof get === "function" ? get() : {};
-
+      /* ── 3. Get canvas dimensions ─────────────────────────────────────────── */
       const { width, height } = canvasEl.getBoundingClientRect();
 
-      const parseScale = (tx: string | null): number => {
-        if (!tx || tx === "none") return 1;
-        const m = tx.match(/matrix\(([^)]+)\)/);
-        if (!m) return 1;
-        const [a, , , d] = m[1].split(",").map(Number);
-        return (a + d) / 2 || 1; // assume uniform scaling
-      };
-      const uiScale = 1;
+      try {
+        /* ── 4. Try backend screenshot service first ──────────────────────── */
+        // Extract canvas HTML and inline styles
+        const canvasHTML = canvasEl.outerHTML;
+        
+        // Get all relevant stylesheets
+        const stylesheets: string[] = [];
+        
+        // Collect all CSS from style tags and link tags
+        const styleElements = document.querySelectorAll('style, link[rel="stylesheet"]');
+        for (const element of styleElements) {
+          if (element.tagName === 'STYLE') {
+            stylesheets.push((element as HTMLStyleElement).textContent || '');
+          } else if (element.tagName === 'LINK') {
+            const linkElement = element as HTMLLinkElement;
+            try {
+              // For external stylesheets, we'll need to fetch them
+              if (linkElement.href && linkElement.href.startsWith(window.location.origin)) {
+                const response = await fetch(linkElement.href);
+                const cssText = await response.text();
+                stylesheets.push(cssText);
+              }
+            } catch (error) {
+              console.warn('Could not fetch stylesheet:', linkElement.href, error);
+            }
+          }
+        }
 
-      /* ── 4. Build an off‑screen clone at 1:1 logical size ─────────────────── */
-      const wrapper = document.createElement("div");
-      Object.assign(wrapper.style, {
-        position: "fixed",
-        left: "-10000px",
-        top: "0",
-        width: `${width}px`,
-        height: `${height}px`,
-        overflow: "hidden",
-        background: getComputedStyle(canvasEl).backgroundColor || "#ffffff",
-        // "--canvas-scale": "1", // neutralise any style‑based scale variables
-      } as CSSStyleDeclaration);
+        // Get computed styles for the canvas element
+        const computedStyle = window.getComputedStyle(canvasEl);
+        const canvasStyles: Record<string, string> = {};
+        
+        // Copy important computed styles
+        const importantStyles = [
+          'backgroundColor', 'fontFamily', 'fontSize', 'color', 'lineHeight',
+          'letterSpacing', 'textAlign', 'fontWeight', 'fontStyle', 'textDecoration'
+        ];
+        
+        for (const prop of importantStyles) {
+          canvasStyles[prop] = computedStyle.getPropertyValue(prop);
+        }
 
-      const clone = canvasEl.cloneNode(true) as HTMLElement;
-      Object.assign(clone.style, {
-        transform: `scale(${1 / uiScale})`, // cancel the editor zoom
-        transformOrigin: "top left",
-        width: `${width}px`,
-        height: `${height}px`,
-        margin: "0",
-        padding: "0",
-        boxSizing: "content-box",
-      } as CSSStyleDeclaration);
+        // Prepare data for backend
+        const screenshotData = {
+          html: canvasHTML,
+          css: stylesheets.join('\n'),
+          canvasStyles,
+          width,
+          height,
+          pixelRatio: 2 // For high quality images
+        };
 
-      wrapper.appendChild(clone);
-      document.body.appendChild(wrapper);
+        // Send request to backend screenshot service
+        const response = await fetch('/api/screenshot', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(screenshotData)
+        });
 
-      /* ── 5. Render PNG with html‑to‑image ─────────────────────────────────── */
-      await document.fonts.ready;
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(wrapper, {
-        width: width,
-        height: height,
-        pixelRatio: 1,                       // 1 CSS‑px → 1 bitmap px
-        cacheBust: true,
-        backgroundColor: getComputedStyle(canvasEl).backgroundColor || "#ffffff",
-      });
+        if (response.ok) {
+          const result = await response.json();
+          
+          if (result.success && result.imageData) {
+            const dataUrl = `data:image/png;base64,${result.imageData}`;
+            console.log("[captureCanvasScreenshot] captured screenshot via backend service");
+            console.log("[captureCanvasScreenshot] Screenshot data URL length:", dataUrl.length);
+            console.log("[captureCanvasScreenshot] Screenshot preview (first 200 chars):", dataUrl.substring(0, 200));
+            
+            // Create a temporary image element to display the screenshot in console
+            const img = new Image();
+            img.onload = () => {
+              console.log("[captureCanvasScreenshot] Screenshot dimensions:", img.width, "x", img.height);
+              console.log("[captureCanvasScreenshot] Screenshot preview:");
+              console.log("%c ", `
+                background: url(${dataUrl}) no-repeat center;
+                background-size: contain;
+                padding: 100px 200px;
+                border: 1px solid #ccc;
+              `);
+            };
+            img.src = dataUrl;
+            
+            return dataUrl;
+          }
+        }
+        
+        throw new Error('Backend screenshot service failed');
 
-      console.log("[captureCanvasScreenshot] captured screenshot:", dataUrl);
+      } catch (backendError) {
+        console.warn('[captureCanvasScreenshot] Backend service failed, falling back to client-side:', backendError);
+        
+        /* ── 5. Fallback to client-side html-to-image ─────────────────────── */
+        await document.fonts.ready;
+        const { toPng } = await import("html-to-image");
+        
+        const dataUrl = await toPng(canvasEl, {
+          width: width,
+          height: height,
+          pixelRatio: 2,
+          cacheBust: true,
+          backgroundColor: getComputedStyle(canvasEl).backgroundColor || "#ffffff",
+          style: {
+            transform: 'none',
+            border: 'none',
+          },
+          filter: (node: HTMLElement) => {
+            // Exclude editor UI elements
+            if (node.classList?.contains('z-editor-canvas-controls')) return false;
+            if (node.classList?.contains('selection-border')) return false;
+            if (node.classList?.contains('resize-handle')) return false;
+            if (node.dataset?.elementId && node.style.position === 'fixed') {
+              return false;
+            }
+            return true;
+          },
+          includeQueryParams: true,
+          fetchRequestInit: {
+            mode: 'cors',
+          }
+        });
 
-      document.body.removeChild(wrapper);
-
-      return dataUrl?.startsWith("data:image/png;base64,") ? dataUrl : undefined;
+        console.log("[captureCanvasScreenshot] captured screenshot via client-side fallback");
+        console.log("[captureCanvasScreenshot] Fallback screenshot data URL length:", dataUrl?.length);
+        console.log("[captureCanvasScreenshot] Fallback screenshot preview (first 200 chars):", dataUrl?.substring(0, 200));
+        
+        // Create a temporary image element to display the fallback screenshot in console
+        if (dataUrl) {
+          const img = new Image();
+          img.onload = () => {
+            console.log("[captureCanvasScreenshot] Fallback screenshot dimensions:", img.width, "x", img.height);
+            console.log("[captureCanvasScreenshot] Fallback screenshot preview:");
+            console.log("%c ", `
+              background: url(${dataUrl}) no-repeat center;
+              background-size: contain;
+              padding: 100px 200px;
+              border: 1px solid #ccc;
+            `);
+          };
+          img.src = dataUrl;
+        }
+        
+        return dataUrl?.startsWith("data:image/png;base64,") ? dataUrl : undefined;
+      }
     } catch (err) {
-      console.error("[captureCanvasScreenshot] failed:", err);
+      console.error("[captureCanvasScreenshot] failed completely:", err);
       return;
     }
   },
+
 }));
 
 // Add a currentPage selector

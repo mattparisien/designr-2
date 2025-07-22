@@ -167,8 +167,7 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
       if (assetType === 'image' && cloudinaryPublicId) {
         thumbnailUrl = cloudinary.url(cloudinaryPublicId, {
           width: 150,
-          height: 100,
-          crop: 'fill',
+          crop: 'fit',
           quality: 'auto',
           format: 'auto'
         });

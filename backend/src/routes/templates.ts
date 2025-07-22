@@ -29,7 +29,7 @@ function getCloudinaryStorage() {
       resource_type: 'image',
       allowed_formats: ['jpg', 'jpeg', 'png'],
       transformation: [
-        { width: 400, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
+        { width: 400, crop: 'fit', quality: 'auto', format: 'auto' }
       ]
     } as any,
   });
@@ -262,7 +262,7 @@ router.post('/:id/thumbnail', async (req: Request, res: Response): Promise<void>
           folder: 'design-tool-thumbnails',
           resource_type: 'image',
           transformation: [
-            { width: 400, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
+            { width: 400, crop: 'fit', quality: 'auto', format: 'auto' }
           ],
           public_id: `template-${id}-${Date.now()}`
         });
