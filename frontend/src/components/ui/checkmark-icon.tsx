@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
 interface CheckmarkIconProps {
@@ -15,10 +16,14 @@ const CheckmarkIcon: React.FC<CheckmarkIconProps> = ({ state }) => {
     >
       <path
         d="M5 13L9 17L19 7"
-        stroke={state === "selected" ? "currentColor" : "#666666"}
+        // stroke={state === "selected" ? "currentColor" : ""}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className={cn("", {
+          "stroke-current": state === "selected",
+          "stroke-neutral-500": state === "hovered",
+        })}
       />
     </svg>
   );

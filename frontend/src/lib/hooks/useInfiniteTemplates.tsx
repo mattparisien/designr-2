@@ -2,11 +2,11 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { templatesAPI } from "@/lib/api/index";
-import { type Template } from "@/lib/types/api";
+import { type Composition } from "@/lib/types/api";
 import { useMemo } from "react";
 
 interface TemplatesPageData {
-  templates: Template[],
+  templates: Composition[],
   totalTemplates: number;
   totalPages: number;
   currentPage: number;

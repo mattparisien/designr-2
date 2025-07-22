@@ -139,71 +139,71 @@ export interface Element {
   borderWidth?: number;
 }
 
-/**
- * Represents a design project created by a user.
- * Projects can be presentations, social media graphics, print designs, etc.
- */
-export interface Project {
-  _id: string;                 // Unique identifier
-  title: string;               // Project title
-  description?: string;        // Optional project description
-  type: 'presentation' | 'social' | 'print' | 'custom'; // Project type
-  thumbnail?: string;          // Preview thumbnail URL
-  tags?: string[];             // Tags array for organization
-  ownerId: string;             // Owner of the project (updated from userId)
-  starred: boolean;            // Whether the project is starred by the user
-  sharedWith?: string[];       // Array of user IDs this project is shared with
-  layoutId: string | Layout;   // Reference to Layout document (string) or populated Layout object
-  sourceTemplateId?: string;   // Reference to source template if cloned
-  createdAt: string;           // Creation timestamp
-  updatedAt: string;           // Last updated timestamp
+// ---------- Roles ----------
+export type Role = 'template' | 'project';
+
+// ---------- Core ----------
+interface CompositionBase {
+  _id: string;
+  title: string;
+  description?: string;
+  // Your element/layer tree etc.
+  data: unknown;
+
+  // If this item was spawned from a template
+  sourceTemplateId?: string;
+  thumbnailUrl?: string; // URL for thumbnail image
+
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Represents a design template that users can use as a starting point.
- */
-export interface Template {
-  _id: string;                 // Unique identifier
-  title: string;               // Template title
-  slug?: string;               // Unique slug for URL/identification
-  description?: string;        // Optional description
-  type: 'presentation' | 'social' | 'print' | 'custom'; // Template type
-  category: string;            // Category for organization
-  thumbnail?: string;          // Preview thumbnail URL
-  previewImages?: string[];    // Additional preview images
-  tags?: string[];             // Keywords for search and filtering
-  author: string;              // Creator of the template
-  featured: boolean;           // Whether this is a featured template
-  popular: boolean;            // Whether this is a popular template
-  starred?: boolean;           // Whether this template is starred by the user
-  canvasSize: {                // Canvas dimensions
-    name?: string;             // Named size (e.g., 'Instagram Post', 'Letter')
-    width: number;             // Width in pixels
-    height: number;            // Height in pixels
-  };
-  layoutId?: string;           // Reference to layout document  
-  pages: any[];                // Template pages/slides
-  metadata?: any;              // Additional metadata
-  createdAt: string;           // Creation timestamp
-  updatedAt: string;           // Last updated timestamp
+// ---------- Role-specific payloads ----------
+interface ProjectFields {
+  role: 'project';
+  type: 'presentation' | 'social' | 'print' | 'custom';
+  thumbnail?: string;
+  tags?: string[];
+  ownerId: string;
+  starred: boolean;
+  sharedWith?: string[];
+  layoutId: string | Layout;
 }
 
-/**
- * Interface representing a template preset from the backend configuration.
- */
-export interface TemplatePreset {
-  id: string;                  // Unique identifier (category:key)
-  category: string;            // Category (Instagram, Facebook, etc.)
-  key: string;                 // Preset key
-  name: string;                // Display name
-  canvasSize: {                // Canvas dimensions
-    name: string;              // Named size
-    width: number;             // Width in pixels
-    height: number;            // Height in pixels
+interface TemplateFields {
+  role: 'template';
+  slug?: string;
+  type: 'presentation' | 'social' | 'print' | 'custom';
+  category: string;
+  previewImages?: string[];
+  tags?: string[];
+  author: string;
+  featured: boolean;
+  popular: boolean;
+  starred?: boolean;
+  canvasSize: {
+    name?: string;
+    width: number;
+    height: number;
   };
-  type: string;                // Preset type
-  tags: string[];              // Associated tags
+  layoutId?: string;
+  pages: any[];
+  metadata?: any;
 }
+
+// ---------- Final union ----------
+export type Composition = (CompositionBase & ProjectFields) | (CompositionBase & TemplateFields);
+
+export type ByRole<R extends Role> = Extract<Composition, { role: R }>;
+export type Project = ByRole<"project">;
+export type Template = ByRole<"template">;
+
+// ---------- Type guards (optional) ----------
+export const isProject = (c: Composition): c is CompositionBase & ProjectFields =>
+  c.role === 'project';
+
+export const isTemplate = (c: Composition): c is CompositionBase & TemplateFields =>
+  c.role === 'template';
 
 /**
  * Base interface for all API services with common authentication functionality.

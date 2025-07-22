@@ -12,7 +12,7 @@ interface CardMediaProps {
 
 export function CardMedia({ image, selected, children }: CardMediaProps) {
     return (
-        <div className={`relative aspect-video p-4 bg-gray-100 overflow-hidden rounded-lg group-hover:bg-gray-200 transition-colors duration-200 border-2 ${selected ? 'border-[var(--border-accent)]' : 'border-transparent'}`}
+        <div className={`relative aspect-video p-4 bg-neutral-100 overflow-hidden rounded-lg group-hover:bg-neutral-200 transition-colors duration-200 border-2 ${selected ? 'border-[var(--border-accent)]' : 'border-transparent'}`}
         >
             {image && (
                     <Image

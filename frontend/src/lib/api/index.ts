@@ -1,12 +1,11 @@
 import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { APIService } from "../types/api";
+import { APIService, Project, Template } from "../types/api";
 import { AssetsAPI } from "./assets";
-import { BrandsAPI } from "./brands";
-import { ProjectsAPI } from "./projects";
-import { UsersAPI } from "./user";
-import { TemplatesAPI } from "./templates";
 import { AuthAPI } from "./auth";
+import { BrandsAPI } from "./brands";
+import { CollectionAPI } from "./collection";
 import { FontsAPI } from "./fonts";
+import { UsersAPI } from "./user";
 
 function createAPIService<T, S extends APIService<T>>(
   ctor: new (client: Axios) => S,
@@ -44,10 +43,25 @@ apiClient.interceptors.request.use(
 
 const assetsAPI = createAPIService(AssetsAPI, apiClient);
 const brandsAPI = createAPIService(BrandsAPI, apiClient);
-const projectsAPI = createAPIService(ProjectsAPI, apiClient);
+// const projectsAPI = createAPIService(ProjectsAPI, apiClient);
 const usersAPI = createAPIService(UsersAPI, apiClient);
-const templatesAPI = createAPIService(TemplatesAPI, apiClient);
+// const templatesAPI = createAPIService(TemplatesAPI, apiClient);
+// Backend actually serves them under /api/projects
+const templatesAPI = new CollectionAPI<
+  Template,
+  "templates",
+  "totalTemplates",
+  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string; featured?: boolean; popular?: boolean }
+>(apiClient, "/templates", { list: "templates", total: "totalTemplates" });
+
+const projectsAPI = new CollectionAPI<
+  Project,
+  "projects",
+  "totalProjects",
+  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
+>(apiClient, "/api/projects", { list: "projects", total: "totalProjects" });
+
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);
 
-export { assetsAPI, brandsAPI, projectsAPI, templatesAPI, usersAPI, authAPI, fontsAPI };
+export { assetsAPI, authAPI, brandsAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };
