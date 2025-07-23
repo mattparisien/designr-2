@@ -25,6 +25,7 @@ interface ToolbarProps {
     className?: string;
     children?: React.ReactNode;
     style?: React.CSSProperties;
+    transitionIn?: boolean;
 }
 
 const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
@@ -34,7 +35,8 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
         onClick,
         style,
         children,
-        sections
+        sections,
+        transitionIn = false
     } = props;
 
     return (
@@ -48,10 +50,10 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
             className={cn('absolute left-1/2 -translate-x-1/2', {
                 [props.className || '']: !!props.className
             })}
-            transitionIn={{
+            transitionIn={transitionIn ? {
                 activate: true,
                 initialY: 100
-            }}
+            } : undefined}
         >
 
             {children && children}
