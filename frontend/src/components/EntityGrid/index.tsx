@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Button } from "../ui";
 import { ChevronDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { SOCIAL_MEDIA_FORMATS, SOCIAL_FORMAT_CATEGORIES, SocialFormat } from "@/app/editor/[id]/lib/constants/socialFormats";
 
 type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl?: string; type?: string; updatedAt?: string };
 
@@ -48,10 +50,18 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
     router.push(`/editor/${id}`);
   }, [router]);
 
-  const handleCreate = useCallback(async (type = "custom") => {
+  const handleCreate = useCallback(async (format?: SocialFormat) => {
+
+
+    if (!format) format = SOCIAL_MEDIA_FORMATS["custom"];
+
     try {
       setIsCreating(true);
-      const payload = cfg.createFactory ? cfg.createFactory(type) : {};
+      const payload = cfg.createFactory ? cfg.createFactory({ width: format?.width, height: format?.height }) : {};
+      // Add format data to payload if provided
+      if (format) {
+        Object.assign(payload, { width: format.width, height: format.height, name: format.name });
+      }
       const created = await createEntity(payload);
       router.push(`/editor/${created._id}`);
     } catch (e) {
@@ -120,10 +130,41 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
   return (
     <>
       <Section heading={`My ${upperFirst(cfg.key)}`}>
-        <button className="flex items center justify-center cursor-pointer hover:bg-neutral-200 p-2 rounded-lg">
-          <span className="text-lg">Create Template</span>
-          <ChevronDown className="text-neutral-400"/>
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="flex items-center justify-center cursor-pointer hover:bg-neutral-200 p-2 rounded-lg gap-2"
+              disabled={isCreating}
+            >
+              <span className="text-lg">{isCreating ? "Creating..." : "Create Template"}</span>
+              <ChevronDown className="text-neutral-400 w-4 h-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="start">
+            <div className="max-h-96 overflow-y-auto">
+              {SOCIAL_FORMAT_CATEGORIES.map((category) => (
+                <div key={category} className="p-3 border-b border-gray-100 last:border-b-0">
+                  <h3 className="text-sm font-medium text-neutral-500 mb-2 px-3">{category}</h3>
+                  <div className="space-y-1">
+                    {Object.entries(SOCIAL_MEDIA_FORMATS)
+                      .filter(([, format]) => format.category === category)
+                      .map(([key, format]) => (
+                        <button
+                          key={key}
+                          onClick={() => handleCreate(format)}
+                          disabled={isCreating}
+                          className="cursor-pointer w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <div className="font-medium text-[0.97rem] text-black">{format.name}</div>
+                          <div className="text-xs font-normal text-neutral-500">{format.width} × {format.height}</div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
         {!isLoading && isError && (
           <div>error</div>
           // <ErrorState onRetry={refetch} noun={cfg.nounSingular ?? "item"} />

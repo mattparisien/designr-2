@@ -16,6 +16,6 @@ export interface EntityConfig<T, F = any> {
     deleteMultiple?: (ids: string[]) => Promise<void>; // optional
   };
   // Optional: factories, copy, etc.
-  createFactory?: (type?: string) => Partial<T>;
+  createFactory?: ({ width, height }: { width: number; height: number }) => Partial<T>;
   nounSingular?: string; // for toasts (“project”, “template”)
 }

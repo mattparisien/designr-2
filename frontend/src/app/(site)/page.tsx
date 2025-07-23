@@ -38,7 +38,7 @@ const templateCfg: EntityConfig<Template, TemplateFilters> = {
     deleteMultiple: templatesAPI.deleteMultiple?.bind(templatesAPI),
   },
   nounSingular: "template",
-  createFactory: () => ({
+  createFactory: ({width = 1080, height = 1080}) => ({
     role: "template",
     title: "Untitled Template",
     type: "custom",
@@ -46,7 +46,16 @@ const templateCfg: EntityConfig<Template, TemplateFilters> = {
     author: "current-user",
     featured: false,
     popular: false,
-    canvasSize: { width: 800, height: 600 },
+    name: "Untitled Template",
+    vibe: "minimal" as const,
+    width,
+    height,
+    templateData: {
+      version: "1.0",
+      elements: [],
+      background: { type: "solid", color: "#ffffff" }
+    },
+    canvasSize: { width, height },
     pages: [],
     data: {},
   }),
