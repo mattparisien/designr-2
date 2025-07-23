@@ -168,7 +168,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
         onDelete={handleDeleteSelected}
         onDuplicate={async () => Promise.resolve()}
         onMove={async () => Promise.resolve()}
-        className="z-50"
+        className="z-50 fixed bottom-10 left-1/2 transform -translate-x-1/2"
       />
     </>
   );

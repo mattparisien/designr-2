@@ -8,7 +8,7 @@ export default function Layout({
   return (
 
     <GlobalProviders>
-      <main className="p-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 sm:py-6 md:py-8 lg:py-10 xl:py-12 2xl:py-16">
+      <main className="pt-10 px-4 md:px-5">
         {children}
       </main>
     </GlobalProviders>
