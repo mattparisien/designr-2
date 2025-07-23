@@ -24,7 +24,7 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
 
     const {
         initialY = 20,
-        duration = 0.4,
+        duration = 0.23,
         ease = "easeOut" as const,
         enabled = true
     } = transitionIn || {};
@@ -36,8 +36,9 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
-            initial={enabled ? { y: initialY } : false}
-            animate={enabled ? { y: 0 } : false}
+            initial={enabled ? { y: initialY } : undefined}
+            animate={enabled ? { y: 0 } : undefined}
+            exit={enabled ? { y: initialY } : undefined}
             transition={enabled ? {
                 duration,
                 ease
