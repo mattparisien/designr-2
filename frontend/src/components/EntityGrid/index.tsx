@@ -16,6 +16,8 @@ import { getRelativeTime } from "@/lib/utils";
 import { upperFirst } from "lodash";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import { Button } from "../ui";
+import { ChevronDown } from "lucide-react";
 
 type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl?: string; type?: string; updatedAt?: string };
 
@@ -118,6 +120,10 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
   return (
     <>
       <Section heading={`My ${upperFirst(cfg.key)}`}>
+        <button className="flex items center justify-center cursor-pointer hover:bg-neutral-200 p-2 rounded-lg">
+          <span className="text-lg">Create Template</span>
+          <ChevronDown className="text-neutral-400"/>
+        </button>
         {!isLoading && isError && (
           <div>error</div>
           // <ErrorState onRetry={refetch} noun={cfg.nounSingular ?? "item"} />
