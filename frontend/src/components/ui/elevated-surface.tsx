@@ -14,6 +14,7 @@ interface ElevatedSurfaceProps extends Omit<HTMLMotionProps<"div">, "ref"> {
         duration?: number;
         ease?: Easing;
         enabled?: boolean;
+        activate?: boolean;
     };
 }
 
@@ -26,7 +27,8 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
         initialY = 20,
         duration = 0.23,
         ease = "easeOut" as const,
-        enabled = true
+        enabled = true,
+        activate = false
     } = transitionIn || {};
 
     return (
@@ -36,10 +38,10 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
-            initial={enabled ? { y: initialY } : undefined}
-            animate={enabled ? { y: 0 } : undefined}
-            exit={enabled ? { y: initialY } : undefined}
-            transition={enabled ? {
+            initial={enabled && activate ? { y: initialY } : undefined}
+            animate={enabled && activate ? { y: 0 } : undefined}
+            exit={enabled && activate ? { y: initialY } : undefined}
+            transition={enabled && activate ? {
                 duration,
                 ease
             } : undefined}

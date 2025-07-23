@@ -47,8 +47,11 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
             data-editor-interactive="true"
             className={cn('absolute left-1/2 -translate-x-1/2', {
                 [props.className || '']: !!props.className
-
             })}
+            transitionIn={{
+                activate: true,
+                initialY: 100
+            }}
         >
 
             {children && children}
