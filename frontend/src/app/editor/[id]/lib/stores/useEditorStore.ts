@@ -628,11 +628,25 @@ const useEditorStore = create<EditorState>((set, get) => ({
           canvasStyles[prop] = computedStyle.getPropertyValue(prop);
         }
 
+        // Get all element information for proper ordering
+        const elementNodes = canvasEl.querySelectorAll('[data-element-id]');
+        const elementInfo = Array.from(elementNodes).map(node => {
+          const elementId = node.getAttribute('data-element-id');
+          const elementKind = node.getAttribute('data-kind') || 'unknown';
+          const zIndex = window.getComputedStyle(node as HTMLElement).zIndex;
+          return {
+            id: elementId,
+            kind: elementKind,
+            zIndex: zIndex === 'auto' ? 0 : parseInt(zIndex) || 0
+          };
+        });
+
         // Prepare data for backend
         const screenshotData = {
           html: canvasHTML,
           css: stylesheets.join('\n'),
           canvasStyles,
+          elementInfo, // Add element ordering information
           width,
           height,
           pixelRatio: 2 // For high quality images

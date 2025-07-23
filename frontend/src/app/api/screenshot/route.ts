@@ -5,16 +5,42 @@ interface ScreenshotRequest {
   html: string;
   css: string;
   canvasStyles: Record<string, string>;
+  elementInfo?: Array<{ id: string; kind: string; zIndex: number }>; // Add element ordering info
   width: number;
   height: number;
   pixelRatio?: number;
+}
+
+// Generate CSS rules to enforce proper element stacking based on element info
+function generateElementStackingCSS(elementInfo: Array<{ id: string; kind: string; zIndex: number }>): string {
+  let css = '\n            /* Dynamic element stacking rules */\n';
+  
+  // Sort elements by kind priority (text should be highest)
+  const sortedElements = elementInfo.sort((a, b) => {
+    // Text elements get highest priority
+    if (a.kind === 'text' && b.kind !== 'text') return 1;
+    if (a.kind !== 'text' && b.kind === 'text') return -1;
+    
+    // Within same kind, use original zIndex
+    return (a.zIndex || 0) - (b.zIndex || 0);
+  });
+  
+  // Generate specific CSS rules for each element
+  sortedElements.forEach((element, index) => {
+    const finalZIndex = element.kind === 'text' ? 1000000 + index : 100 + index;
+    if (element.id) {
+      css += `            [data-element-id="${element.id}"] { z-index: ${finalZIndex} !important; }\n`;
+    }
+  });
+  
+  return css;
 }
 
 export async function POST(request: NextRequest) {
   let browser: Browser | null = null;
   
   try {
-    const { html, css, canvasStyles, width, height, pixelRatio = 2 }: ScreenshotRequest = await request.json();
+    const { html, css, canvasStyles, elementInfo, width, height, pixelRatio = 2 }: ScreenshotRequest = await request.json();
 
     // Validate input
     if (!html || !width || !height) {
@@ -26,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Clean the HTML to remove editor-specific elements and attributes
     const cleanHTML = html
-      .replace(/data-element-id="[^"]*"/g, '') // Remove element IDs that might interfere
+      // Keep data-element-id for stacking CSS but remove other problematic attributes
       .replace(/class="[^"]*z-editor-canvas-controls[^"]*"/g, 'class=""') // Remove editor control classes
       .replace(/style="[^"]*position:\s*fixed[^"]*"/g, '') // Remove fixed positioning
       .replace(/contentEditable="[^"]*"/g, '') // Remove contentEditable attributes
@@ -76,11 +102,26 @@ export async function POST(request: NextRequest) {
               visibility: hidden !important;
             }
             
-            /* Ensure text elements render properly */
+            /* Ensure text elements render properly and stay on top */
             .text-element {
               font-family: ${canvasStyles.fontFamily || 'Inter, sans-serif'} !important;
               color: ${canvasStyles.color || '#000000'} !important;
               line-height: 1.2;
+              z-index: 999999 !important;
+              position: relative !important;
+            }
+            
+            /* Ensure all text-based elements are on top */
+            [data-element-id][style*="text"],
+            [data-element-id] .text-element,
+            [data-element-id][data-kind="text"] {
+              z-index: 999999 !important;
+              position: relative !important;
+            }
+            
+            /* Force all non-text elements to be behind text */
+            [data-element-id]:not([data-kind="text"]) {
+              z-index: 1 !important;
             }
             
             /* Ensure proper positioning and remove editor artifacts */
@@ -113,6 +154,8 @@ export async function POST(request: NextRequest) {
             [contenteditable] {
               -webkit-user-modify: read-only;
             }
+            
+            ${elementInfo ? generateElementStackingCSS(elementInfo) : ''}
           </style>
         </head>
         <body>

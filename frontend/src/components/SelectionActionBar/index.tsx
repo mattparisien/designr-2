@@ -1,11 +1,10 @@
 "use client"
 
-import { useSelection } from "@/lib/context/selection"
-import { Button } from "@/components/ui/button"
-import { Folder, Loader2, Trash2, X } from "lucide-react"
 import { Toolbar, ToolbarButton, ToolbarIcon, ToolbarLabel, ToolbarSection } from "@/app/editor/[id]/components/Toolbar"
-import { useState } from "react"
+import { useSelection } from "@/lib/context/selection"
 import { cn } from "@/lib/utils"
+import { Folder, Loader2, Trash2, X } from "lucide-react"
+import { useState } from "react"
 
 interface SelectionActionBarProps {
   onDelete?: () => Promise<void>
@@ -56,7 +55,7 @@ export function SelectionActionBar({
   return (
     <Toolbar className={cn("px-4 py-5", className)}>
       <ToolbarSection space={40}>
-        <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap"/>
+        <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap" />
         <ToolbarSection space={10}>
           <ToolbarButton onClick={handleMove}>
             <ToolbarIcon icon={isMoving ? Loader2 : Folder} strokeWidth={iconStrokeWidth} />
