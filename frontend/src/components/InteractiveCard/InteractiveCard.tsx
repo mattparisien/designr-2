@@ -53,7 +53,7 @@ export default function InteractiveCard({
                 {children}
             </CardMedia>
 
-            <div className="py-4 px-1">
+            <div className="py-4 px-1 cursor-pointer">
                 <EditableTitle
                     id={id}
                     title={title}

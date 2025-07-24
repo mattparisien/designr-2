@@ -9,27 +9,25 @@ interface ElevatedSurfaceProps extends Omit<HTMLMotionProps<"div">, "ref"> {
     onMouseLeave?: () => void;
     onClick?: React.MouseEventHandler<HTMLDivElement>;
     children?: React.ReactNode;
-    transitionIn?: {
+    transition?: {
         initialY?: number;
         duration?: number;
         ease?: Easing;
         enabled?: boolean;
-        activate?: boolean;
     };
 }
 
 
 const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props, ref) => {
 
-    const { className, style, onMouseEnter, onMouseLeave, onClick, children, transitionIn, ...restProps } = props;
+    const { className, style, onMouseEnter, onMouseLeave, onClick, children, transition, ...restProps } = props;
 
     const {
         initialY = 20,
         duration = 0.23,
         ease = "easeOut" as const,
-        enabled = true,
-        activate = false
-    } = transitionIn || {};
+        enabled = true
+    } = transition || {};
 
     return (
         <motion.div
@@ -38,10 +36,10 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
-            initial={enabled && activate ? { y: initialY } : undefined}
-            animate={enabled && activate ? { y: 0 } : undefined}
-            exit={enabled && activate ? { y: initialY } : undefined}
-            transition={enabled && activate ? {
+            initial={enabled ? { y: initialY } : undefined}
+            animate={enabled ? { y: 0 } : undefined}
+            exit={enabled ? { y: initialY } : undefined}
+            transition={enabled ? {
                 duration,
                 ease
             } : undefined}

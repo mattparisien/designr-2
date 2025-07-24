@@ -54,7 +54,7 @@ export function SelectionActionBar({
   const iconSize = "lg";
 
   return (
-    <Toolbar className={cn("px-4 py-5", className)} transitionIn>
+    <Toolbar className={cn("px-4 py-5", className)} transition>
       <ToolbarSection space={40}>
         <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap" size="md"/>
         <ToolbarSection space={10}>
