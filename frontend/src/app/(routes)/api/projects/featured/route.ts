@@ -6,7 +6,7 @@ interface ProjectData {
   [key: string]: unknown;
 }
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3001';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${BACKEND_API_URL}${endpoint}`;
@@ -35,7 +35,7 @@ async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
 export async function GET() {
   try {
     // Since backend doesn't have /featured endpoint, we'll get all projects and filter for featured ones
-    const data = await makeBackendRequest('/projects?limit=100');
+    const data = await makeBackendRequest('/api/projects?limit=100');
     
     // Filter for featured projects (assuming projects have a featured property)
     const featuredProjects = data.projects?.filter((project: ProjectData) => project.featured) || [];

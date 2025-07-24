@@ -9,7 +9,7 @@ interface TemplateData {
   [key: string]: unknown;
 }
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001/api';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
     console.log(endpoint, options);
@@ -41,7 +41,7 @@ async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+    console.log('herreeeeeee!')
     // Extract pagination parameters
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');

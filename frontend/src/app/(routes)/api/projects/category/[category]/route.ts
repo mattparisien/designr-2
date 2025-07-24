@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3001';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${BACKEND_API_URL}${endpoint}`;
@@ -34,7 +34,7 @@ export async function GET(
     const { category } = params;
     
     // Use the backend's category filtering
-    const data = await makeBackendRequest(`/projects?category=${encodeURIComponent(category)}&limit=100`);
+    const data = await makeBackendRequest(`/api/projects?category=${encodeURIComponent(category)}&limit=100`);
     
     return NextResponse.json(data);
   } catch (error) {

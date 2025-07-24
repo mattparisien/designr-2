@@ -3,7 +3,7 @@
  * Used by all project API routes
  */
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3001';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
 
 export async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${BACKEND_API_URL}${endpoint}`;
@@ -18,6 +18,14 @@ export async function makeBackendRequest(endpoint: string, options: RequestInit 
     });
 
     if (!response.ok) {
+      // If projects endpoint doesn't exist, fall back to empty data structure
+      if (response.status === 404 && endpoint.includes('/projects')) {
+        console.warn(`Projects endpoint not found: ${endpoint}. Returning empty result.`);
+        return {
+          projects: [],
+          totalProjects: 0
+        };
+      }
       throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
     }
 
@@ -29,6 +37,16 @@ export async function makeBackendRequest(endpoint: string, options: RequestInit 
     return response.json();
   } catch (error) {
     console.error('Backend request failed:', error);
+    
+    // If the error is a 404 for projects, return empty structure
+    if (error instanceof Error && error.message.includes('404') && endpoint.includes('/projects')) {
+      console.warn(`Projects endpoint not found: ${endpoint}. Returning empty result.`);
+      return {
+        projects: [],
+        totalProjects: 0
+      };
+    }
+    
     throw error;
   }
 }

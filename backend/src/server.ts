@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth';
 import brandRoutes from './routes/brands';
 import templateRoutes from './routes/templates';
+import projectRoutes from './routes/projects';
 import aiRoutes from './routes/ai';
 import exportRoutes from './routes/export';
 import stripeRoutes from './routes/stripe';
@@ -61,6 +62,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/design-to
 app.use('/api/auth', authRoutes);
 app.use('/api/brand', brandRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/stripe', stripeRoutes);

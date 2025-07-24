@@ -1,31 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// This would typically come from your backend API client
-// For now, I'm using a placeholder - you'll need to replace this with your actual backend client
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
-
-async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
-  const url = `${BACKEND_API_URL}${endpoint}`;
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('Backend request failed:', error);
-    throw error;
-  }
-}
+import { makeBackendRequest } from './_utils';
 
 // GET /api/projects - Get all projects with optional filters
 export async function GET(request: NextRequest) {
@@ -34,7 +8,7 @@ export async function GET(request: NextRequest) {
     
     // Build query string for backend
     const queryString = searchParams.toString();
-    const endpoint = `/projects${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/projects${queryString ? `?${queryString}` : ''}`;
     
     const data = await makeBackendRequest(endpoint);
     
@@ -42,7 +16,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch projects' },
+      { error: 'Failed to fetch projects', projects: [], totalProjects: 0 },
       { status: 500 }
     );
   }
@@ -53,7 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const data = await makeBackendRequest('/projects', {
+    const data = await makeBackendRequest('/api/projects', {
       method: 'POST',
       body: JSON.stringify(body),
     });

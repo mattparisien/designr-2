@@ -1,34 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3001';
-
-async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
-  const url = `${BACKEND_API_URL}${endpoint}`;
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-    }
-
-    // Handle DELETE requests which may not return JSON
-    if (options.method === 'DELETE') {
-      return null;
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('Backend request failed:', error);
-    throw error;
-  }
-}
+import { makeBackendRequest } from '../_utils';
 
 // GET /api/projects/[id] - Get project by ID
 export async function GET(
@@ -37,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    const data = await makeBackendRequest(`/projects/${id}`);
+    const data = await makeBackendRequest(`/api/projects/${id}`);
     
     return NextResponse.json(data);
   } catch (error) {
@@ -58,7 +29,7 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
     
-    const data = await makeBackendRequest(`/projects/${id}`, {
+    const data = await makeBackendRequest(`/api/projects/${id}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     });
@@ -81,7 +52,7 @@ export async function DELETE(
   try {
     const { id } = params;
     
-    await makeBackendRequest(`/projects/${id}`, {
+    await makeBackendRequest(`/api/projects/${id}`, {
       method: 'DELETE',
     });
     

@@ -1,45 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Project type for filtering
-interface ProjectData {
-  _id: string;
-  title?: string;
-  description?: string;
-  tags?: string[];
-  [key: string]: unknown;
-}
-
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001/api';
-
-async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
-    console.log(endpoint, options);
-  const url = `${BACKEND_API_URL}${endpoint}`;
-  
-  console.log(url);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('Backend request failed:', error);
-    throw error;
-  }
-}
+import { makeBackendRequest, ProjectData } from '../_utils';
 
 // GET /api/projects/paginated - Get paginated projects
 export async function GET(request: NextRequest) {
   try {
+    console.log('HELLO!!!')
     const { searchParams } = new URL(request.url);
     
     // Get pagination parameters
@@ -65,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     const endpoint = `/projects?${queryParams.toString()}`;
     const data = await makeBackendRequest(endpoint);
+    console.log(data, 'data from backend')
 
     // Filter locally if needed (in case backend doesn't support all filters)
     let filteredProjects = data.projects || [];

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001/api';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${BACKEND_API_URL}${endpoint}`;
@@ -42,7 +42,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    await makeBackendRequest('/projects/bulk', {
+    await makeBackendRequest('/api/projects/bulk', {
       method: 'DELETE',
       body: JSON.stringify(body),
     });
