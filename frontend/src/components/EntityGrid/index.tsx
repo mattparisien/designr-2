@@ -1,7 +1,6 @@
 // components/EntityGrid.tsx
 "use client";
-
-import { SOCIAL_FORMAT_CATEGORIES, SOCIAL_MEDIA_FORMATS, SocialFormat } from "@/app/(routes)/[id]/lib/constants/socialFormats";
+import { SOCIAL_FORMAT_CATEGORIES, SOCIAL_MEDIA_FORMATS, SocialFormat} from "@/app/(routes)/editor/[id]/lib/constants/socialFormats";
 import InteractiveCard from "@/components/InteractiveCard/InteractiveCard";
 import { LazyGrid } from "@/components/LazyGrid";
 import { SelectionActionBar } from "@/components/SelectionActionBar";

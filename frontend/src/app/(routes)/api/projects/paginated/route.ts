@@ -4,7 +4,6 @@ import { makeBackendRequest, ProjectData } from '../_utils';
 // GET /api/projects/paginated - Get paginated projects
 export async function GET(request: NextRequest) {
   try {
-    console.log('HELLO!!!')
     const { searchParams } = new URL(request.url);
     
     // Get pagination parameters
@@ -54,6 +53,7 @@ export async function GET(request: NextRequest) {
       totalProjects: filteredProjects.length,
       page,
       limit,
+      currentPage: page,
       totalPages: Math.ceil(filteredProjects.length / limit),
       hasNextPage: endIndex < filteredProjects.length,
       hasPrevPage: page > 1,
@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
         page: 1,
         limit: 12,
         totalPages: 0,
+        currentPage: 1,
         hasNextPage: false,
         hasPrevPage: false,
       },

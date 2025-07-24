@@ -50,7 +50,7 @@ const projectCfg: EntityConfig<Project, ProjectFilters> = {
     vibe: "minimal" as const,
     width,
     height,
-    templateData: {
+    projectData: {
       version: "1.0",
       elements: [],
       background: { type: "solid", color: "#ffffff" }

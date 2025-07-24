@@ -37,12 +37,14 @@ export function useInfiniteCollection<T, F = unknown>(
       const currentPage = lastPage.currentPage ?? 0;
       const totalPages = lastPage.totalPages ?? 0;
       
-      // If there are no items or no pages, stop pagination
+      // If there are no items, no pages, or we're on the last page, stop pagination
       if (totalPages === 0 || currentPage >= totalPages) {
         return undefined;
       }
       
-      return currentPage + 1;
+      // Only return next page if there are more pages available
+      console.log('currentPage', currentPage, 'totalPages', totalPages);
+      return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     initialPageParam: 1,
   });

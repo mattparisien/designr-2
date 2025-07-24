@@ -22,7 +22,7 @@ import { getRelativeTime } from "@/lib/utils"
 import { upperFirst } from "lodash"
 import { Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useInfiniteCompositions } from "@/lib/hooks/useInfiniteCompositions"
 
 
@@ -32,10 +32,10 @@ export default function CompositionGrid() {
     const { toast } = useToast()
     const { selectedIds, clearSelection } = useSelection();
     const {
-        createTemplate,
-        deleteTemplate,
-        deleteMultipleTemplates,
-        updateTemplate
+        createTemplate: createComposition,
+        deleteTemplate: deleteComposition,
+        deleteMultipleTemplates: deleteMultipleCompositions,
+        updateTemplate: updateComposition
     } = useTemplateQuery()
 
     const [viewMode, setViewMode] = useState<ViewMode>("grid")
@@ -44,11 +44,14 @@ export default function CompositionGrid() {
     const [searchQuery] = useState<string>("")
 
     // Build filters for infinite query based on active tab and search query
-    const filters = {
-        ...(activeTab === "starred" ? { starred: true } : {}),
-        ...(activeTab === "shared" ? { shared: true } : {}),
-        ...(searchQuery ? { search: searchQuery } : {}),
-    }
+    const filters = useMemo(
+        () => ({
+            ...(activeTab === "starred" ? { starred: true } : {}),
+            ...(activeTab === "shared" ? { shared: true } : {}),
+            ...(searchQuery ? { search: searchQuery } : {}),
+        }),
+        [activeTab, searchQuery]
+    )
 
     // Use our new infinite templates hook
     // const {
@@ -131,31 +134,31 @@ export default function CompositionGrid() {
         } finally {
             setIsCreating(false)
         }
-    }, [createTemplate, router, toast, setIsCreating])
+    }, [createComposition, router, toast, setIsCreating])
 
     // Handle create template button click
     const handleCreateTemplateClick = useCallback(() => {
-        handleCreateTemplate("custom");
-    }, [handleCreateTemplate])  // Handle template deletion
+        handleCreateComposition("custom");
+    }, [handleCreateComposition])  // Handle template deletion
     const handleDeleteTemplate = useCallback(async (id: string, e: React.MouseEvent) => {
         e.stopPropagation() // Prevent triggering the card click
-        await deleteTemplate(id)
+        await deleteComposition(id)
         // Refresh the data after deletion
         refetch()
-    }, [deleteTemplate, refetch])
+    }, [deleteComposition, refetch])
 
     // Handle star toggling
     const handleToggleStar = useCallback(async (id: string, e: React.MouseEvent) => {
         e.stopPropagation() // Prevent triggering the card click
 
-        const template = templates.find(p => p._id === id)
-        if (!template) return
+        const composition = compositions.find(p => p._id === id)
+        if (!composition) return
 
         // Update the template with the new starred status
-        await updateTemplate({ id, data: { starred: !template.starred } })
+        await updateComposition({ id, data: { starred: !composition.starred } })
         // Refresh the data after starring
         refetch()
-    }, [templates, updateTemplate, refetch])
+    }, [compositions, updateComposition, refetch])
 
     // Handle deleting multiple templates with better error handling and UI updates
     const handleDeleteSelectedTemplates = useCallback(async () => {
@@ -169,7 +172,7 @@ export default function CompositionGrid() {
             });
 
             // Delete the templates
-            await deleteMultipleTemplates(selectedIds);
+            await deleteMultipleCompositions(selectedIds);
 
             // Clear the selection after successful deletion
             clearSelection();
@@ -193,7 +196,7 @@ export default function CompositionGrid() {
             // Still try to refresh the data to get the current state
             refetch();
         }
-    }, [deleteMultipleTemplates, refetch, selectedIds, toast, clearSelection]);
+    }, [deleteMultipleCompositions, refetch, selectedIds, toast, clearSelection]);
 
     // Handle template title change
     const handleTitleChange = useCallback(async (id: string, newTitle: string) => {
@@ -220,7 +223,7 @@ export default function CompositionGrid() {
                 variant: "destructive"
             });
         }
-    }, [templates, updateTemplate, refetch, toast]);
+    }, [compositions, updateComposition, refetch, toast]);
 
     // Render a grid item for LazyGrid
     const renderGridItem = useCallback((comp: Composition) => {
@@ -235,19 +238,19 @@ export default function CompositionGrid() {
                 title={comp.title || "Untitled Composition"}
                 subtitleLeft={upperFirst(comp.type)}
                 subtitleRight={`Last updated ${getRelativeTime(comp.updatedAt)}`}
-                onClick={() => handleOpenTemplate(comp._id)}
+                onClick={() => handleOpenComposition(comp._id)}
                 onSelect={(id, isSelected) => {
                     console.log(`Composition ${id} selection state: ${isSelected}`);
                 }}
                 onTitleChange={handleTitleChange}
             />
         );
-    }, [handleOpenTemplate, handleTitleChange]);
+    }, [handleOpenComposition, handleTitleChange]);
 
     return (
         <>
             {/* All Designs */}
-            <Section heading="My Designs">
+            <Section title="My Designs">
 
                 {/* Sticky Controls Bar */}
                 {/* <StickyControlsBar
@@ -303,12 +306,12 @@ export default function CompositionGrid() {
                         {viewMode === "grid" ? (
                             <div className="space-y-6">
                                 <LazyGrid
-                                    items={templates}
+                                    items={compositions}
                                     renderItem={renderGridItem}
                                     loadMore={handleFetchNextPage}
                                     hasMore={!!hasNextPage}
                                     isLoading={isFetchingNextPage}
-                                    isInitialLoading={isLoading && templates.length === 0}
+                                    isInitialLoading={isLoading && compositions.length === 0}
                                     loadingVariant="grid"
                                     loadingText="Loading your templates..."
                                     className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full"
@@ -316,9 +319,9 @@ export default function CompositionGrid() {
                             </div>
                         ) : (
                             <ListView
-                                getVisibleDesigns={() => templates}
-                                handleOpenDesign={handleOpenTemplate}
-                                designs={templates}
+                                getVisibleDesigns={() => compositions}
+                                handleOpenDesign={handleOpenComposition}
+                                designs={compositions}
                                 handleDeleteDesign={handleDeleteTemplate}
                                 toggleStar={handleToggleStar}
                                 getDefaultThumbnail={(index: number) => `/placeholder${index % 2 === 0 ? '.jpg' : '.svg'}`}
@@ -334,7 +337,7 @@ export default function CompositionGrid() {
                         )}
 
                         {/* Empty state */}
-                        {templates.length === 0 && !isLoading && (
+                        {compositions.length === 0 && !isLoading && (
                             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                                 <div className="rounded-full bg-gradient-to-r from-brand-blue-light/20 to-brand-teal-light/20 p-6 mb-4">
                                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-blue">
