@@ -110,7 +110,7 @@ export class CollectionAPI<
     filters: TFilters = {} as TFilters
   ): Promise<PaginatedResult<TItem>> {
     try {
-      console.log(this.baseUrl)
+
       const params = this.qs({ page, limit, ...filters });
       const { data } = await this.client.get<Record<string, any>>(
         `${this.baseUrl}/paginated?${params.toString()}`

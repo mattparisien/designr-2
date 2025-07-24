@@ -9,7 +9,7 @@ interface TemplateData {
   [key: string]: unknown;
 }
 
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001/api';
 
 async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
     console.log(endpoint, options);

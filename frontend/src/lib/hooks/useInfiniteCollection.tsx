@@ -30,8 +30,20 @@ export function useInfiniteCollection<T, F = unknown>(
   const query = useInfiniteQuery({
     queryKey: [...queryKey, limit, filters],
     queryFn: async ({ pageParam = 1 }) => fetchPage(pageParam, limit, filters),
-    getNextPageParam: (lastPage) =>
-      lastPage.currentPage >= lastPage.totalPages ? undefined : lastPage.currentPage + 1,
+    getNextPageParam: (lastPage) => {
+      console.log('lastPage', lastPage);
+      
+      // Handle edge cases where currentPage or totalPages might be undefined/null
+      const currentPage = lastPage.currentPage ?? 0;
+      const totalPages = lastPage.totalPages ?? 0;
+      
+      // If there are no items or no pages, stop pagination
+      if (totalPages === 0 || currentPage >= totalPages) {
+        return undefined;
+      }
+      
+      return currentPage + 1;
+    },
     initialPageParam: 1,
   });
 
