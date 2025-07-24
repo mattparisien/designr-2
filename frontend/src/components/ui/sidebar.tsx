@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { LucideIcon, Plus, Sidebar as SidebarIcon } from "lucide-react"
+import { LucideIcon, Plus } from "lucide-react"
 import * as React from "react"
-import { useState, useMemo, useCallback, forwardRef } from "react"
+import { forwardRef, useCallback, useMemo, useState } from "react"
 
-interface SidebarItem {
+export interface SidebarItem {
     id: string
     title: string
     href?: string
@@ -15,7 +15,7 @@ interface SidebarItem {
     icon?: LucideIcon
 }
 
-interface SidebarSection {
+export interface SidebarSection {
     title: string
     items: SidebarItem[]
 }
@@ -224,7 +224,7 @@ const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
 
         const { children, className, isCollapsed } = props;
 
-        return <div
+        return <aside
             ref={ref}
             className={cn(
                 "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
@@ -235,7 +235,7 @@ const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
                 backgroundColor: "var(--bg-elevated-secondary)",
                 borderRightColor: "var(--border-default)"
             }}
-        >{children}</div>
+        >{children}</aside>
     });
 
 Sidebar.displayName = "Sidebar"

@@ -51,7 +51,8 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
                 [props.className || '']: !!props.className
             })}
             transition={transition ? {
-                initialY: 100
+                initialY: 100,
+                enabled: true
             } : undefined}
             
         >

@@ -17,6 +17,17 @@ interface ElevatedSurfaceProps extends Omit<HTMLMotionProps<"div">, "ref"> {
     };
 }
 
+/**
+ * ElevatedSurface component with motion animations.
+ * 
+ * IMPORTANT: For exit animations to work, wrap this component with AnimatePresence 
+ * where it's used conditionally:
+ * 
+ * <AnimatePresence>
+ *   {shouldShow && <ElevatedSurface />}
+ * </AnimatePresence>
+ */
+
 
 const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props, ref) => {
 
@@ -26,7 +37,7 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
         initialY = 20,
         duration = 0.23,
         ease = "easeOut" as const,
-        enabled = true
+        enabled = false
     } = transition || {};
 
     return (
@@ -36,12 +47,13 @@ const ElevatedSurface = forwardRef<HTMLDivElement, ElevatedSurfaceProps>((props,
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
-            initial={enabled ? { y: initialY } : undefined}
-            animate={enabled ? { y: 0 } : undefined}
-            exit={enabled ? { y: initialY } : undefined}
+            initial={enabled ? { y: initialY, opacity: 0 } : undefined}
+            animate={enabled ? { y: 0, opacity: 1 } : undefined}
+            exit={enabled ? { y: initialY, opacity: 0 } : undefined}
             transition={enabled ? {
                 duration,
-                ease
+                ease,
+                opacity: { duration: duration * 0.8 }
             } : undefined}
             style={{
                 borderColor: "var(--elevated-surface-border)",

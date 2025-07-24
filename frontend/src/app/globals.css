@@ -87,7 +87,7 @@
   --z-editor-toolbar: 1001;
   --z-editor-sidebar: 1002;
 
-  --sidebar-width: 20rem;
+  --sidebar-width: 13rem;
   --sidebar-width-collapsed: 4.5rem;
 }
 
@@ -100,9 +100,7 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Helvetica,Apple Color Emoji,Arial,sans-serif,Segoe UI Emoji,Segoe UI Symbol;
-}
+  color: var(--foreground);}
 
 /* Custom scrollbar for resize dropdown */
 .custom-scrollbar {
