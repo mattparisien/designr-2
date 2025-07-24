@@ -51,21 +51,22 @@ export function SelectionActionBar({
   }
 
   const iconStrokeWidth = 1.7
+  const iconSize = "lg";
 
   return (
     <Toolbar className={cn("px-4 py-5", className)} transitionIn>
       <ToolbarSection space={40}>
-        <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap" />
+        <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap" size="md"/>
         <ToolbarSection space={10}>
           <ToolbarButton onClick={handleMove}>
-            <ToolbarIcon icon={isMoving ? Loader2 : Folder} strokeWidth={iconStrokeWidth} />
+            <ToolbarIcon size={iconSize} icon={isMoving ? Loader2 : Folder} strokeWidth={iconStrokeWidth} />
           </ToolbarButton>
           <ToolbarButton onClick={handleDelete}>
-            <ToolbarIcon icon={isDeleting ? Loader2 : Trash2} className="text-red-500" strokeWidth={iconStrokeWidth} />
+            <ToolbarIcon size={iconSize} icon={isDeleting ? Loader2 : Trash2} className="text-red-500" strokeWidth={iconStrokeWidth} />
           </ToolbarButton>
         </ToolbarSection>
         <ToolbarButton onClick={clearSelection}>
-          <ToolbarIcon icon={X} strokeWidth={iconStrokeWidth} />
+          <ToolbarIcon size={iconSize} icon={X} strokeWidth={iconStrokeWidth} />
         </ToolbarButton>
       </ToolbarSection>
     </Toolbar>

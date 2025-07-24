@@ -1,6 +1,7 @@
 // components/EntityGrid.tsx
 "use client";
 
+import { SOCIAL_FORMAT_CATEGORIES, SOCIAL_MEDIA_FORMATS, SocialFormat } from "@/app/editor/[id]/lib/constants/socialFormats";
 import InteractiveCard from "@/components/InteractiveCard/InteractiveCard";
 import { LazyGrid } from "@/components/LazyGrid";
 import { SelectionActionBar } from "@/components/SelectionActionBar";
@@ -14,12 +15,10 @@ import { useToast } from "@/lib/hooks/useToast";
 import { EntityConfig } from "@/lib/types/grid";
 import { getRelativeTime } from "@/lib/utils";
 import { upperFirst } from "lodash";
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { Button } from "../ui";
-import { ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { SOCIAL_MEDIA_FORMATS, SOCIAL_FORMAT_CATEGORIES, SocialFormat } from "@/app/editor/[id]/lib/constants/socialFormats";
 
 type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl?: string; type?: string; updatedAt?: string };
 
@@ -129,42 +128,52 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
 
   return (
     <>
-      <Section heading={`My ${upperFirst(cfg.key)}`}>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="flex items-center justify-center cursor-pointer hover:bg-neutral-200 p-2 rounded-lg gap-2"
-              disabled={isCreating}
-            >
-              <span className="text-lg">{isCreating ? "Creating..." : "Create Template"}</span>
-              <ChevronDown className="text-neutral-400 w-4 h-4" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="start">
-            <div className="max-h-96 overflow-y-auto">
-              {SOCIAL_FORMAT_CATEGORIES.map((category) => (
-                <div key={category} className="p-3 border-b border-gray-100 last:border-b-0">
-                  <h3 className="text-sm font-medium text-neutral-500 mb-2 px-3">{category}</h3>
-                  <div className="space-y-1">
-                    {Object.entries(SOCIAL_MEDIA_FORMATS)
-                      .filter(([, format]) => format.category === category)
-                      .map(([key, format]) => (
-                        <button
-                          key={key}
-                          onClick={() => handleCreate(format)}
-                          disabled={isCreating}
-                          className="cursor-pointer w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <div className="font-medium text-[0.97rem] text-black">{format.name}</div>
-                          <div className="text-xs font-normal text-neutral-500">{format.width} × {format.height}</div>
-                        </button>
-                      ))}
-                  </div>
+      <Section>
+        <div className="flex items-center justify-between pb-10">
+          <div>
+            <h3 className="text-xl font-medium">
+              My {upperFirst(cfg.key)}
+            </h3>
+          </div>
+          <div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="flex items-center justify-center cursor-pointer hover:bg-neutral-200 px-2.5 py-1.5 rounded-lg gap-1 "
+                  disabled={isCreating}
+                >
+                  <span className="text-lg">{isCreating ? "Creating..." : "Create"}</span>
+                  <ChevronDown className="text-neutral-400 w-5 h-5 mt-[3px]" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <div className="max-h-96 overflow-y-auto">
+                  {SOCIAL_FORMAT_CATEGORIES.map((category) => (
+                    <div key={category} className="p-3 border-b border-gray-100 last:border-b-0">
+                      <h3 className="text-sm font-medium text-neutral-500 mb-2 px-3">{category}</h3>
+                      <div className="space-y-1">
+                        {Object.entries(SOCIAL_MEDIA_FORMATS)
+                          .filter(([, format]) => format.category === category)
+                          .map(([key, format]) => (
+                            <button
+                              key={key}
+                              onClick={() => handleCreate(format)}
+                              disabled={isCreating}
+                              className="cursor-pointer w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="font-medium text-[0.97rem] text-black">{format.name}</div>
+                              <div className="text-xs font-normal text-neutral-500">{format.width} × {format.height}</div>
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
         {!isLoading && isError && (
           <div>error</div>
           // <ErrorState onRetry={refetch} noun={cfg.nounSingular ?? "item"} />
@@ -209,7 +218,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
             )}
           </>
         )}
-      </Section>
+      </Section >
 
       <SelectionActionBar
         onDelete={handleDeleteSelected}
