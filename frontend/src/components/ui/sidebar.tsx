@@ -6,26 +6,16 @@ import { cn } from "@/lib/utils"
 import { LucideIcon, Plus } from "lucide-react"
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useState } from "react"
+import { type Navigation, type NavigationItem } from "@/lib/types/navigation"
+import * as LucideIcons from "lucide-react"
 
-export interface SidebarItem {
-    id: string
-    title: string
-    href?: string
-    children?: SidebarItem[]
-    icon?: LucideIcon
-}
-
-export interface SidebarSection {
-    title: string
-    items: SidebarItem[]
-}
 
 interface SidebarProps {
-    sections: SidebarSection[]
+    navigation: Navigation,
     isDefaultCollapsed?: boolean
     className?: string
     searchPlaceholder?: string
-    onItemClick?: (item: SidebarItem) => void
+    onItemClick?: (item: NavigationItem) => void
     activeItem?: string
 }
 
@@ -46,8 +36,8 @@ interface MenuIconProps {
 }
 
 interface SidebarItemProps {
-    item: SidebarItem
-    onItemClick?: (item: SidebarItem) => void
+    item: NavigationItem
+    onItemClick?: (item: NavigationItem) => void
     isActive?: boolean
     level: number,
     isCollapsed: boolean,
@@ -70,6 +60,7 @@ const MenuIcon = (props: MenuIconProps) => {
         width: width || "0.98rem",
         height: height || '0.98rem',
         fill: isFill ? "var(--text-primary)" : "none",
+        strokeWidth: "1.4px"
     }} />;
 
 }
@@ -82,8 +73,8 @@ const MenuButton = (props: MenuButtonProps) => {
         variant="ghost"
         onClick={onClick}
         className={cn(
-            "flex items-center justify-start w-full rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-            "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
+            "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+            "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer gap-1.5",
             isActive
                 ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
                 : "text-black",
@@ -101,7 +92,7 @@ const MenuButton = (props: MenuButtonProps) => {
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     ({
-        sections,
+        navigation,
         className,
         onItemClick,
         activeItem,
@@ -113,17 +104,17 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         const [searchQuery, setSearchQuery] = useState<string>("")
 
         const filteredSections = useMemo(() => {
-            if (!searchQuery) return sections
+            if (!searchQuery) return navigation.sections;
 
-            return sections.map(section => ({
+            return navigation.sections.map(section => ({
                 ...section,
                 items: section.items.filter(item =>
                     item.title.toLowerCase().includes(searchQuery.toLowerCase())
                 )
             })).filter(section => section.items.length > 0)
-        }, [sections, searchQuery])
+        }, [navigation, searchQuery])
 
-        const handleItemClick = useCallback((item: SidebarItem) => {
+        const handleItemClick = useCallback((item: NavigationItem) => {
             setActiveItemId(item.id);
             onItemClick?.(item);
         }, [onItemClick]);
@@ -132,22 +123,8 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
                 <ScrollArea className="flex-1">
                     <div className="p-1">
-                        {/* <aside className="mb-6">
-                            <div className="flex justify-end">
-                                <MenuButton
-                                    isActive={false}
-                                    icon={<MenuIcon icon={SidebarIcon} />}
-                                    widthMode="wrap"
-                                    level={0}
-                                    // label="Toggle Sidebar"
-                                    onClick={() => setIsCollapsed(!isCollapsed)}
-                                />
-
-
-                            </div>
-                        </aside> */}
                         {filteredSections.map((section) => (
-                            <aside key={section.title} className="mb-6">
+                            <div key={section.id} className="mb-6">
 
                                 {/* Section Items */}
                                 <div className="space-y-1">
@@ -163,7 +140,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                                         />
                                     ))}
                                 </div>
-                            </aside>
+                            </div>
                         ))}
                     </div>
                 </ScrollArea>
@@ -190,13 +167,38 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         onItemClick?.(item)
     }
 
+    const icon = useMemo(() => {
+        if (typeof item.icon === "string") {
+            // Parse the icon name from "lucide:name-of-icon" format
+            const iconName = item.icon.replace("lucide:", "");
+
+            // Convert kebab-case to PascalCase (e.g., "arrow-left" => "ArrowLeft")
+            const pascalCaseName = iconName
+                .split("-")
+                .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join("");
+
+            // Dynamically access the icon component
+            const DynamicIcon = (LucideIcons as Record<string, React.ElementType>)[pascalCaseName];
+
+            if (DynamicIcon) {
+                return DynamicIcon;
+            }
+
+            console.warn(`Icon "${item.icon}" not found, using fallback`);
+            return Plus;
+        }
+
+        return null;
+    }, [item.icon]);
+
     return (
         <div>
             <MenuButton
                 onClick={handleClick}
                 level={level}
                 label={item.title}
-                icon={<MenuIcon icon={item.icon || Plus} width="1.2rem" height="1.2rem" isFill={isActive} />}
+                icon={<MenuIcon icon={icon || Plus} width="1.2rem" height="1.2rem" isFill={isActive} />}
                 isActive={isActive}
             />
             {/* Render children if expanded */}
@@ -237,5 +239,5 @@ const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
 Sidebar.displayName = "Sidebar"
 SidebarShell.displayName = "SidebarShell"
 
-export { Sidebar, SidebarShell, type SidebarItem, type SidebarProps, type SidebarSection }
+export { Sidebar, SidebarShell, type SidebarItem, type SidebarProps }
 

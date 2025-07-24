@@ -1,18 +1,19 @@
-import { LucideProps } from "lucide-react";
-import { ForwardRefExoticComponent, RefAttributes, ReactNode, ComponentType } from "react";
+import { type LucideIcon } from "lucide-react";
 
-// Original icon type (keeping for reference)
-export type NavigationItemIcon = 
-  | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> 
-  | ComponentType<React.SVGProps<SVGSVGElement>>
-  | ReactNode;
-
-// New icon type that uses string names instead of components
-export type NavigationIconName = 'home' | 'folder-kanban' | 'square-kanban' | 'panels-top-left' | 'layout-template' | 'component' | 'type' | 'upload' | 'shapes' | 'database' | 'brain' | 'message-circle';
+export interface Navigation {
+  title: string
+  sections: {
+    id: string;
+    items: NavigationItem[]
+  }[]
+}
 
 export interface NavigationItem {
-    id: string;
-    path?: string;
-    iconName: NavigationIconName; // Changed from icon to iconName
-    label: string;
+  id: string
+  title: string
+  href?: string
+  children?: NavigationItem[]
+  icon?: string | LucideIcon
 }
+
+
