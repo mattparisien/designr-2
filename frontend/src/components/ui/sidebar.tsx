@@ -78,25 +78,25 @@ const MenuButton = (props: MenuButtonProps) => {
 
     const { onClick, isActive, level, icon, label } = props;
 
-    return <div className="flex flex-col items-center justify-center">
-        <Button
-            variant="ghost"
-            onClick={onClick}
-            className={cn(
-                "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-                "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
-                isActive
-                    ? "bg-[var(--interactive-bg-secondary-selected)] text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
-                level > 0 && "ml-4")}
-            style={{ paddingLeft: `${12 + level * 16}px` }}
-        >
+    return <Button
+        variant="ghost"
+        onClick={onClick}
+        className={cn(
+            "flex items-center justify-start w-full rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+            "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer",
+            isActive
+                ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
+                : "text-black",
+            level > 0 && "ml-4")}
+    >
+        <span>
             {icon}
-        </Button>
-        <div className="text-xs text-[var(--text-secondary)] mt-1">
+        </span>
+        <span>
             {label}
-        </div>
-    </div>
+        </span>
+    </Button>
+
 }
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
@@ -150,7 +150,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                             <aside key={section.title} className="mb-6">
 
                                 {/* Section Items */}
-                                <div className="space-y-5">
+                                <div className="space-y-1">
                                     {section.items.map((item) => (
                                         <SidebarItem
                                             isCollapsed={isCollapsed}
@@ -227,14 +227,10 @@ const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
         return <aside
             ref={ref}
             className={cn(
-                "relative inline-flex h-screen flex-col bg-elevated-secondary border-r transition-width duration-300 ease-in",
+                "pt-10 relative inline-flex h-screen flex-col bg-neutral-100 border-r border-neutral-200 transition-width duration-300 ease-in",
                 !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
                 className
             )}
-            style={{
-                backgroundColor: "var(--bg-elevated-secondary)",
-                borderRightColor: "var(--border-default)"
-            }}
         >{children}</aside>
     });
 

@@ -60,8 +60,8 @@ export default function InteractiveCard({
                     onTitleChange={onTitleChange}
                 />
                 <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-500">{subtitleLeft}</span>
-                    <span className="text-xs text-gray-500">{subtitleRight}</span>
+                    <span className="text-xs text-neutral-500">{subtitleLeft}</span>
+                    <span className="text-xs text-neutral-500">{subtitleRight}</span>
                 </div>
             </div>
             <SelectionCheckbox
