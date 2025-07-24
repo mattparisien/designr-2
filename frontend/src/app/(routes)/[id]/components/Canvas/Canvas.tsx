@@ -1,7 +1,7 @@
 "use client"
 
-import { AlignmentGuides } from "../Canvas/AlignmentGuides"
-import { CanvasElement } from "../Canvas/CanvasElement"
+import { AlignmentGuides } from "./AlignmentGuides"
+import { CanvasElement } from "./CanvasElement"
 import { calculateFitScale } from "../../lib/utils/canvas"
 import useCanvasStore, { useCurrentCanvasSize, useCurrentPageElements } from "../../lib/stores/useCanvasStore"
 import useEditorStore from "../../lib/stores/useEditorStore"

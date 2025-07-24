@@ -5,7 +5,7 @@ import {
     createPresentationTemplate,
     createPrintTemplate,
     createSocialMediaTemplate
-} from "@/app/editor/[id]/lib/factories/elementFactory"
+} from "@/app/(routes)/[id]/lib/factories/elementFactory"
 import InteractiveCard from "@/components/InteractiveCard/InteractiveCard"
 import { LazyGrid } from "@/components/LazyGrid"
 import { SelectionActionBar } from "@/components/SelectionActionBar"

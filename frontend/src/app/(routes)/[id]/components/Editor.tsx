@@ -2,7 +2,7 @@
 
 import { addToRefArrayOfObjects } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
-import useCanvasStore, { useCurrentCanvasSize } from "../lib//stores/useCanvasStore";
+import useCanvasStore, { useCurrentCanvasSize } from "../lib/stores/useCanvasStore";
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
 import { ElementFactory } from "../lib/factories/elementFactory";
 import useElementActionBar from "../lib/hooks/useElementActionBar";

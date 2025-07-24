@@ -25,6 +25,7 @@ interface MenuButtonProps {
     level: number;
     label: string;
     icon?: React.ReactNode;
+    href?: string;
     widthMode?: "full" | "wrap"
 }
 
@@ -67,9 +68,11 @@ const MenuIcon = (props: MenuIconProps) => {
 
 const MenuButton = (props: MenuButtonProps) => {
 
-    const { onClick, isActive, level, icon, label } = props;
+    const { onClick, isActive, level, icon, label, href } = props;
 
     return <Button
+        as="NextLink"
+        href={href}
         variant="ghost"
         onClick={onClick}
         className={cn(
@@ -198,7 +201,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 onClick={handleClick}
                 level={level}
                 label={item.title}
-                icon={<MenuIcon icon={icon || Plus} width="1.2rem" height="1.2rem" isFill={isActive} />}
+                href={item.href}
+                icon={<MenuIcon icon={icon || Plus} width="1.2rem" height="1.2rem" />}
                 isActive={isActive}
             />
             {/* Render children if expanded */}

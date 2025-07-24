@@ -80,7 +80,7 @@ export async function testCanvasScreenshot() {
   
   // Import useEditorStore to access the capture function
   try {
-    const useEditorStore = (await import('@/app/editor/[id]/lib/stores/useEditorStore')).default;
+    const useEditorStore = (await import('@/app/(routes)/[id]/lib/stores/useEditorStore')).default;
     const captureFunction = useEditorStore.getState().captureCanvasScreenshot;
     
     const result = await captureFunction();

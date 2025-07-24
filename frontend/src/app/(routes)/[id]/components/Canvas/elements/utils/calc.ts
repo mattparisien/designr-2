@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_FONT_STYLE, DEFAULT_FONT_WEIGHT, DEFAULT_LETTER_SPACING } from "@/app/editor/[id]/lib/constants";
+import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_FONT_STYLE, DEFAULT_FONT_WEIGHT, DEFAULT_LETTER_SPACING } from "@/app/(routes)/[id]/lib/constants";
 
 // Calculate text width based on content and font size
 export const calculateTextWidth = (

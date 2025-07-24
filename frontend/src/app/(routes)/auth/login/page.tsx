@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
-import { ApiClient } from '../../../lib/api';
+import { ApiClient } from '../../../../lib/api';
 
 export default function LoginPage() {
   const router = useRouter();

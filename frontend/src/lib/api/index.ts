@@ -59,7 +59,7 @@ const projectsAPI = new CollectionAPI<
   "projects",
   "totalProjects",
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
->(apiClient, "/api/projects", { list: "projects", total: "totalProjects" });
+>(apiClient, "/projects", { list: "projects", total: "totalProjects" });
 
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);

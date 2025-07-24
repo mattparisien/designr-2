@@ -9,7 +9,7 @@ export const SITE_NAVIGATION : Navigation = {
                 {
                     id: "projects",
                     title: "Projects",
-                    href: "/projects",
+                    href: "/",
                     icon: "lucide:folder-closed"
                 },
                 {
@@ -17,6 +17,24 @@ export const SITE_NAVIGATION : Navigation = {
                     title: "Templates",
                     href: "/templates",
                     icon: "lucide:panels-top-left"
+                },
+                {
+                    id: "brands",
+                    title: "Brands",
+                    href: "/brands",
+                    icon: "lucide:id-card"
+                },
+                {
+                    id: "assets",
+                    title: "Assets",
+                    href: "/assets",
+                    icon: "lucide:image"
+                },
+                {
+                    id: "magic-creator",
+                    title: "Magic Creator",
+                    href: "/magic-creator",
+                    icon: "lucide:sparkle"
                 },
             ],
         }
