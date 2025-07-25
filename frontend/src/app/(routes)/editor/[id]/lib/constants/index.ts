@@ -1,4 +1,10 @@
 /**
+ * Editor constants for navigation
+ */
+
+export * from "./navigation";
+
+/**
  * Editor constants for canvas and elements
  */
 

@@ -1,5 +1,4 @@
 import { Sidebar } from "@/components/ui";
-import { SidebarItem } from "@/components/ui/sidebar";
 import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera, Download } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
@@ -12,6 +11,8 @@ import { Asset } from "@/lib/types/api";
 import { apiClient } from "@/lib/api";
 import { CORE_COLORS } from "../../lib/constants/colors";
 import ColorSwatch from "@/components/ui/color-swatch";
+import { Navigation, NavigationItem } from "@/lib/types/navigation";
+import { EDITOR_NAVIGATION } from "../../lib/constants";
 
 
 const sections = [
@@ -169,7 +170,7 @@ const EditorSidebar = () => {
         return sidebarWidth;
     }
 
-    const handleItemClick = useCallback((item: SidebarItem) => {
+    const handleItemClick = useCallback((item: NavigationItem) => {
         if (item.id === activeItem?.id) {
             closeSidebar();
         } else {
@@ -463,12 +464,16 @@ const EditorSidebar = () => {
         }
     }, [activeItem?.id, fetchAssets]);
 
+    const handleItemMouseEnter = useCallback((item: NavigationItem) => {
+        openSidebar(item.id);
+    }, []);
+
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
         <Sidebar
-            isDefaultCollapsed
-            sections={sections}
+            navigation={EDITOR_NAVIGATION}
             onItemClick={handleItemClick}
+            onItemMouseEnter={handleItemMouseEnter}
         />
         {(sidebar.isOpen || sidebarPanel.isOpen) && (
             <EditorSidebarPanel

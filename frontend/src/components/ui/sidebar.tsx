@@ -39,6 +39,7 @@ interface MenuIconProps {
 interface SidebarItemProps {
     item: NavigationItem
     onItemClick?: (item: NavigationItem) => void
+    onItemMouseEnter?: (item: NavigationItem) => void
     isActive?: boolean
     level: number,
     isCollapsed: boolean,
@@ -98,6 +99,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         navigation,
         className,
         onItemClick,
+        onItemMouseEnter,
         activeItem,
         isDefaultCollapsed = false,
     }, ref) => {
@@ -122,6 +124,11 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             onItemClick?.(item);
         }, [onItemClick]);
 
+        const handleItemMouseEnter = useCallback((item: NavigationItem) => {
+            setActiveItemId(item.id);
+            onItemMouseEnter?.(item);
+        }, [onItemMouseEnter]);
+
         return (
             <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
                 <ScrollArea className="flex-1">
@@ -137,6 +144,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                                             key={item.id}
                                             item={item}
                                             onItemClick={handleItemClick}
+                                            onItemMouseEnter={handleItemMouseEnter}
                                             isActive={activeItemId === item.id}
                                             level={0}
                                             activeItem={activeItem}
@@ -155,6 +163,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 const SidebarItem: React.FC<SidebarItemProps> = ({
     item,
     onItemClick,
+    onItemMouseEnter,
     isCollapsed,
     isActive,
     level,
@@ -196,7 +205,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     }, [item.icon]);
 
     return (
-        <div>
+        <div onMouseEnter={() => onItemMouseEnter?.(item)}>
             <MenuButton
                 onClick={handleClick}
                 level={level}

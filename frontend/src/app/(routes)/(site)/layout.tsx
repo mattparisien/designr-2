@@ -9,7 +9,6 @@ export default function Layout({
 }>) {
 
   return (
-
     <GlobalProviders>
       <Sidebar navigation={SITE_NAVIGATION} />
       <main className="pt-10 px-4 md:px-5 flex-1">

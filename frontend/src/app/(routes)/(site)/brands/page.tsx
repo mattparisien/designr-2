@@ -17,7 +17,7 @@ import {
   Star,
   Building2,
 } from "lucide-react"
-import { ApiClient } from "../../../lib/api"
+import { ApiClient } from "../../../../lib/api"
 
 interface Brand {
   _id: string

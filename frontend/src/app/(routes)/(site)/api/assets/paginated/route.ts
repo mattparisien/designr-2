@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { makeBackendRequest } from '../../_utils';
-import { Asset } from '@/lib/types/api';
 
 // GET /api/projects/paginated - Get paginated projects
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Get pagination parameters
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
@@ -39,8 +38,8 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit;
 
     const paginatedAssets = filteredAssets.slice(startIndex, endIndex).map(x => ({
-        ...x,
-        thumbnailUrl: x.thumbnail || x.cloudinaryUrl || x.url,
+      ...x,
+      thumbnailUrl: x.thumbnail || x.cloudinaryUrl || x.url,
     }));
 
     const response = {
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching paginated assets:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch assets',
         assets: [],
         totalAssets: 0,
