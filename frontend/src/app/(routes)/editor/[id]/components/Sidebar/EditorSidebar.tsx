@@ -1,18 +1,18 @@
 import { Sidebar } from "@/components/ui";
-import { Circle, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type, Camera, Download } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
+import ColorSwatch from "@/components/ui/color-swatch";
+import { apiClient } from "@/lib/api";
+import { Asset } from "@/lib/types/api";
+import { NavigationItem } from "@/lib/types/navigation";
+import { Camera, Circle, Download, LayoutPanelTop, Minus, Palette, Shapes, Square, Triangle, Type } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { EDITOR_NAVIGATION } from "../../lib/constants";
+import { CORE_COLORS } from "../../lib/constants/colors";
+import { ElementFactory } from "../../lib/factories/elementFactory";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
-import { ElementFactory } from "../../lib/factories/elementFactory";
-import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { DesignPanelContent } from "./DesignPanelContent";
+import EditorSidebarPanel, { EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { ExportPanelContent } from "./ExportPanelContent";
-import { Asset } from "@/lib/types/api";
-import { apiClient } from "@/lib/api";
-import { CORE_COLORS } from "../../lib/constants/colors";
-import ColorSwatch from "@/components/ui/color-swatch";
-import { Navigation, NavigationItem } from "@/lib/types/navigation";
-import { EDITOR_NAVIGATION } from "../../lib/constants";
 
 
 const sections = [
@@ -484,9 +484,9 @@ const EditorSidebar = () => {
                     activeItem?.title
                 }
                 sections={panelSections}
-                customContent={activeItem?.id === "design" ? <DesignPanelContent /> : 
-                             activeItem?.id === "export" ? <ExportPanelContent /> : 
-                             undefined}
+                customContent={activeItem?.id === "design" ? <DesignPanelContent /> :
+                    activeItem?.id === "export" ? <ExportPanelContent /> :
+                        undefined}
             />
         )}
 

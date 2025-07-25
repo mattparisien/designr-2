@@ -107,7 +107,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable 
 
   const handleTitleChange = useCallback(async (id: string, newTitle: string) => {
     try {
-      await updateEntity({ id, data: { title: newTitle } as Partial<T> });
+      await updateEntity({ id, data: { name: newTitle } as Partial<T> });
       // Note: useEntityQuery already shows success toast, so we don't need to duplicate it
       refetch();
     } catch (error) {
@@ -121,7 +121,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable 
       key={item._id}
       id={item._id}
       image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? "Thumbnail" } : undefined}
-      title={item.title ?? "Untitled"}
+      title={item.name ?? "Untitled"}
       disableClick={!isClickable}
       subtitleLeft={upperFirst(item.type ?? "")}
       subtitleRight={`Last updated ${getRelativeTime(item.updatedAt ?? "")}`}

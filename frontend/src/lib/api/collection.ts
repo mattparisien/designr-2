@@ -81,8 +81,10 @@ export class CollectionAPI<
   async update(id: string, payload: Partial<TItem>): Promise<TItem> {
     try {
       const { data } = await this.client.put<TItem>(`${this.baseUrl}/${id}`, payload);
+      console.log('madw it after!', data)
       return data;
     } catch (e) {
+      console.log('in error')
       this.handleError(e, "Failed to update item");
     }
   }

@@ -145,7 +145,7 @@ export type Role = 'template' | 'project';
 // ---------- Core ----------
 interface CompositionBase {
   _id: string;
-  title: string;
+  name: string;
   description?: string;
   // Your element/layer tree etc.
   data: unknown;

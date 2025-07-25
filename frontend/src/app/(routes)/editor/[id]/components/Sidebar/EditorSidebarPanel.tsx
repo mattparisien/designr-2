@@ -47,9 +47,7 @@ const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }
             <SidebarShell className={rootClasses}>
                 <div className="w-full h-full flex flex-col" data-editor-interactive>
                     {/* Fixed header */}
-                    <div className="px-8 pt-8 pb-4 flex-shrink-0">
                         <h2 className="font-bold text-lg">{title}</h2>
-                    </div>
 
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto px-4">

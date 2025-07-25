@@ -307,6 +307,7 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
         console.log('Canvas mouse enter triggered');
         if (isEditMode) setIsCanvasHovering(true);
       }}
+      id="capture"
     >
       <div
         ref={handleRef}

@@ -74,33 +74,7 @@ export async function testThumbnailUpload(templateId: string) {
   }
 }
 
-// Test function to capture actual canvas screenshot
-export async function testCanvasScreenshot() {
-  console.log('Testing canvas screenshot capture...');
-  
-  // Import useEditorStore to access the capture function
-  try {
-    const useEditorStore = (await import('@/app/(routes)/[id]/lib/stores/useEditorStore')).default;
-    const captureFunction = useEditorStore.getState().captureCanvasScreenshot;
-    
-    const result = await captureFunction();
-    
-    if (result) {
-      console.log('✅ Canvas screenshot captured successfully!');
-      console.log('Data URL length:', result.length);
-      console.log('Preview:', result.substring(0, 100) + '...');
-      
-      // You can copy this data URL and paste it in browser address bar to see the image
-      console.log('📋 Copy this data URL to see the captured image:');
-      console.log(result);
-      return result;
-    } else {
-      console.error('❌ Canvas screenshot capture failed');
-    }
-  } catch (error) {
-    console.error('❌ Canvas screenshot test error:', error);
-  }
-}
+
 
 // Usage in browser console:
 // testThumbnailUpload('your-template-id-here')

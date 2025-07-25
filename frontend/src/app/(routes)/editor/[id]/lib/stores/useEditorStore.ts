@@ -572,7 +572,97 @@ const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
   captureCanvasScreenshot: async (): Promise<string | undefined> => {
-    return undefined;
+    const captureElement = document.querySelector("#capture");
+    if (!captureElement) {
+      console.error('Capture element not found');
+      return undefined;
+    }
+
+    try {
+      // Get the current page data for canvas dimensions
+      const state = get();
+      const currentPage = state.pages.find(page => page.id === state.currentPageId);
+      if (!currentPage) {
+        console.error('Current page not found');
+        return undefined;
+      }
+
+      // Extract HTML content from the capture element
+      const html = captureElement.innerHTML;
+      
+      // Get computed styles
+      const computedStyles = window.getComputedStyle(captureElement);
+      const css = Array.from(document.styleSheets)
+        .map(styleSheet => {
+          try {
+            return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('\n');
+          } catch (e) {
+            return '';
+          }
+        })
+        .join('\n');
+
+      // Get canvas styles
+      const canvasStyles = {
+        backgroundColor: currentPage.background?.value || '#ffffff',
+        fontFamily: 'Inter, sans-serif',
+        color: '#000000'
+      };
+
+      // Extract element info for proper stacking
+      const elementInfo = Array.from(captureElement.querySelectorAll('[data-element-id]'))
+        .map(el => ({
+          id: el.getAttribute('data-element-id') || '',
+          kind: el.getAttribute('data-kind') || 'unknown',
+          zIndex: parseInt(window.getComputedStyle(el).zIndex) || 0
+        }));
+
+      // Make request to puppeteer screenshot API
+      const response = await fetch('/api/screenshot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          html,
+          css,
+          canvasStyles,
+          elementInfo,
+          width: currentPage.canvas.width,
+          height: currentPage.canvas.height,
+          pixelRatio: 2
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Screenshot API request failed:', response.statusText);
+        return undefined;
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('Screenshot generation failed:', result.error);
+        return undefined;
+      }
+
+      // Convert base64 image to data URL
+      const dataURL = `data:image/png;base64,${result.imageData}`;
+
+      // Open the captured image in a new tab
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`<img src="${dataURL}" style="max-width: 100%; height: auto;" />`);
+        newTab.document.title = "Canvas Screenshot";
+      }
+
+      console.log('Screenshot captured successfully using Puppeteer');
+      return dataURL;
+
+    } catch (error) {
+      console.error('Error capturing screenshot:', error);
+      return undefined;
+    }
   },
 
 }));

@@ -16,6 +16,7 @@ interface SidebarProps {
     className?: string
     searchPlaceholder?: string
     onItemClick?: (item: NavigationItem) => void
+    onItemMouseEnter?: (item: NavigationItem) => void
     activeItem?: string
 }
 
@@ -72,7 +73,7 @@ const MenuButton = (props: MenuButtonProps) => {
     const { onClick, isActive, level, icon, label, href } = props;
 
     return <Button
-        as="NextLink"
+        as={href ? "NextLink" : "button"}
         href={href}
         variant="ghost"
         onClick={onClick}
