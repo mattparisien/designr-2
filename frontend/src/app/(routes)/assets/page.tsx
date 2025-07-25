@@ -79,6 +79,7 @@ export default function AssetsPage() {
             <EntityGrid<Asset, AssetFilters>
                 cfg={assetCfg}
                 filters={filters}
+                ctaLabel="Upload"
                 isClickable={false}
             />
         </SelectionProvider>

@@ -24,10 +24,11 @@ type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl
 interface Props<T extends BaseEntity, F> {
   cfg: EntityConfig<T, F>;
   isClickable?: boolean; // if true, clicking opens the editor
+  ctaLabel?: string; // label for the create button
   filters: F;
 }
 
-export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable }: Props<T, F>) {
+export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable, ctaLabel }: Props<T, F>) {
   const router = useRouter();
   const { toast } = useToast();
   const { selectedIds, clearSelection } = useSelection();
@@ -145,7 +146,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable 
                   className="flex items-center justify-center cursor-pointer hover:bg-neutral-200 px-2.5 py-1.5 rounded-lg gap-1 "
                   disabled={isCreating}
                 >
-                  <span className="text-lg">{isCreating ? "Creating..." : "Create"}</span>
+                  <span className="text-lg">{isCreating ? "Creating..." : ctaLabel || "Create"}</span>
                   <ChevronDown className="text-neutral-400 w-5 h-5 mt-[3px]" />
                 </button>
               </PopoverTrigger>
