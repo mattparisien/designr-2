@@ -38,11 +38,8 @@ export default function Editor({ templateId }: EditorProps) {
     const [selectedPageThumbnail, setSelectedPageThumbnail] = useState<string | null>(null)
 
     // Use Zustand stores directly
-    const currentPageId = useEditorStore(state => state.currentPageId)
     const pages = useEditorStore(state => state.pages)
     const currentPageIndex = useEditorStore(state => state.currentPageIndex)
-    const addPage = useEditorStore(state => state.addPage)
-    const goToPage = useEditorStore(state => state.goToPage)
     const deletePage = useEditorStore(state => state.deletePage)
     const isEditMode = useEditorStore(state => state.isEditMode)
 
@@ -420,22 +417,24 @@ export default function Editor({ templateId }: EditorProps) {
                 )}
 
                 {/* ElementPropertyBar moved here */}
-                {selectedElement && (
-                    <ElementPropertyBar
-                        selectedElement={selectedElement}
-                        onFontSizeChange={handleFontSizeChange}
-                        onFontFamilyChange={handleFontFamilyChange}
-                        onTextAlignChange={handleTextAlignChange}
-                        onLetterSpacingChange={handleLetterSpacingChange}
-                        onLineHeightChange={handleLineHeightChange}
-                        onFormatChange={handleFormatChange}
-                        onPositionChange={handlePositionChange}
-                        isHovering={false}
-                        elementId={selectedElement?.id || null}
-                        canvasWidth={canvasSize.width}
-                        ref={elementPropertyBarRef}
-                    />
-                )}
+                <header className="absolute top-0 left-0 w-full h-[var(--editor-header-height)] flex items-center justify-center ">
+                        {selectedElement && (
+                            <ElementPropertyBar
+                                selectedElement={selectedElement}
+                                onFontSizeChange={handleFontSizeChange}
+                                onFontFamilyChange={handleFontFamilyChange}
+                                onTextAlignChange={handleTextAlignChange}
+                                onLetterSpacingChange={handleLetterSpacingChange}
+                                onLineHeightChange={handleLineHeightChange}
+                                onFormatChange={handleFormatChange}
+                                onPositionChange={handlePositionChange}
+                                isHovering={false}
+                                elementId={selectedElement?.id || null}
+                                canvasWidth={canvasSize.width}
+                                ref={elementPropertyBarRef}
+                            />
+                        )}
+                </header>
                 <Canvas
                     zoom={zoom}
                     setZoom={handleZoomChange}

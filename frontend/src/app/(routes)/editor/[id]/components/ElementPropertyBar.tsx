@@ -247,7 +247,8 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
         onMouseEnter={handleToolbarMouseEnter}
         onMouseLeave={handleToolbarMouseLeave}
         onClick={handleToolbarClick}
-        className="top-[var(--editor-propertyBar-top)] py-[3px] px-[4px]"
+        className="py-[3px] px-[4px]"
+        positionStatic
         ref={ref}
       >
         {/* Text Element Controls - Show all text-related controls */}

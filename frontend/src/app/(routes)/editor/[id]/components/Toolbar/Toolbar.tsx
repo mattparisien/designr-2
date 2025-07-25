@@ -23,6 +23,7 @@ interface ToolbarProps {
     onMouseLeave?: () => void;
     onClick?: (e: React.MouseEvent) => void;
     className?: string;
+    positionStatic?: boolean;
     children?: React.ReactNode;
     style?: React.CSSProperties;
     transition?: boolean;
@@ -36,6 +37,7 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
         style,
         children,
         sections,
+        positionStatic = false,
         transition = false
     } = props;
 
@@ -47,8 +49,9 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>((props, ref) => {
             onClick={onClick}
             style={style}
             data-editor-interactive="true"
-            className={cn('absolute left-1/2 -translate-x-1/2', {
-                [props.className || '']: !!props.className
+            className={cn('', {
+                [props.className || '']: !!props.className,
+                "absolute left-1/2 -translate-x-1/2": !positionStatic,
             })}
             transition={transition ? {
                 initialY: 100,

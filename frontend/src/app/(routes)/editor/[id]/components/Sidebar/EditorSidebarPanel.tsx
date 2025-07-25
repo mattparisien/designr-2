@@ -37,13 +37,14 @@ interface EditorSidebarPanelProps {
 const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }: EditorSidebarPanelProps) => {
 
 
-    
+    const rootClasses = cn("h-[calc(100vh-var(--editor-header-height))] rounded-2xl", {
+        "absolute left-[calc(var(--sidebar-width)+1rem)] overflow-hidden": isOverlay,
+        "top-[var(--editor-header-height)] h-[calc(100vh-var(--editor-header-height)-1rem)] overflow-hidden": isOverlay
+    })
+
     return (
-        <div className={cn("", {
-            "absolute left-[calc(var(--sidebar-width)+1rem)] rounded-2xl overflow-hidden": isOverlay,
-            "top-[var(--editor-propertyBar-top)]": isOverlay
-        })}>
-            <SidebarShell>
+        
+            <SidebarShell className={rootClasses}>
                 <div className="w-full h-full flex flex-col" data-editor-interactive>
                     {/* Fixed header */}
                     <div className="px-8 pt-8 pb-4 flex-shrink-0">
@@ -113,7 +114,7 @@ const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }
                     </div>
                 </div>
             </SidebarShell>
-        </div>
+        // </div>
     )
 }
 

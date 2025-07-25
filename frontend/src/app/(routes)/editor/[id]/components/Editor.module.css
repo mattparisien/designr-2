@@ -3,6 +3,7 @@
     --canvas-border-width: 2px;
     --canvas-border-radius: var(--radius-editor-canvas); /* Default to the global canvas radius */
     --editor-propertyBar-top: 1.5rem;
+    --editor-header-height: 5rem; /* Default header height */
 }
 
 .borderDefault {
