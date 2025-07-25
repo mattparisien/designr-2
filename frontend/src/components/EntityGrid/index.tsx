@@ -23,16 +23,18 @@ type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl
 
 interface Props<T extends BaseEntity, F> {
   cfg: EntityConfig<T, F>;
+  isClickable?: boolean; // if true, clicking opens the editor
   filters: F;
 }
 
-export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F>) {
+export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable }: Props<T, F>) {
   const router = useRouter();
   const { toast } = useToast();
   const { selectedIds, clearSelection } = useSelection();
 
   const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
     useInfiniteEntity<T, F>(cfg, { limit: 12, filters });
+
 
   const {
     create: createEntity,
@@ -114,6 +116,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters }: Props<T, F
       id={item._id}
       image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? "Thumbnail" } : undefined}
       title={item.title ?? "Untitled"}
+      disableClick={!isClickable}
       subtitleLeft={upperFirst(item.type ?? "")}
       subtitleRight={`Last updated ${getRelativeTime(item.updatedAt ?? "")}`}
       onClick={() => handleOpen(item._id)}

@@ -31,7 +31,6 @@ export function useInfiniteCollection<T, F = unknown>(
     queryKey: [...queryKey, limit, filters],
     queryFn: async ({ pageParam = 1 }) => fetchPage(pageParam, limit, filters),
     getNextPageParam: (lastPage) => {
-      console.log('lastPage', lastPage);
       
       // Handle edge cases where currentPage or totalPages might be undefined/null
       const currentPage = lastPage.currentPage ?? 0;
@@ -43,7 +42,6 @@ export function useInfiniteCollection<T, F = unknown>(
       }
       
       // Only return next page if there are more pages available
-      console.log('currentPage', currentPage, 'totalPages', totalPages);
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     initialPageParam: 1,

@@ -1,6 +1,5 @@
 import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { APIService, Project, Template } from "../types/api";
-import { AssetsAPI } from "./assets";
+import { APIService, Asset, Project, Template } from "../types/api";
 import { AuthAPI } from "./auth";
 import { BrandsAPI } from "./brands";
 import { CollectionAPI } from "./collection";
@@ -41,7 +40,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-const assetsAPI = createAPIService(AssetsAPI, apiClient);
+// const assetsAPI = createAPIService(AssetsAPI, apiClient);
 const brandsAPI = createAPIService(BrandsAPI, apiClient);
 // const projectsAPI = createAPIService(ProjectsAPI, apiClient);
 const usersAPI = createAPIService(UsersAPI, apiClient);
@@ -60,6 +59,14 @@ const projectsAPI = new CollectionAPI<
   "totalProjects",
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
 >(apiClient, "/projects", { list: "projects", total: "totalProjects" });
+
+
+const assetsAPI = new CollectionAPI<
+  Asset,
+  "assets",
+  "totalAssets",
+  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
+>(apiClient, "/assets", { list: "assets", total: "totalAssets" });
 
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);

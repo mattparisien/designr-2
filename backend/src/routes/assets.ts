@@ -48,7 +48,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
   // Check file type - allow various asset types
   const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf', '.mp4', '.mov', '.avi'];
   const fileExtension = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedTypes.includes(fileExtension)) {
     cb(null, true);
   } else {
@@ -67,39 +67,58 @@ const upload = multer({
 // Get all assets (only images and graphics for sidebar)
 router.get('/', async (req, res) => {
   try {
-    const { userId, folderId } = req.query;
-    
+    const { userId, folderId,
+      page = 1,
+      limit = 50, } = req.query;
+
     // Build query filter - only fetch image assets for the sidebar
     const filter: any = {
       type: 'image', // Only fetch image assets
-      mimeType: { 
+      mimeType: {
         $in: [
-          'image/jpeg', 
-          'image/jpg', 
-          'image/png', 
-          'image/gif', 
-          'image/svg+xml', 
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/svg+xml',
           'image/webp'
-        ] 
+        ]
       }
     };
-    
+
     // Filter by userId if provided
     if (userId) {
       filter.userId = userId;
     }
-    
+
     // Filter by folderId if provided
     if (folderId) {
       filter.folderId = folderId;
     }
+
+    // Convert page and limit to numbers and apply pagination
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 50;
+    const startIndex = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalItems = await Asset.countDocuments(filter);
     
-    const assets = await Asset.find(filter).sort({ createdAt: -1 });
-    
+    // Apply pagination to the query
+    const assets = await Asset.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limitNum)
+      .skip(startIndex);
+
     res.json({
       success: true,
-      data: assets,
-      count: assets.length
+      assets: assets,
+      count: assets.length,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limitNum),
+      currentPage: pageNum,
+      hasNextPage: startIndex + assets.length < totalItems,
+      hasPrevPage: pageNum > 1
     });
   } catch (error) {
     console.error('Error fetching assets:', error);
@@ -115,14 +134,14 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const asset = await Asset.findById(id);
-    
+
     if (!asset) {
       return res.status(404).json({
         success: false,
         error: 'Asset not found'
       });
     }
-    
+
     res.json({
       success: true,
       data: asset
@@ -148,21 +167,21 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
 
     const { originalname, mimetype, size } = req.file;
     const userId = req.user?.id || 'unknown';
-    
+
     // Determine asset type
-    const assetType = mimetype.startsWith('image/') ? 'image' : 
-                     mimetype.startsWith('video/') ? 'video' : 
-                     mimetype.startsWith('audio/') ? 'audio' : 'document';
-    
+    const assetType = mimetype.startsWith('image/') ? 'image' :
+      mimetype.startsWith('video/') ? 'video' :
+        mimetype.startsWith('audio/') ? 'audio' : 'document';
+
     let assetUrl: string;
     let thumbnailUrl: string | undefined;
     let cloudinaryPublicId: string | undefined;
-    
+
     if (process.env.CLOUDINARY_CLOUD_NAME && (req.file as any).public_id) {
       // Cloudinary upload
       cloudinaryPublicId = (req.file as any).public_id;
       assetUrl = (req.file as any).secure_url;
-      
+
       // Generate thumbnail for images using Cloudinary transformations
       if (assetType === 'image' && cloudinaryPublicId) {
         thumbnailUrl = cloudinary.url(cloudinaryPublicId, {
@@ -177,7 +196,7 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
       assetUrl = `/uploads/assets/${req.file.filename}`;
       thumbnailUrl = assetType === 'image' ? assetUrl : undefined;
     }
-    
+
     // Create new asset in database
     const newAsset = new Asset({
       name: req.body.name || originalname,
@@ -192,7 +211,7 @@ router.post('/upload', authenticateToken, upload.single('asset'), async (req: Au
       tags: req.body.tags ? JSON.parse(req.body.tags) : [],
       folderId: req.body.folderId || undefined
     });
-    
+
     const savedAsset = await newAsset.save();
 
     res.json({
@@ -214,14 +233,14 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const asset = await Asset.findById(id);
-    
+
     if (!asset) {
       return res.status(404).json({
         success: false,
         error: 'Asset not found'
       });
     }
-    
+
     // Delete from Cloudinary if it was uploaded there
     if (asset.cloudinaryPublicId) {
       try {
@@ -231,7 +250,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
         // Continue with database deletion even if Cloudinary deletion fails
       }
     }
-    
+
     // Delete file from local filesystem if it's a local file
     if (asset.url.startsWith('/uploads/')) {
       const filePath = path.join(__dirname, '../../', asset.url);
@@ -239,7 +258,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
         fs.unlinkSync(filePath);
       }
     }
-    
+
     // Delete from database
     await Asset.findByIdAndDelete(id);
 
@@ -261,14 +280,14 @@ router.get('/file/:filename', (req, res) => {
   try {
     const { filename } = req.params;
     const filePath = path.join(__dirname, '../../uploads/assets', filename);
-    
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
         success: false,
         error: 'File not found'
       });
     }
-    
+
     res.sendFile(filePath);
   } catch (error) {
     console.error('Error serving asset file:', error);

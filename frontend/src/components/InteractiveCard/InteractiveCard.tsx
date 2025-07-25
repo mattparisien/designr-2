@@ -14,6 +14,7 @@ interface InteractiveCardProps {
     title: string;
     subtitleLeft?: string;
     subtitleRight?: string;
+    disableClick?: boolean; // if true, clicking does nothing
     onClick: () => void;
     onSelect?: (id: string, isSelected: boolean) => void;
     onTitleChange?: (id: string, newTitle: string) => void;
@@ -26,6 +27,7 @@ export default function InteractiveCard({
     title,
     subtitleLeft,
     subtitleRight,
+    disableClick = false,
     onClick,
     onSelect,
     onTitleChange,
@@ -36,6 +38,7 @@ export default function InteractiveCard({
     const selected = isSelected(id);
 
     const handleCardClick = () => {
+        if (disableClick) return;
         onClick?.();
     };
 

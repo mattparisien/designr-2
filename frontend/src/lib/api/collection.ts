@@ -116,6 +116,7 @@ export class CollectionAPI<
         `${this.baseUrl}/paginated?${params.toString()}`
       );
 
+
       return {
         items: data[this.keys.list] as TItem[],
         totalItems: data[this.keys.total] as number,

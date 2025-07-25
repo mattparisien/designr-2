@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { makeBackendRequest, ProjectData } from '../_utils';
+import { makeBackendRequest } from '../../_utils';
+import { Asset } from '@/lib/types/api';
 
-// GET /api/assets/paginated - Get paginated assets
+// GET /api/projects/paginated - Get paginated projects
 export async function GET(request: NextRequest) {
   try {
-    console.log('made it here!')
     const { searchParams } = new URL(request.url);
     
     // Get pagination parameters
@@ -31,44 +31,38 @@ export async function GET(request: NextRequest) {
     const endpoint = `/assets?${queryParams.toString()}`;
     const data = await makeBackendRequest(endpoint);
 
-    console.log(data, 'data from backend')
-
     // Filter locally if needed (in case backend doesn't support all filters)
-    let filteredProjects = data.projects || [];
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredProjects = filteredProjects.filter((project: ProjectData) =>
-        project.title?.toLowerCase().includes(searchLower) ||
-        project.description?.toLowerCase().includes(searchLower) ||
-        project.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-      );
-    }
+    let filteredAssets = data.assets || [];
 
     // Apply pagination to filtered results
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+
+    const paginatedAssets = filteredAssets.slice(startIndex, endIndex).map(x => ({
+        ...x,
+        thumbnailUrl: x.thumbnail || x.cloudinaryUrl || x.url,
+    }));
 
     const response = {
-      projects: paginatedProjects,
-      totalProjects: filteredProjects.length,
+      assets: paginatedAssets,
+      totalAssets: filteredAssets.length,
       page,
       limit,
       currentPage: page,
-      totalPages: Math.ceil(filteredProjects.length / limit),
-      hasNextPage: endIndex < filteredProjects.length,
+      totalPages: Math.ceil(filteredAssets.length / limit),
+      hasNextPage: endIndex < filteredAssets.length,
       hasPrevPage: page > 1,
     };
+    console.log('the response', response)
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching paginated projects:', error);
+    console.error('Error fetching paginated assets:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to fetch projects',
-        projects: [],
-        totalProjects: 0,
+        error: 'Failed to fetch assets',
+        assets: [],
+        totalAssets: 0,
         page: 1,
         limit: 12,
         totalPages: 0,
