@@ -227,6 +227,61 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
   }
 });
 
+// DELETE /api/assets/bulk - Bulk delete assets (must come before /:id route)
+router.delete('/bulk', async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'ids array is required and must not be empty' 
+      });
+    }
+
+    // First, get all assets to handle cleanup (Cloudinary/filesystem)
+    const assetsToDelete = await Asset.find({ _id: { $in: ids } });
+
+    console.log(assetsToDelete, 'assets to delete');
+
+    // Delete files from storage services
+    for (const asset of assetsToDelete) {
+      try {
+        // Delete from Cloudinary if it was uploaded there
+        if (asset.cloudinaryPublicId) {
+          await cloudinary.uploader.destroy(asset.cloudinaryPublicId);
+        }
+
+        // Delete file from local filesystem if it's a local file
+        if (asset.url.startsWith('/uploads/')) {
+          const filePath = path.join(__dirname, '../../', asset.url);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      } catch (cleanupError) {
+        console.error(`Error cleaning up asset ${asset._id}:`, cleanupError);
+        // Continue with deletion even if cleanup fails
+      }
+    }
+
+    // Delete from database
+    const result = await Asset.deleteMany({ _id: { $in: ids } });
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} assets`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error bulk deleting assets:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete assets' 
+    });
+  }
+});
+
 // Delete an asset (keep authentication for delete)
 router.delete('/:id', async (req: express.Request, res) => {
   try {
@@ -270,59 +325,6 @@ router.delete('/:id', async (req: express.Request, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete asset'
-    });
-  }
-});
-
-// DELETE /api/assets/bulk - Bulk delete assets
-router.delete('/bulk', async (req, res) => {
-  try {
-    const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'ids array is required and must not be empty' 
-      });
-    }
-
-    // First, get all assets to handle cleanup (Cloudinary/filesystem)
-    const assetsToDelete = await Asset.find({ _id: { $in: ids } });
-
-    // Delete files from storage services
-    for (const asset of assetsToDelete) {
-      try {
-        // Delete from Cloudinary if it was uploaded there
-        if (asset.cloudinaryPublicId) {
-          await cloudinary.uploader.destroy(asset.cloudinaryPublicId);
-        }
-
-        // Delete file from local filesystem if it's a local file
-        if (asset.url.startsWith('/uploads/')) {
-          const filePath = path.join(__dirname, '../../', asset.url);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        }
-      } catch (cleanupError) {
-        console.error(`Error cleaning up asset ${asset._id}:`, cleanupError);
-        // Continue with deletion even if cleanup fails
-      }
-    }
-
-    // Delete from database
-    const result = await Asset.deleteMany({ _id: { $in: ids } });
-
-    res.json({
-      success: true,
-      message: `Successfully deleted ${result.deletedCount} assets`,
-      deletedCount: result.deletedCount
-    });
-  } catch (error) {
-    console.error('Error bulk deleting assets:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to delete assets' 
     });
   }
 });
