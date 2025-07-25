@@ -2,6 +2,7 @@
 :root {
     --canvas-border-width: 2px;
     --canvas-border-radius: var(--radius-editor-canvas); /* Default to the global canvas radius */
+    --editor-propertyBar-top: 1.5rem;
 }
 
 .borderDefault {

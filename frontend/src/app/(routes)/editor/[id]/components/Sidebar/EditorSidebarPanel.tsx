@@ -35,8 +35,14 @@ interface EditorSidebarPanelProps {
 }
 
 const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }: EditorSidebarPanelProps) => {
+
+
+    
     return (
-        <div className={cn(isOverlay && "absolute top-0 left-[calc(var(--sidebar-width)+1rem)] rounded-2xl overflow-hidden")}>
+        <div className={cn("", {
+            "absolute left-[calc(var(--sidebar-width)+1rem)] rounded-2xl overflow-hidden": isOverlay,
+            "top-[var(--editor-propertyBar-top)]": isOverlay
+        })}>
             <SidebarShell>
                 <div className="w-full h-full flex flex-col" data-editor-interactive>
                     {/* Fixed header */}

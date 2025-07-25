@@ -40,8 +40,6 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
                 transform: 'translateX(50%)',
                 zIndex: 1000,
             }}
-            transition
-
         >
             <ToolbarButton onClick={onLock} title={element.locked ? "Unlock" : "Lock"} isActive={element.locked}>
                 <LockIcon className="w-4 h-4" />
