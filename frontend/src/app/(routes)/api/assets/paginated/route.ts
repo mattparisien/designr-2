@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const data = await makeBackendRequest(endpoint);
 
     // Filter locally if needed (in case backend doesn't support all filters)
-    let filteredAssets = data.assets || [];
+    const filteredAssets = data.assets || [];
 
     // Apply pagination to filtered results
     const startIndex = (page - 1) * limit;
@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
       hasNextPage: endIndex < filteredAssets.length,
       hasPrevPage: page > 1,
     };
-    console.log('the response', response)
 
     return NextResponse.json(response);
   } catch (error) {

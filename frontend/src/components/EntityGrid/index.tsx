@@ -28,7 +28,7 @@ interface Props<T extends BaseEntity, F> {
   filters: F;
 }
 
-export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable, ctaLabel }: Props<T, F>) {
+export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable = true, ctaLabel }: Props<T, F>) {
   const router = useRouter();
   const { toast } = useToast();
   const { selectedIds, clearSelection } = useSelection();
@@ -106,10 +106,15 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable,
   }, [selectedIds, cfg.api, deleteManyEntities, clearSelection, refetch, toast]);
 
   const handleTitleChange = useCallback(async (id: string, newTitle: string) => {
-    await updateEntity({ id, data: { title: newTitle } as Partial<T> });
-    toast({ title: "Success", description: "Title updated" });
-    refetch();
-  }, [updateEntity, toast, refetch]);
+    try {
+      await updateEntity({ id, data: { title: newTitle } as Partial<T> });
+      // Note: useEntityQuery already shows success toast, so we don't need to duplicate it
+      refetch();
+    } catch (error) {
+      console.error('Error updating title:', error);
+      // useEntityQuery already shows error toast
+    }
+  }, [updateEntity, refetch]);
 
   const renderGridItem = useCallback((item: T) => {
     return <InteractiveCard
