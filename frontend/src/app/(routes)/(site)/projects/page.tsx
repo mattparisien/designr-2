@@ -35,17 +35,31 @@ export type ProjectFilters = {
   category?: string;
   featured?: boolean;
   popular?: boolean;
+  role?: string; // Added to support role filtering
+  isTemplate?: boolean; // Added to support template filtering
 };
 
 
 
 // --- Config object passed to the generic grid ---
 const compositionCfg: EntityConfig<Composition, ProjectFilters> = {
-  key: "compositions",
-  infiniteKey: "infiniteCompositions",
+  key: "projects",
+  infiniteKey: "infiniteProjects",
   api: {
-    getPaginated: compositionAPI.getPaginated.bind(compositionAPI),
-    getAll: compositionAPI.getAll.bind(compositionAPI),
+    getPaginated: (page, limit, filters) => {
+      // Always filter compositions by role=project
+      const enhancedFilters = { 
+        ...filters,
+        // These are sent as query parameters to filter compositions
+        // in the backend
+        role: "project",
+        isTemplate: false
+      };
+      
+      return compositionAPI.getPaginated(page, limit, enhancedFilters);
+    },
+    // Using type assertion to overcome TypeScript limitations
+    getAll: () => compositionAPI.getAll({ role: "project", isTemplate: false } as unknown as ProjectFilters),
     create: compositionAPI.create.bind(compositionAPI),
     update: compositionAPI.update.bind(compositionAPI),
     delete: compositionAPI.delete.bind(compositionAPI),

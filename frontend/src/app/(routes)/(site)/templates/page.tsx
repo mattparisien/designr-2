@@ -35,23 +35,37 @@ export type TemplateFilters = {
   category?: string;
   featured?: boolean;
   popular?: boolean;
+  role?: string; // Added to support role filtering
+  isTemplate?: boolean; // Added to support template filtering
 };
 
 
 
 // --- Config object passed to the generic grid ---
 const compositionCfg: EntityConfig<Composition, TemplateFilters> = {
-  key: "compositions",
-  infiniteKey: "infiniteCompositions",
+  key: "templates",
+  infiniteKey: "infiniteTemplates",
   api: {
-    getPaginated: compositionAPI.getPaginated.bind(compositionAPI),
-    getAll: compositionAPI.getAll.bind(compositionAPI),
+    getPaginated: (page, limit, filters) => {
+      // Always filter compositions by role=template
+      const enhancedFilters = { 
+        ...filters,
+        // These are sent as query parameters to filter compositions
+        // in the backend
+        role: "template",
+        isTemplate: true
+      };
+      
+      return compositionAPI.getPaginated(page, limit, enhancedFilters);
+    },
+    // Using type assertion to overcome TypeScript limitations
+    getAll: () => compositionAPI.getAll({ role: "template", isTemplate: true } as unknown as TemplateFilters),
     create: compositionAPI.create.bind(compositionAPI),
     update: compositionAPI.update.bind(compositionAPI),
     delete: compositionAPI.delete.bind(compositionAPI),
     deleteMultiple: compositionAPI.deleteMultiple?.bind(compositionAPI),
   },
-  nounSingular: "project",
+  nounSingular: "template",
   createFactory: ({ width = 1080, height = 1080 }) => {
     // Import the factory dynamically to avoid circular dependencies
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -59,8 +73,8 @@ const compositionCfg: EntityConfig<Composition, TemplateFilters> = {
     return createComposition({
       width,
       height,
-      isTemplate: false,
-      role: "project"
+      isTemplate: true,
+      role: "template"
     });
   },
 };
