@@ -138,6 +138,61 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/compositions/batch - Batch update compositions
+router.post('/batch', async (req: Request, res: Response) => {
+  try {
+    const { operation, ids, updates } = req.body;
+    
+    if (!operation || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Operation and IDs array are required' });
+    }
+    
+    switch (operation) {
+      case 'update':
+        if (!updates || typeof updates !== 'object') {
+          return res.status(400).json({ error: 'Updates object is required for update operation' });
+        }
+        
+        await Composition.updateMany(
+          { _id: { $in: ids } },
+          { $set: updates }
+        );
+        
+        res.json({ message: `${ids.length} compositions updated successfully` });
+        break;
+      
+      default:
+        res.status(400).json({ error: `Unsupported operation: ${operation}` });
+    }
+  } catch (error) {
+    console.error('Error batch updating compositions:', error);
+    res.status(500).json({ error: 'Failed to update compositions' });
+  }
+});
+
+// DELETE /api/compositions/batch - Batch delete compositions
+router.delete('/batch', async (req: Request, res: Response) => {
+  try {
+    console.log('hereeee!')
+    const { ids } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'No IDs provided for deletion' });
+    }
+    
+    // Soft delete all compositions in the array
+    await Composition.updateMany(
+      { _id: { $in: ids } },
+      { $set: { isActive: false } }
+    );
+    
+    res.json({ message: `${ids.length} compositions deleted successfully` });
+  } catch (error) {
+    console.error('Error batch deleting compositions:', error);
+    res.status(500).json({ error: 'Failed to delete compositions' });
+  }
+});
+
 // GET /api/compositions/:id - Get composition by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -371,28 +426,6 @@ router.get('/projects', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching projects:', error);
     res.status(500).json({ error: 'Failed to fetch projects' });
-  }
-});
-
-// DELETE /api/compositions/batch - Batch delete compositions
-router.delete('/batch', async (req: Request, res: Response) => {
-  try {
-    const { ids } = req.body;
-    
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'No IDs provided for deletion' });
-    }
-    
-    // Soft delete all compositions in the array
-    await Composition.updateMany(
-      { _id: { $in: ids } },
-      { $set: { isActive: false } }
-    );
-    
-    res.json({ message: `${ids.length} compositions deleted successfully` });
-  } catch (error) {
-    console.error('Error batch deleting compositions:', error);
-    res.status(500).json({ error: 'Failed to delete compositions' });
   }
 });
 

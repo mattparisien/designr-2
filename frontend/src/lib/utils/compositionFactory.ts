@@ -61,15 +61,16 @@ export function createComposition(options: CompositionCreateOptions = {}): Recor
     featured,
     popular,
     userId,
-    // For actual composition data
+    // For actual composition data - ensure pages array is included in compositionData
     compositionData: {
       version: "1.0",
+      pages: [], // Include pages array inside compositionData as expected by backend
       elements: [],
-      background: { type: "solid", color: "#ffffff" }
+      background: { type: "solid", color: "#ffffff" },
+      canvasSize: { width, height } // Move canvasSize inside compositionData
     },
     // For backward compatibility with frontend components
-    canvasSize: { width, height },
-    pages: [],
+    pages: [], // Keep this for backward compatibility
     data: {},
     ...(role === 'project' ? {
       ownerId: userId || '', // Will be assigned by backend

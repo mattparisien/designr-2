@@ -30,7 +30,7 @@ async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
   }
 }
 
-// POST /api/compositions/bulk - Perform bulk operations on compositions
+// POST /api/compositions/bulk - Perform bulk update operations on compositions
 export async function POST(request: NextRequest) {
   try {
     const { operation, ids, updates } = await request.json();
@@ -42,18 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle different bulk operations
+    // Only handle update operations here
     switch (operation) {
-      case 'delete':
-        await makeBackendRequest('/compositions/bulk', {
-          method: 'POST',
-          body: JSON.stringify({
-            operation: 'delete',
-            ids
-          })
-        });
-        break;
-        
       case 'update':
         if (!updates || typeof updates !== 'object') {
           return NextResponse.json(
@@ -62,7 +52,7 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        await makeBackendRequest('/compositions/bulk', {
+        await makeBackendRequest('/compositions/batch', {
           method: 'POST',
           body: JSON.stringify({
             operation: 'update',
@@ -84,6 +74,33 @@ export async function POST(request: NextRequest) {
     console.error('Error performing bulk operation on compositions:', error);
     return NextResponse.json(
       { error: 'Failed to perform bulk operation' }, 
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/compositions/bulk - Perform bulk delete operations on compositions
+export async function DELETE(request: NextRequest) {
+  try {
+    const { ids } = await request.json();
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid request. IDs array is required.' }, 
+        { status: 400 }
+      );
+    }
+
+    await makeBackendRequest('/compositions/batch', {
+      method: 'DELETE',
+      body: JSON.stringify({ ids })
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error performing bulk delete operation on compositions:', error);
+    return NextResponse.json(
+      { error: 'Failed to perform bulk delete operation' },
       { status: 500 }
     );
   }

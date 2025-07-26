@@ -99,7 +99,7 @@ export class CompositionAPI extends APIBase {
 
   async deleteMultiple(ids: string[]): Promise<void> {
     try {
-      await this.client.delete(`${this.baseUrl}/bulk`, { data: { ids } });
+      await this.client.delete(`${this.baseUrl}/batch`, { data: { ids } });
     } catch (e) {
       this.handleError(e, "Failed to bulk delete compositions");
     }
