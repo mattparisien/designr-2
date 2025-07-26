@@ -40,6 +40,11 @@ interface APITemplate {
 
 interface APILayout {
   pages: APIPage[];
+  canvasSize?: {
+    name?: string;
+    width: number;
+    height: number;
+  };
 }
 
 interface PresetItem {
@@ -536,7 +541,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
     set({ compositionId });
   },
   loadComposition: async (compositionId: string) => {
-    const state = get();
 
     try {
       // Set loading indicator
@@ -547,18 +551,60 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       // Get the composition data
       const composition = await compositionAPI.getById(compositionId);
-
+      console.log('the composition:', composition);
       if (!composition) {
         throw new Error('Composition not found');
       }
 
+      // Add more detailed logging to help debug
       console.log('Composition loaded:', composition);
-
-      // Get layout data from the composition's data property
-      const layoutData = composition.data as APILayout;
+      
+      // Try to get layout data from the composition - check all possible property names
+      let layoutData: APILayout | null = null;
+      
+      // Use type assertion to safely access possible properties
+      const compositionAny = composition as any;
+      
+      // First check the expected property compositionData
+      if (compositionAny.compositionData && typeof compositionAny.compositionData === 'object') {
+        layoutData = compositionAny.compositionData as APILayout;
+        console.log('Found layout data in composition.compositionData:', layoutData);
+      } 
+      // Then try data as fallback
+      else if (composition.data && typeof composition.data === 'object') {
+        layoutData = composition.data as APILayout;
+        console.log('Found layout data in composition.data:', layoutData);
+      }
+      // Finally check if pages array is directly on the composition object
+      else if (compositionAny.pages && Array.isArray(compositionAny.pages)) {
+        layoutData = {
+          pages: compositionAny.pages,
+          canvasSize: compositionAny.canvasSize || DEFAULT_CANVAS_SIZE
+        };
+        console.log('Found pages directly on composition:', layoutData);
+      }
+      
+      // Final check if we have valid layout data
       if (!layoutData || !layoutData.pages) {
+        console.error('Layout data structure:', composition);
         throw new Error('Layout data not found in composition');
       }
+      
+      // Ensure we have a valid pages array
+      if (!Array.isArray(layoutData.pages) || layoutData.pages.length === 0) {
+        console.warn('Pages array is empty or not an array, creating default page');
+        layoutData.pages = [{
+          name: 'Page 1',
+          canvas: { 
+            width: layoutData.canvasSize?.width || DEFAULT_CANVAS_SIZE.width,
+            height: layoutData.canvasSize?.height || DEFAULT_CANVAS_SIZE.height 
+          },
+          background: { type: 'color', value: '#ffffff' },
+          elements: []
+        }];
+      }
+      
+      console.log('Final layoutData with pages:', layoutData);
       
       // Convert composition pages to frontend format
       const frontendPages = layoutData.pages.map(convertAPIPageToFrontend);
@@ -592,21 +638,30 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       // Prepare the composition data from the current editor state
       const layoutData: APILayout = {
-        pages: state.pages.map(convertFrontendPageToAPI)
+        pages: state.pages.map(convertFrontendPageToAPI),
+        // Add metadata for better composition handling
+        canvasSize: state.pages[0]?.canvasSize || DEFAULT_CANVAS_SIZE
       };
 
-      console.log('Saving composition:', state.designName, 'with ID:', compositionId);
 
       // Import the API client
       const { compositionAPI } = await import('@/lib/api/index');
 
+      console.log('About to save composition with data:', layoutData);
+      
       // Call the API to update the composition
-      await compositionAPI.update(compositionId, {
+      // Using multiple properties to ensure compatibility
+      const updateData = {
         name: state.designName,
-        data: layoutData, // Using layoutData as the composition data
+        title: state.designName, // Make sure title is also set (required in backend)
+        compositionData: layoutData, // Primary property expected by backend model
+        data: layoutData, // Also send as data for backward compatibility
         updatedAt: new Date().toISOString(),
         thumbnailUrl: thumbnailImage // Include the thumbnail image
-      });
+      };
+      
+      console.log('Update payload:', updateData);
+      await compositionAPI.update(compositionId, updateData);
 
       // If thumbnail capture was successful, log it
       if (thumbnailImage) {
@@ -878,7 +933,7 @@ export const initializeDesign = async () => {
       console.log('Design loaded:', design.title);
 
       useEditorStore.setState({
-        designName: design.name || "Untitled Design",
+        designName: design.name || "Untitled Project",
         isDesignSaved: true
       });
 
