@@ -42,7 +42,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    await makeBackendRequest('/api/projects/bulk', {
+    await makeBackendRequest('/projects/bulk', {
       method: 'DELETE',
       body: JSON.stringify(body),
     });

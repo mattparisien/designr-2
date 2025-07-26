@@ -15,14 +15,14 @@ import { ElementActionBar } from "./Canvas/ElementActionBar";
 import { ElementPropertyBar } from "./ElementPropertyBar";
 
 interface EditorProps {
-    templateId: string;
+    compositionId: string;
 }
 
 /**
  * Editor component serves as the main wrapper for the canvas editing experience.
  * It focuses exclusively on the canvas area and related editing functionality.
  */
-export default function Editor({ templateId }: EditorProps) {
+export default function Editor({ compositionId }: EditorProps) {
     // Reference for the editor container
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -285,18 +285,18 @@ export default function Editor({ templateId }: EditorProps) {
 
     // Initialize template ID and load template data when component mounts
     useEffect(() => {
-        if (templateId) {
-            const setTemplateId = useEditorStore.getState().setTemplateId;
-            const loadTemplate = useEditorStore.getState().loadTemplate;
+        if (compositionId) {
+            const setCompositionId = useEditorStore.getState().setCompositionId;
+            const loadComposition = useEditorStore.getState().loadComposition;
 
-            setTemplateId(templateId);
+            setCompositionId(compositionId);
 
-            // Load the template data
-            loadTemplate(templateId).catch((error) => {
-                console.error('Error loading template:', error);
+            // Load the composition data
+            loadComposition(compositionId).catch((error) => {
+                console.error('Error loading composition:', error);
             });
         }
-    }, [templateId]);
+    }, [compositionId]);
 
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {
@@ -306,10 +306,10 @@ export default function Editor({ templateId }: EditorProps) {
                 e.preventDefault(); // Prevent browser's default save action
 
                 // Call the save function
-                const saveTemplate = useEditorStore.getState().saveTemplate;
-                if (templateId && saveTemplate) {
-                    saveTemplate(templateId).catch((error) => {
-                        console.error('Error saving template:', error);
+                const saveComposition = useEditorStore.getState().saveComposition;
+                if (compositionId && saveComposition) {
+                    saveComposition(compositionId).catch((error) => {
+                        console.error('Error saving composition:', error);
                     });
                 }
             }
@@ -321,7 +321,7 @@ export default function Editor({ templateId }: EditorProps) {
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [templateId]);
+    }, [compositionId]);
 
     useEffect(() => {
         const handleOutsideClick = (e: globalThis.MouseEvent) => {

@@ -70,6 +70,7 @@ export class CollectionAPI<
   }
 
   async create(payload: Partial<TItem>): Promise<TItem> {
+    console.log('the payload is', payload)
     try {
       const { data } = await this.client.post<TItem>(this.baseUrl, payload);
       return data;

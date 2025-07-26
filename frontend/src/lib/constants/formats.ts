@@ -1,6 +1,13 @@
 
-// Enhanced social media format presets organized by categories
-export const SOCIAL_MEDIA_FORMATS = {
+interface DesignFormat {
+    width: number;
+    height: number;
+    name: string;
+    category: string; // Category for grouping formats
+}
+
+
+export const DESIGN_FORMATS: Record<string, DesignFormat> = {
     // Instagram
     "instagram-square": { width: 1080, height: 1080, name: "Instagram Square Post", category: "Instagram" },
     "instagram-portrait": { width: 1080, height: 1350, name: "Instagram Portrait Post", category: "Instagram" },

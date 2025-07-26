@@ -4,6 +4,7 @@ import { useSelection } from "@/lib/context/selection";
 import { SelectionCheckbox } from "./SelectionCheckbox";
 import { EditableTitle } from "./EditableTitle";
 import { CardMedia } from "./CardMedia";
+import { Ellipsis } from "lucide-react";
 
 interface InteractiveCardProps {
     id: string;

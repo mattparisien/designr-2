@@ -100,10 +100,14 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   designId: string | null;
   // Template operations
   templateId: string | null;
+  compositionId: string | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
   saveTemplate: (templateId: string) => Promise<void>;
   loadTemplate: (templateId: string) => Promise<void>;
   setTemplateId: (templateId: string) => void;
+  loadComposition: (compositionId: string) => Promise<void>;
+  saveComposition: (compositionId: string) => Promise<void>;
+  setCompositionId: (compositionId: string) => void;
 
   sidebar: {
     width: number | null;
@@ -134,6 +138,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   isSaving: false,
   designId: null,
   templateId: null,
+  compositionId: null,
   sidebar: {
     width: null,
     isOpen: false,
@@ -526,6 +531,85 @@ const useEditorStore = create<EditorState>((set, get) => ({
   },
   setTemplateId: (templateId: string) => {
     set({ templateId });
+  },
+  setCompositionId: (compositionId: string) => {
+    set({ compositionId });
+  },
+  loadComposition: async (compositionId: string) => {
+    const state = get();
+
+    try {
+      // Set loading indicator
+      set({ isSaving: true });
+
+      // Import the API client
+      const { compositionAPI } = await import('@/lib/api/index');
+
+      // Get the composition data
+      const response = await compositionAPI.getById(compositionId)
+      const composition = response.composition;
+
+      if (!composition) {
+        throw new Error('Composition not found');
+      }
+
+      console.log('Composition loaded:', composition);
+
+      // Convert composition pages to frontend format
+      const frontendPages = composition.layout.pages.map(convertAPIPageToFrontend);
+
+      set({
+        designName: composition.title || 'Untitled Composition',
+        pages: frontendPages,
+        currentPageId: frontendPages[0]?.id || '',
+        currentPageIndex: 0,
+        isDesignSaved: true,
+        compositionId: compositionId
+      });
+
+      console.log('Composition loaded successfully');
+    } catch (error) {
+      console.error('Error loading composition:', error);
+      throw error;
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+  saveComposition: async (compositionId: string) => {
+    const state = get();
+
+    try {
+      // Set saving indicator to true
+      set({ isSaving: true });
+
+      // Prepare the composition data from the current editor state
+      const compositionData: APILayout = {
+        pages: state.pages.map(convertFrontendPageToAPI)
+      };
+
+      console.log('Saving composition:', state.designName, 'with ID:', compositionId);
+
+      // Import the API client
+      const { compositionAPI } = await import('@/lib/api/index');
+
+      // Call the API to update the composition
+      await compositionAPI.update(compositionId, {
+        name: state.designName,
+        layout: compositionData,
+        updatedAt: new Date().toISOString()
+      });
+
+      console.log('Composition saved successfully:', state.designName);
+      set({
+        isDesignSaved: true,
+        compositionId: compositionId
+      });
+    } catch (error) {
+      console.error('Error saving composition:', error);
+    } finally {
+      // Set saving indicator back to false
+      set({ isSaving: false });
+    }
   },
   openSidebarPanel: (itemId: string) =>
     set(state => ({

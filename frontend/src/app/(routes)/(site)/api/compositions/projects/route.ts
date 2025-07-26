@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { makeBackendRequest, ProjectData } from '../_utils';
+import { makeBackendRequest, CompositionData } from '../_utils';
 
-// GET /api/assets/paginated - Get paginated assets
+// GET /api/compositions/projects - Get all project compositions
 export async function GET(request: NextRequest) {
   try {
-    console.log('made it here!')
     const { searchParams } = new URL(request.url);
     
     // Get pagination parameters
@@ -14,57 +13,48 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || '';
     const starred = searchParams.get('starred') === 'true';
     const shared = searchParams.get('shared') === 'true';
-    const type = searchParams.get('type') || '';
 
-    // Build query parameters
+    // Build query parameters with isTemplate=false to filter only projects
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
+      isTemplate: 'false' // This is the key filter for projects
     });
 
     if (search) queryParams.append('search', search);
     if (category) queryParams.append('category', category);
     if (starred) queryParams.append('starred', 'true');
     if (shared) queryParams.append('shared', 'true');
-    if (type) queryParams.append('type', type);
 
-    const endpoint = `/projects?${queryParams.toString()}`;
+    const endpoint = `/compositions?${queryParams.toString()}`;
     const data = await makeBackendRequest(endpoint);
 
-    // Filter locally if needed (in case backend doesn't support all filters)
-    let filteredProjects = data.projects || [];
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredProjects = filteredProjects.filter((project: ProjectData) =>
-        project.title?.toLowerCase().includes(searchLower) ||
-        project.description?.toLowerCase().includes(searchLower) ||
-        project.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-      );
-    }
-
+    // Filter locally if needed
+    let projects = data.data || [];
+    
+    // Ensure all returned items are projects
+    projects = projects.filter((composition: CompositionData) => 
+      composition.isTemplate === false
+    );
 
     // Apply pagination to filtered results
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
-
-
+    const paginatedProjects = projects.slice(startIndex, endIndex);
     
     const response = {
       projects: paginatedProjects,
-      totalProjects: filteredProjects.length,
+      totalProjects: projects.length,
       page,
       limit,
-      currentPage: page,
-      totalPages: Math.ceil(filteredProjects.length / limit),
-      hasNextPage: endIndex < filteredProjects.length,
+      totalPages: Math.ceil(projects.length / limit),
+      hasNextPage: endIndex < projects.length,
       hasPrevPage: page > 1,
     };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching paginated projects:', error);
+    console.error('Error fetching projects:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch projects',
@@ -73,7 +63,6 @@ export async function GET(request: NextRequest) {
         page: 1,
         limit: 12,
         totalPages: 0,
-        currentPage: 1,
         hasNextPage: false,
         hasPrevPage: false,
       },

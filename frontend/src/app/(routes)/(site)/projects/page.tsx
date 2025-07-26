@@ -1,21 +1,33 @@
 "use client";
 
-// app/templates/page.tsx
+// app/projects/page.tsx
 // Full page using the generic EntityGrid + your Composition union split by role
 
 import { EntityGrid } from "@/components/EntityGrid";
-import { templatesAPI } from "@/lib/api/index";
+import { compositionAPI } from "@/lib/api/index";
 import { SelectionProvider } from "@/lib/context/selection";
-import { ByRole } from "@/lib/types/api"; // helper: export type ByRole<R extends Role> = Extract<Composition, { role: R }>
+import { ByRole, Composition } from "@/lib/types/api"; // helper: export type ByRole<R extends Role> = Extract<Composition, { role: R }>
+import type { SelectionConfig } from "@/lib/types/config";
 import type { EntityConfig } from "@/lib/types/grid";
+// We're importing the factory dynamically in createFactory to avoid circular dependencies
+import { DESIGN_FORMATS } from "@/lib/constants";
+import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
-// --- Narrow the union to just templates ---
-export type Template = ByRole<"template">;
+// Define the social media format type
+interface SocialMediaFormat {
+  width: number;
+  height: number;
+  name: string;
+  category: string;
+}
 
-// --- Filters the backend accepts for templates ---
-export type TemplateFilters = {
+// --- Narrow the union to just projects ---
+export type Project = ByRole<"project">;
+
+// --- Filters the backend accepts for projects ---
+export type ProjectFilters = {
   starred?: boolean;
   shared?: boolean;
   search?: string;
@@ -25,56 +37,62 @@ export type TemplateFilters = {
   popular?: boolean;
 };
 
+
+
 // --- Config object passed to the generic grid ---
-const templateCfg: EntityConfig<Template, TemplateFilters> = {
-  key: "templates",
-  infiniteKey: "infiniteTemplates",
+const compositionCfg: EntityConfig<Composition, ProjectFilters> = {
+  key: "compositions",
+  infiniteKey: "infiniteCompositions",
   api: {
-    getPaginated: templatesAPI.getPaginated.bind(templatesAPI),
-    getAll: templatesAPI.getAll.bind(templatesAPI),
-    create: templatesAPI.create.bind(templatesAPI),
-    update: templatesAPI.update.bind(templatesAPI),
-    delete: templatesAPI.delete.bind(templatesAPI),
-    deleteMultiple: templatesAPI.deleteMultiple?.bind(templatesAPI),
+    getPaginated: compositionAPI.getPaginated.bind(compositionAPI),
+    getAll: compositionAPI.getAll.bind(compositionAPI),
+    create: compositionAPI.create.bind(compositionAPI),
+    update: compositionAPI.update.bind(compositionAPI),
+    delete: compositionAPI.delete.bind(compositionAPI),
+    deleteMultiple: compositionAPI.deleteMultiple?.bind(compositionAPI),
   },
-  nounSingular: "template",
-  createFactory: ({width = 1080, height = 1080}) => ({
-    role: "template",
-    title: "Untitled Template",
-    type: "custom",
-    category: "custom",
-    author: "current-user",
-    featured: false,
-    popular: false,
-    name: "Untitled Template",
-    vibe: "minimal" as const,
-    width,
-    height,
-    templateData: {
-      version: "1.0",
-      elements: [],
-      background: { type: "solid", color: "#ffffff" }
-    },
-    canvasSize: { width, height },
-    pages: [],
-    data: {},
-  }),
+  nounSingular: "project",
+  createFactory: ({ width = 1080, height = 1080 }) => {
+    // Import the factory dynamically to avoid circular dependencies
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createComposition } = require("@/lib/utils/compositionFactory");
+    return createComposition({
+      width,
+      height,
+      isTemplate: false,
+      role: "project"
+    });
+  },
 };
 
-export default function TemplatesPage() {
+export default function CompositionsPage() {
   // If you prefer URL-driven filters, grab them here
   const params = useSearchParams();
   const [search] = useState(""); // local state if you have a search box somewhere
 
-  const filters: TemplateFilters = useMemo(() => ({
+  const filters: ProjectFilters = useMemo(() => ({
     starred: params.get("starred") === "true" ? true : undefined,
     shared: params.get("shared") === "true" ? true : undefined,
     featured: params.get("featured") === "true" ? true : undefined,
     popular: params.get("popular") === "true" ? true : undefined,
-    type: (params.get("type") as TemplateFilters["type"]) ?? undefined,
+    type: (params.get("type") as ProjectFilters["type"]) ?? undefined,
     category: params.get("category") ?? undefined,
     search: search || params.get("search") || undefined,
   }), [params, search]);
 
-  return <SelectionProvider><EntityGrid<Template, TemplateFilters> cfg={templateCfg} filters={filters} /></SelectionProvider>;
+
+  // Transform DESIGN_FORMATS into a SelectionConfig for the grid
+  const socialMediaConfig = useMemo<SelectionConfig>(() => {
+    return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
+  }, []);
+
+  return (
+    <SelectionProvider>
+      <EntityGrid<Composition, ProjectFilters>
+        cfg={compositionCfg}
+        filters={filters}
+        selectionConfig={socialMediaConfig}
+      />
+    </SelectionProvider>
+  );
 }

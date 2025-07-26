@@ -1,5 +1,5 @@
 import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { APIService, Asset, Project, Template } from "../types/api";
+import { APIService, Asset, Composition, Project, Template } from "../types/api";
 import { AuthAPI } from "./auth";
 import { BrandsAPI } from "./brands";
 import { CollectionAPI } from "./collection";
@@ -68,7 +68,14 @@ const assetsAPI = new CollectionAPI<
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
 >(apiClient, "/assets", { list: "assets", total: "totalAssets" });
 
+const compositionAPI = new CollectionAPI<
+  Composition,
+  "compositions",
+  "totalCompositions",
+  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
+>(apiClient, "/compositions", { list: "compositions", total: "totalCompositions" });
+
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);
 
-export { assetsAPI, authAPI, brandsAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };
+export { assetsAPI, authAPI, brandsAPI, compositionAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };

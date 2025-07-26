@@ -8,9 +8,32 @@ import { assetsAPI } from "@/lib/api/index";
 import { SelectionProvider } from "@/lib/context/selection";
 import { type Asset } from "@/lib/types/api";
 import type { EntityConfig } from "@/lib/types/grid";
+import type { SelectionConfig, SelectionItem } from "@/lib/types/config";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { Upload } from "lucide-react";
 
+// Asset types available for upload, organized by categories
+export const ASSET_TYPES = {
+    // Images
+    "image-photo": { type: "image", name: "Photo", category: "Images", description: "JPG, PNG, WebP up to 15MB" },
+    "image-illustration": { type: "image", name: "Illustration", category: "Images", description: "SVG, PNG, AI files" },
+    "image-icon": { type: "image", name: "Icon", category: "Images", description: "SVG, PNG icons" },
+
+    // Videos
+    "video-mp4": { type: "video", name: "MP4 Video", category: "Videos", description: "H.264 encoded up to 100MB" },
+    "video-gif": { type: "video", name: "GIF", category: "Videos", description: "Animated GIFs up to 15MB" },
+    "video-webm": { type: "video", name: "WebM Video", category: "Videos", description: "VP9 encoded up to 50MB" },
+
+    // Documents
+    "document-pdf": { type: "document", name: "PDF Document", category: "Documents", description: "PDF files up to 25MB" },
+    "document-presentation": { type: "document", name: "Presentation", category: "Documents", description: "PPT, Keynote files" },
+    "document-spreadsheet": { type: "document", name: "Spreadsheet", category: "Documents", description: "Excel, CSV files" },
+
+    // Audio
+    "audio-mp3": { type: "audio", name: "MP3 Audio", category: "Audio", description: "MP3 files up to 10MB" },
+    "audio-wav": { type: "audio", name: "WAV Audio", category: "Audio", description: "Uncompressed audio" },
+};
 
 // --- Filters the backend accepts for templates ---
 export type AssetFilters = {
@@ -36,27 +59,15 @@ const assetCfg: EntityConfig<Asset, AssetFilters> = {
         deleteMultiple: assetsAPI.deleteMultiple?.bind(assetsAPI),
     },
     nounSingular: "asset",
-    createFactory: ({ width = 1080, height = 1080 }) => ({
-        role: "asset",
-        title: "Untitled Asset",
-        type: "custom",
-        category: "custom",
-        author: "current-user",
-        featured: false,
-        popular: false,
-        name: "Untitled Project",
-        vibe: "minimal" as const,
-        width,
-        height,
-        projectData: {
-            version: "1.0",
-            elements: [],
-            background: { type: "solid", color: "#ffffff" }
-        },
-        canvasSize: { width, height },
-        pages: [],
-        data: {},
-    }),
+    createFactory: (item) => {
+        console.log(item)
+        return {
+            role: "asset",
+            title: item.name || "Untitled Asset",
+            type: item.type || "custom",
+            category: item.category || "custom",
+        }
+    },
 };
 
 export default function AssetsPage() {
@@ -74,13 +85,41 @@ export default function AssetsPage() {
         search: search || params.get("search") || undefined,
     }), [params, search]);
 
+    // Transform ASSET_TYPES into a SelectionConfig for the grid
+    const assetTypesConfig = useMemo<SelectionConfig>(() => {
+        // Extract unique categories
+        const categories = [...new Set(Object.values(ASSET_TYPES).map(asset => asset.category))];
+
+        // Transform asset types into selection items
+        const items: SelectionItem[] = Object.entries(ASSET_TYPES).map(([key, asset]) => ({
+            key,
+            label: asset.name,
+            description: asset.description,
+            category: asset.category,
+            data: {
+                type: asset.type
+            }
+        }));
+
+        return {
+            categories,
+            items
+        };
+    }, []);
+
     return (
         <SelectionProvider>
             <EntityGrid<Asset, AssetFilters>
                 cfg={assetCfg}
                 filters={filters}
-                ctaLabel="Upload"
+                cta={{
+                    label: "Upload Files",
+                    icon: Upload,
+                    el: "input[type='file']"
+                }}
+
                 isClickable={false}
+                selectionConfig={assetTypesConfig}
             />
         </SelectionProvider>
     )
