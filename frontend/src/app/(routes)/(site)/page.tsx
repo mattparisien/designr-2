@@ -9,6 +9,7 @@ import { SelectionProvider } from "@/lib/context/selection";
 import { ByRole, Composition } from "@/lib/types/api"; // helper: export type ByRole<R extends Role> = Extract<Composition, { role: R }>
 import type { SelectionConfig } from "@/lib/types/config";
 import type { EntityConfig } from "@/lib/types/grid";
+// We're importing the factory dynamically in createFactory to avoid circular dependencies
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import { useSearchParams } from "next/navigation";
@@ -34,6 +35,8 @@ export type ProjectFilters = {
   category?: string;
   featured?: boolean;
   popular?: boolean;
+  role?: string; // Added to support role filtering
+  isTemplate?: boolean; // Added to support template filtering
 };
 
 
@@ -43,8 +46,20 @@ const compositionCfg: EntityConfig<Composition, ProjectFilters> = {
   key: "projects",
   infiniteKey: "infiniteProjects",
   api: {
-    getPaginated: compositionAPI.getPaginated.bind(compositionAPI),
-    getAll: compositionAPI.getAll.bind(compositionAPI),
+    getPaginated: (page, limit, filters) => {
+      // Always filter compositions by role=project
+      const enhancedFilters = { 
+        ...filters,
+        // These are sent as query parameters to filter compositions
+        // in the backend
+        role: "project",
+        isTemplate: false
+      };
+      
+      return compositionAPI.getPaginated(page, limit, enhancedFilters);
+    },
+    // Using type assertion to overcome TypeScript limitations
+    getAll: () => compositionAPI.getAll({ role: "project", isTemplate: false } as unknown as ProjectFilters),
     create: compositionAPI.create.bind(compositionAPI),
     update: compositionAPI.update.bind(compositionAPI),
     delete: compositionAPI.delete.bind(compositionAPI),

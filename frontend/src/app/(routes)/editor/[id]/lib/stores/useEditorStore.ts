@@ -546,8 +546,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       const { compositionAPI } = await import('@/lib/api/index');
 
       // Get the composition data
-      const response = await compositionAPI.getById(compositionId)
-      const composition = response.composition;
+      const composition = await compositionAPI.getById(compositionId);
 
       if (!composition) {
         throw new Error('Composition not found');
@@ -555,11 +554,17 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       console.log('Composition loaded:', composition);
 
+      // Get layout data from the composition's data property
+      const layoutData = composition.data as APILayout;
+      if (!layoutData || !layoutData.pages) {
+        throw new Error('Layout data not found in composition');
+      }
+      
       // Convert composition pages to frontend format
-      const frontendPages = composition.layout.pages.map(convertAPIPageToFrontend);
+      const frontendPages = layoutData.pages.map(convertAPIPageToFrontend);
 
       set({
-        designName: composition.title || 'Untitled Composition',
+        designName: composition.name || 'Untitled Composition',
         pages: frontendPages,
         currentPageId: frontendPages[0]?.id || '',
         currentPageIndex: 0,
@@ -582,8 +587,11 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Set saving indicator to true
       set({ isSaving: true });
 
+      // Capture canvas screenshot for thumbnail
+      const thumbnailImage = await get().captureCanvasScreenshot();
+
       // Prepare the composition data from the current editor state
-      const compositionData: APILayout = {
+      const layoutData: APILayout = {
         pages: state.pages.map(convertFrontendPageToAPI)
       };
 
@@ -595,9 +603,15 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Call the API to update the composition
       await compositionAPI.update(compositionId, {
         name: state.designName,
-        layout: compositionData,
-        updatedAt: new Date().toISOString()
+        data: layoutData, // Using layoutData as the composition data
+        updatedAt: new Date().toISOString(),
+        thumbnailUrl: thumbnailImage // Include the thumbnail image
       });
+
+      // If thumbnail capture was successful, log it
+      if (thumbnailImage) {
+        console.log('Thumbnail captured successfully for composition');
+      }
 
       console.log('Composition saved successfully:', state.designName);
       set({
@@ -864,7 +878,7 @@ export const initializeDesign = async () => {
       console.log('Design loaded:', design.title);
 
       useEditorStore.setState({
-        designName: design.title || "Untitled Design",
+        designName: design.name || "Untitled Design",
         isDesignSaved: true
       });
 
@@ -995,11 +1009,11 @@ export const initializeWithPreset = async (presetId: string) => {
       return;
     }
 
-    // Import projectsAPI
-    const { projectsAPI } = await import('@/lib/api');
+    // Import templatesAPI for presets
+    const { templatesAPI } = await import('@/lib/api');
 
     // Load presets
-    const presets = await projectsAPI.getPresets();
+    const presets = await templatesAPI.getPresets();
     const preset = presets.find((p: any) => p.id === presetId);
 
     if (preset) {
