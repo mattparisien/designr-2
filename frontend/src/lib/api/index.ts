@@ -1,9 +1,11 @@
 import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { APIService, Asset, Composition, Project, Template } from "../types/api";
+import { APIService, Asset, Composition } from "../types/api";
 import { AuthAPI } from "./auth";
 import { BrandsAPI } from "./brands";
 import { CollectionAPI } from "./collection";
 import { FontsAPI } from "./fonts";
+import { ProjectsAPI } from "./projects";
+import { TemplatesAPI } from "./templates";
 import { UsersAPI } from "./user";
 
 function createAPIService<T, S extends APIService<T>>(
@@ -42,23 +44,16 @@ apiClient.interceptors.request.use(
 
 // const assetsAPI = createAPIService(AssetsAPI, apiClient);
 const brandsAPI = createAPIService(BrandsAPI, apiClient);
-// const projectsAPI = createAPIService(ProjectsAPI, apiClient);
+const projectsAPI = createAPIService(ProjectsAPI, apiClient);
 const usersAPI = createAPIService(UsersAPI, apiClient);
-// const templatesAPI = createAPIService(TemplatesAPI, apiClient);
+const templatesAPI = createAPIService(TemplatesAPI, apiClient);
 // Backend actually serves them under /api/projects
-const templatesAPI = new CollectionAPI<
-  Template,
-  "templates",
-  "totalTemplates",
-  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string; featured?: boolean; popular?: boolean }
->(apiClient, "/templates", { list: "templates", total: "totalTemplates" });
-
-const projectsAPI = new CollectionAPI<
-  Project,
-  "projects",
-  "totalProjects",
-  { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
->(apiClient, "/projects", { list: "projects", total: "totalProjects" });
+// const projectsAPI = new CollectionAPI<
+//   Project,
+//   "projects",
+//   "totalProjects",
+//   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
+// >(apiClient, "/projects", { list: "projects", total: "totalProjects" });
 
 
 const assetsAPI = new CollectionAPI<

@@ -1,69 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// This would typically come from your backend API client
-// For now, I'm using a placeholder - you'll need to replace this with your actual backend client
-const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:5001';
+const BASE_URL = process.env.BACKEND_API_URL;
 
-async function makeBackendRequest(endpoint: string, options: RequestInit = {}) {
-  const url = `${BACKEND_API_URL}${endpoint}`;
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+export async function GET(req: NextRequest) {
+  const url = new URL(`${BASE_URL}/templates`);
+  req.nextUrl.searchParams.forEach((value, key) => url.searchParams.set(key, value));
 
-    if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-    }
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
 
-    return response.json();
-  } catch (error) {
-    console.error('Backend request failed:', error);
-    throw error;
-  }
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
 }
 
-// GET /api/templates - Get all templates with optional filters
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    
-    // Build query string for backend
-    const queryString = searchParams.toString();
-    const endpoint = `/templates${queryString ? `?${queryString}` : ''}`;
-    
-    const data = await makeBackendRequest(endpoint);
-    
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching templates:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch templates' },
-      { status: 500 }
-    );
-  }
-}
+export async function POST(req: NextRequest) {
+  const body = await req.json();
 
-// POST /api/templates - Create new template
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    
-    const data = await makeBackendRequest('/templates', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    
-    return NextResponse.json(data, { status: 201 });
-  } catch (error) {
-    console.error('Error creating template:', error);
-    return NextResponse.json(
-      { error: 'Failed to create template' },
-      { status: 500 }
-    );
-  }
+  const res = await fetch(`${BASE_URL}/templates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
 }

@@ -1,30 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-/* ── 1. Enums for controlled values ─────────────────────────────── */
-export enum ElementType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  SHAPE = 'shape',
-  VIDEO = 'video',
-}
+export type ElementType = 'text' | 'image' | 'shape' | 'video';
+export type BackgroundType = 'color' | 'image' | 'gradient';
+export type TemplateCategory = 'presentation' | 'social' | 'print' | 'custom';
 
-export enum BackgroundType {
-  COLOR = 'color',
-  IMAGE = 'image',
-  GRADIENT = 'gradient',
-}
-
-export enum TemplateCategory {
-  PRESENTATION = 'presentation',
-  SOCIAL = 'social',
-  PRINT = 'print',
-  CUSTOM = 'custom',
-}
-
-/* ── 2. Interfaces ─────────────────────────────────────────────── */
-export interface IElement {
+export interface Element {
   type: ElementType;
-  placeholder?: string; // e.g., "titleText"
+  placeholder?: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
   style?: {
@@ -35,32 +17,31 @@ export interface IElement {
   };
 }
 
-export interface IPage {
+export interface Page {
   name: string;
   background?: {
     type: BackgroundType;
-    value?: string; // hex code, image URL, gradient definition
+    value?: string;
   };
-  elements: IElement[];
+  elements: Element[];
 }
 
-export interface ITemplate extends Document {
+export interface TemplateDocument extends Document {
   title: string;
   description?: string;
   category: TemplateCategory;
   thumbnailUrl?: string;
   canvasSize: { width: number; height: number };
-  pages: IPage[];
+  pages: Page[];
   isPublic: boolean;
-  createdBy: mongoose.Types.ObjectId;
+  createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-/* ── 3. Schemas ────────────────────────────────────────────────── */
-const ElementSchema = new Schema<IElement>({
-  type: { type: String, enum: Object.values(ElementType), required: true },
-  placeholder: { type: String },
+const ElementSchema = new Schema<Element>({
+  type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
+  placeholder: String,
   position: {
     x: { type: Number, required: true },
     y: { type: Number, required: true },
@@ -72,35 +53,34 @@ const ElementSchema = new Schema<IElement>({
   style: { type: Schema.Types.Mixed },
 });
 
-const PageSchema = new Schema<IPage>({
+const PageSchema = new Schema<Page>({
   name: { type: String, required: true },
   background: {
-    type: { type: String, enum: Object.values(BackgroundType) },
-    value: { type: String },
+    type: { type: String, enum: ['color', 'image', 'gradient'] },
+    value: String,
   },
   elements: { type: [ElementSchema], default: [] },
 });
 
-const TemplateSchema = new Schema<ITemplate>(
+const TemplateSchema = new Schema<TemplateDocument>(
   {
     title: { type: String, required: true },
-    description: { type: String },
+    description: String,
     category: {
       type: String,
-      enum: Object.values(TemplateCategory),
+      enum: ['presentation', 'social', 'print', 'custom'],
       required: true,
     },
-    thumbnailUrl: { type: String },
+    thumbnailUrl: String,
     canvasSize: {
       width: { type: Number, required: true },
       height: { type: Number, required: true },
     },
     pages: { type: [PageSchema], default: [] },
     isPublic: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
 
-/* ── 4. Export Model ────────────────────────────────────────────── */
-export default mongoose.model<ITemplate>('Template', TemplateSchema);
+export default mongoose.model<TemplateDocument>('Template', TemplateSchema);

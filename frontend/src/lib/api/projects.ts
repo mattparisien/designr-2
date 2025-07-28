@@ -85,61 +85,7 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
         }
     }
 
-    async clone(projectId: string, ownerId: string): Promise<Project> {
-        try {
-            const response = await this.apiClient.post<Project>(
-                `/projects/${projectId}/clone`,
-                { ownerId }
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error(
-                `Error cloning project ${projectId}:`,
-                error.response?.data || error.message
-            );
-            throw error.response?.data || new Error("Failed to clone project");
-        }
-    }
 
-    async toggleTemplate(
-        projectId: string,
-        isTemplate: boolean
-    ): Promise<Project> {
-        try {
-            const response = await this.apiClient.put<Project>(
-                `/projects/${projectId}/toggle-template`,
-                { isTemplate }
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error(
-                `Error updating template status for project ${projectId}:`,
-                error.response?.data || error.message
-            );
-            throw (
-                error.response?.data || new Error("Failed to update template status")
-            );
-        }
-    }
-
-    async getTemplates(category?: string, type?: string): Promise<Project[]> {
-        try {
-            const params = new URLSearchParams();
-            if (category) params.append("category", category);
-            if (type) params.append("type", type);
-
-            const response = await this.apiClient.get<Project[]>(
-                `/projects/templates?${params.toString()}`
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error(
-                "Error fetching templates:",
-                error.response?.data || error.message
-            );
-            throw error.response?.data || new Error("Failed to fetch templates");
-        }
-    }
 
     async getPaginated(
         page: number = 1,
@@ -188,34 +134,4 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
         }
     }
 
-    async getPresets(): Promise<any[]> {
-        try {
-            const response = await this.apiClient.get<any[]>('/projects/presets');
-            return response.data;
-        } catch (error: any) {
-            console.error('Error fetching project presets:', error.response?.data || error.message);
-            throw error.response?.data || new Error('Failed to fetch project presets');
-        }
-    }
-
-    async createFromPreset(presetId: string, data?: { title?: string; ownerId?: string }): Promise<Project> {
-        try {
-            const projectData = {
-                presetId,
-                ...data
-            };
-            
-            const response = await this.apiClient.post<Project>(
-                "/projects",
-                projectData
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error(
-                "Error creating project from preset:",
-                error.response?.data || error.message
-            );
-            throw error.response?.data || new Error("Failed to create project from preset");
-        }
-    }
 }
