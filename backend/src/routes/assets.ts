@@ -164,6 +164,57 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get paginated assets for grid view
+router.get('/paginated', async (req, res) => {
+  try {
+    const { userId, folderId, type, page = 1, limit = 20 } = req.query;
+
+    // Build query filter
+    const filter: any = {};
+
+    // Filter by userId if provided
+    if (userId) {
+      filter.userId = userId;
+    }
+
+    // Filter by folderId if provided
+    if (folderId !== undefined) {
+      filter.folderId = folderId;
+    }
+
+    // Filter by type if provided
+    if (type) {
+      filter.type = type;
+    }
+
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count and assets
+    const [assets, totalAssets] = await Promise.all([
+      Asset.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Asset.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalAssets / limitNum);
+
+    res.json({
+      assets,
+      totalAssets,
+      totalPages,
+      currentPage: pageNum,
+    });
+  } catch (error) {
+    console.error('[GET /assets/paginated] Error:', error);
+    res.status(500).json({ message: 'Failed to fetch paginated assets' });
+  }
+});
+
 // Get asset by ID
 router.get('/:id', async (req, res) => {
   try {

@@ -33,6 +33,41 @@ router.get('/', async (req, res) => {
   }
 });
 
+/* ── Get paginated projects ─────────────────────────── */
+router.get('/paginated', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const { ownerId, templateId } = req.query;
+    
+    const filters: any = {};
+    if (ownerId) filters.ownerId = ownerId;
+    if (templateId) filters.templateId = templateId;
+
+    const skip = (page - 1) * limit;
+    
+    const [projects, totalProjects] = await Promise.all([
+      Project.find(filters)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Project.countDocuments(filters)
+    ]);
+
+    const totalPages = Math.ceil(totalProjects / limit);
+
+    res.json({
+      projects,
+      totalProjects,
+      totalPages,
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error('[GET /projects/paginated] Error:', error);
+    res.status(500).json({ message: 'Failed to fetch paginated projects' });
+  }
+});
+
 /* ── Get a single project by ID ─────────────────────── */
 router.get('/:id', async (req, res) => {
   try {
@@ -42,6 +77,25 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     console.error(`[GET /projects/${req.params.id}] Error:`, error);
     res.status(500).json({ message: 'Failed to fetch project' });
+  }
+});
+
+/* ── Delete multiple projects (bulk) ─────────────────── */
+router.delete('/bulk', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Invalid or empty ids array' });
+    }
+
+    const result = await Project.deleteMany({ _id: { $in: ids } });
+    res.json({ 
+      message: `${result.deletedCount} projects deleted`,
+      deletedCount: result.deletedCount 
+    });
+  } catch (error) {
+    console.error('[DELETE /projects/bulk] Error:', error);
+    res.status(500).json({ message: 'Failed to delete projects' });
   }
 });
 
@@ -70,6 +124,25 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error(`[DELETE /projects/${req.params.id}] Error:`, error);
     res.status(500).json({ message: 'Failed to delete project' });
+  }
+});
+
+/* ── Delete multiple projects ───────────────────────── */
+router.post('/delete-multiple', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Invalid or empty ids array' });
+    }
+
+    const result = await Project.deleteMany({ _id: { $in: ids } });
+    res.json({ 
+      message: `${result.deletedCount} projects deleted`,
+      deletedCount: result.deletedCount 
+    });
+  } catch (error) {
+    console.error('[POST /projects/delete-multiple] Error:', error);
+    res.status(500).json({ message: 'Failed to delete projects' });
   }
 });
 

@@ -87,9 +87,9 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
 
     async deleteMultiple(ids: string[]): Promise<void> {
         try {
-            const response = await this.apiClient.post<void>(
-                "/projects/delete-multiple",
-                { ids }
+            const response = await this.apiClient.delete<void>(
+                "/projects/bulk",
+                { data: { ids } }
             );
             return response.data;
         } catch (error: any) {

@@ -10,8 +10,8 @@ export default function Layout({
 
   return (
     <GlobalProviders>
-      <Sidebar navigation={SITE_NAVIGATION} />
-      <main className="pt-10 px-4 md:px-5 flex-1">
+      <Sidebar navigation={SITE_NAVIGATION} className="fixed left-0 top-0" />
+      <main className="pt-10 pr-[1rem] pl-[calc(var(--sidebar-width)+1rem)] flex-1">
         {children}
       </main>
     </GlobalProviders>

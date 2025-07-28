@@ -51,7 +51,15 @@ const assetCfg: EntityConfig<Asset, AssetFilters> = {
     key: "assets",
     infiniteKey: "infiniteAssets",
     api: {
-        getPaginated: assetsAPI.getPaginated.bind(assetsAPI),
+        getPaginated: async (page?: number, limit?: number, filters?: Record<string, string | number | boolean>) => {
+            const result = await assetsAPI.getPaginated(page, limit, filters);
+            return {
+                items: result.assets,
+                totalItems: result.totalAssets,
+                totalPages: result.totalPages,
+                currentPage: result.currentPage,
+            };
+        },
         getAll: assetsAPI.getAll.bind(assetsAPI),
         create: assetsAPI.create.bind(assetsAPI),
         update: assetsAPI.update.bind(assetsAPI),

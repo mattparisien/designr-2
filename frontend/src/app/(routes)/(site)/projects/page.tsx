@@ -27,7 +27,15 @@ const compositionCfg: EntityConfig<Project> = {
   key: "projects",
   infiniteKey: "infiniteProjects",
   api: {
-    getPaginated: projectsAPI.getPaginated.bind(projectsAPI),
+    getPaginated: async (page?: number, limit?: number, filters?: Record<string, unknown>) => {
+      const result = await projectsAPI.getPaginated(page, limit, filters);
+      return {
+        items: result.projects,
+        totalItems: result.totalProjects,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+      };
+    },
     getAll: projectsAPI.getAll.bind(projectsAPI),
     create: projectsAPI.create.bind(projectsAPI),
     update: projectsAPI.update.bind(projectsAPI),
@@ -62,7 +70,7 @@ export default function ProjectsPage() {
     <SelectionProvider>
       <EntityGrid<Project, unknown>
         cfg={compositionCfg}
-        // filters={filters}
+        filters={{}}
         selectionConfig={socialMediaConfig}
       />
     </SelectionProvider>

@@ -115,6 +115,68 @@ export class AssetsAPI extends APIBase implements APIService<Asset> {
     }
 
     /**
+     * Delete multiple assets
+     */
+    async deleteMultiple(ids: string[]): Promise<void> {
+        try {
+            await this.apiClient.delete('/assets/bulk', { data: { ids } });
+        } catch (error: any) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('Error deleting multiple assets:', errorMessage);
+            throw new Error('Failed to delete multiple assets');
+        }
+    }
+
+    /**
+     * Get paginated assets
+     */
+    async getPaginated(
+        page: number = 1,
+        limit: number = 20,
+        filters: Record<string, string | number | boolean> = {},
+    ): Promise<{
+        assets: Asset[];
+        totalAssets: number;
+        totalPages: number;
+        currentPage: number;
+    }> {
+        try {
+            const params = new URLSearchParams();
+            params.append("page", page.toString());
+            params.append("limit", limit.toString());
+
+            // Add any filters to the query params
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    params.append(key, String(value));
+                }
+            });
+
+            const response = await this.apiClient.get<{
+                assets: Asset[];
+                totalAssets: number;
+                totalPages: number;
+                currentPage: number;
+            }>(`/assets/paginated?${params.toString()}`);
+
+            return {
+                assets: response.data.assets,
+                totalAssets: response.data.totalAssets,
+                totalPages: response.data.totalPages,
+                currentPage: response.data.currentPage,
+            };
+        } catch (error: any) {
+            console.error(
+                "Error fetching paginated assets:",
+                error.response?.data || error.message
+            );
+            throw (
+                error.response?.data || new Error("Failed to fetch paginated assets")
+            );
+        }
+    }
+
+    /**
      * Upload a file as an asset
      */
     async upload(params: { file: File; userId?: string; folderId?: string; name?: string; tags?: string[] } | File, tags: string[] = []): Promise<Asset> {

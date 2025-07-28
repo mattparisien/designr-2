@@ -221,12 +221,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             // Dynamically access the icon component
             const DynamicIcon = (LucideIcons as Record<string, unknown>)[pascalCaseName] as LucideIcon;
 
-            if (DynamicIcon && typeof DynamicIcon === 'function') {
-                return DynamicIcon;
-            }
-
-            console.warn(`Icon "${item.icon}" not found, using fallback`);
-            return Plus;
+            return DynamicIcon || Plus;
         }
 
         // If item.icon is already a LucideIcon component, return it directly
