@@ -102,6 +102,12 @@ export interface APIService<T> extends APIServiceBase {
      * @returns Promise resolving when deletion is complete
      */
     delete: (id: string) => Promise<void>;
+    /**
+     * Deletes multiple records by their IDs.
+     * @param ids - Array of unique identifiers for the records to delete
+     * @returns Promise resolving when deletion is complete
+     */
+    deleteMultiple?: (ids: string[]) => Promise<void>;
 }
 
 /**

@@ -3,7 +3,7 @@ export interface EntityConfig<T, F = any> {
   key: string;                 // 'projects' | 'templates'
   infiniteKey: string;         // 'infiniteProjects' | 'infiniteTemplates'
   api: {
-    getPaginated: (p: number, l: number, f: F) => Promise<{
+    getPaginated: (p?: number, l?: number, f?: F) => Promise<{
       items: T[];
       totalItems: number;
       totalPages: number;

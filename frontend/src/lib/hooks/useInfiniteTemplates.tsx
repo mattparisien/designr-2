@@ -1,12 +1,12 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { templatesAPI } from "@/lib/api/index";
-import { type Composition } from "@/lib/types/api";
+import { Template } from "@/lib/types/api";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface TemplatesPageData {
-  templates: Composition[],
+  templates: Template[],
   totalTemplates: number;
   totalPages: number;
   currentPage: number;

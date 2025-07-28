@@ -85,6 +85,24 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
         }
     }
 
+    async deleteMultiple(ids: string[]): Promise<void> {
+        try {
+            const response = await this.apiClient.post<void>(
+                "/projects/delete-multiple",
+                { ids }
+            );
+            return response.data;
+        } catch (error: any) {
+            console.error(
+                "Error deleting multiple projects:",
+                error.response?.data || error.message
+            );
+
+            throw error.response?.data || new Error("Failed to delete projects");
+        }
+    }
+
+
 
 
     async getPaginated(
@@ -98,7 +116,7 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
         currentPage: number;
     }> {
         try {
-            
+
             const params = new URLSearchParams();
             params.append("page", page.toString());
             params.append("limit", limit.toString());
@@ -116,7 +134,7 @@ export class ProjectsAPI extends APIBase implements ProjectsAPIService {
                 totalPages: number;
                 currentPage: number;
             }>(`/projects/paginated?${params.toString()}`);
-            
+
             return {
                 projects: response.data.projects,
                 totalProjects: response.data.totalProjects,
