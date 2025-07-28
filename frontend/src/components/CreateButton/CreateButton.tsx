@@ -3,7 +3,6 @@
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
 import type { SelectionConfig } from "@/lib/types/config";
-import { useState } from "react";
 
 interface CreateItemData {
   key?: string;
@@ -36,15 +35,8 @@ export function CreateButton({
   onCreate, 
   cta 
 }: CreateButtonProps) {
-  const [open, setOpen] = useState(false);
-
-  const handleItemClick = (item: CreateItemData) => {
-    onCreate(item);
-    setOpen(false); // Close the popover after selection
-  };
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover>
       <PopoverTrigger asChild>
         {cta?.el === "input[type='file']" ? (
           <label className="flex items-center justify-center cursor-pointer hover:bg-neutral-200 px-2.5 py-1.5 rounded-lg gap-1">
@@ -60,7 +52,7 @@ export function CreateButton({
               disabled={isCreating}
               onChange={(e) =>
                 e.target.files &&
-                handleItemClick({
+                onCreate({
                   data: {
                     files: e.target.files,
                   },
@@ -95,7 +87,7 @@ export function CreateButton({
                   .map((item) => (
                     <button
                       key={item.key}
-                      onClick={() => handleItemClick(item)}
+                      onClick={() => onCreate(item)}
                       disabled={isCreating}
                       className="cursor-pointer w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >

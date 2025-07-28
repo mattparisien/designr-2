@@ -8,10 +8,11 @@ import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
+import { createProject as createProjectFactory } from "@/lib/factories";
 import { useInfiniteProjects } from "@/lib/hooks/useInfiniteProjects";
+import { useProjectQuery } from "@/lib/hooks/useProjects";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
-import { useProjectQuery } from "@/lib/hooks/useProjects";
 import { useCallback, useMemo } from "react";
 
 // Define the social media format type
@@ -25,19 +26,14 @@ interface SocialMediaFormat {
 
 export default function ProjectsPage() {
 
-  const {
-    projects,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    refetch
-  } = useInfiniteProjects({
+  const { projects, refetch } = useInfiniteProjects({
     limit: 20
   });
 
   const {
-    createProject
+    createProject,
+    updateProject,
+    deleteMultipleProjects
   } = useProjectQuery();
 
   const gridItems = useMemo(() => {
@@ -46,19 +42,47 @@ export default function ProjectsPage() {
       title: project.title,
       image: { src: "", alt: project.title },
       updatedAt: project.updatedAt,
-      type: project.templateId ? "template" : "project",
+      type: project ? "template" : "project",
     })) ?? [];
   }, [projects])
 
 
   // Transform DESIGN_FORMATS into a SelectionConfig for the grid
-  const socialMediaConfig = useMemo<SelectionConfig>(() => {
+  const selectionConfig = useMemo<SelectionConfig>(() => {
     return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
   }, []);
 
-  const handleCreate = useCallback((item: { key?: string; label?: string; data?: { files?: FileList } }) => {
-    createProject(item);
-  }, [createProject]);
+
+  const handleCreate = useCallback(async (item: { key?: string; label?: string; data?: { files?: FileList } }) => {
+    try {
+      if (!item.key) {
+        throw new Error("No format key provided");
+      }
+
+      const projectData = createProjectFactory(item.key, item.label);
+      await createProject(projectData);
+
+
+      // Optionally refetch to ensure UI is updated immediately
+      refetch();
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    }
+  }, [createProject, createProjectFactory, refetch]);
+
+  // CRUD handlers for InteractiveGrid
+  const handleDeleteItems = useCallback(async (ids: string[]) => {
+    await deleteMultipleProjects(ids);
+    refetch();
+  }, [deleteMultipleProjects, refetch]);
+
+  const handleUpdateItem = useCallback(async (id: string, updates: { title?: string; name?: string }) => {
+    const updateData: { title?: string } = {};
+    if (updates.title) updateData.title = updates.title;
+    if (updates.name) updateData.title = updates.name; // Map name to title
+
+    await updateProject({ id, data: updateData });
+  }, [updateProject]);
 
   return (
     <SelectionProvider>
@@ -70,12 +94,14 @@ export default function ProjectsPage() {
             </h3>
           </div>
           <CreateButton
-            config={socialMediaConfig}
+            config={selectionConfig}
             onCreate={handleCreate}
           />
         </div>
         <InteractiveGrid
           items={gridItems}
+          onDeleteItems={handleDeleteItems}
+          onUpdateItem={handleUpdateItem}
         />
       </Section>
     </SelectionProvider>
