@@ -134,7 +134,18 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             
             // If no activeItem prop, try to match based on href in navigation items
             const allItems = navigation.sections.flatMap(section => section.items);
-            const matchedItem = allItems.find(item => item.href && pathname.includes(item.href));
+            const matchedItem = allItems.find(item => {
+                console.log(item, 'item', pathname)
+                if (!item.href) return false;
+                
+                // Exact match for root paths or when pathname exactly matches href
+                if (item.href === pathname) return true;
+                
+                // For non-root paths, check if pathname starts with the href
+                if (item.href !== '/' && pathname.startsWith(item.href)) return true;
+                
+                return false;
+            });
             return matchedItem?.id || null;
         }, [activeItem, pathname, navigation]);
 

@@ -3,15 +3,16 @@
 // app/projects/page.tsx
 // Full page using the generic EntityGrid + your Composition union split by role
 
-import { EntityGrid } from "@/components/EntityGrid";
-import { projectsAPI } from "@/lib/api/index";
+import { CreateButton } from "@/components/CreateButton";
+import { InteractiveGrid } from "@/components/EntityGrid/InteractiveGrid";
+import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
+import { useInfiniteProjects } from "@/lib/hooks/useInfiniteProjects";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
-import { type Project } from "@/lib/types/api";
 import type { SelectionConfig } from "@/lib/types/config";
-import type { EntityConfig } from "@/lib/types/grid";
-import { useMemo } from "react";
+import { useProjectQuery } from "@/lib/hooks/useProjects";
+import { useCallback, useMemo } from "react";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -22,43 +23,32 @@ interface SocialMediaFormat {
 }
 
 
-// --- Config object passed to the generic grid ---
-const compositionCfg: EntityConfig<Project> = {
-  key: "projects",
-  infiniteKey: "infiniteProjects",
-  api: {
-    getPaginated: async (page?: number, limit?: number, filters?: Record<string, unknown>) => {
-      const result = await projectsAPI.getPaginated(page, limit, filters);
-      return {
-        items: result.projects,
-        totalItems: result.totalProjects,
-        totalPages: result.totalPages,
-        currentPage: result.currentPage,
-      };
-    },
-    getAll: projectsAPI.getAll.bind(projectsAPI),
-    create: projectsAPI.create.bind(projectsAPI),
-    update: projectsAPI.update.bind(projectsAPI),
-    delete: projectsAPI.delete.bind(projectsAPI),
-    deleteMultiple: projectsAPI.deleteMultiple?.bind(projectsAPI),
-  },
-  nounSingular: "project",
-  createFactory: ({ width = 1080, height = 1080 }) => {
-    // Import the factory dynamically to avoid circular dependencies
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createComposition } = require("@/lib/utils/compositionFactory");
-    return createComposition({
-      width,
-      height,
-      isTemplate: false,
-      role: "project"
-    });
-  },
-};
-
 export default function ProjectsPage() {
 
+  const {
+    projects,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch
+  } = useInfiniteProjects({
+    limit: 20
+  });
 
+  const {
+    createProject
+  } = useProjectQuery();
+
+  const gridItems = useMemo(() => {
+    return projects?.map(project => ({
+      _id: project._id,
+      title: project.title,
+      image: { src: "", alt: project.title },
+      updatedAt: project.updatedAt,
+      type: project.templateId ? "template" : "project",
+    })) ?? [];
+  }, [projects])
 
 
   // Transform DESIGN_FORMATS into a SelectionConfig for the grid
@@ -66,13 +56,28 @@ export default function ProjectsPage() {
     return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
   }, []);
 
+  const handleCreate = useCallback((item: { key?: string; label?: string; data?: { files?: FileList } }) => {
+    createProject(item);
+  }, [createProject]);
+
   return (
     <SelectionProvider>
-      <EntityGrid<Project, unknown>
-        cfg={compositionCfg}
-        filters={{}}
-        selectionConfig={socialMediaConfig}
-      />
+      <Section>
+        <div className="flex items-center justify-between pb-10">
+          <div>
+            <h3 className="text-xl font-medium">
+              My Projects
+            </h3>
+          </div>
+          <CreateButton
+            config={socialMediaConfig}
+            onCreate={handleCreate}
+          />
+        </div>
+        <InteractiveGrid
+          items={gridItems}
+        />
+      </Section>
     </SelectionProvider>
   );
 }

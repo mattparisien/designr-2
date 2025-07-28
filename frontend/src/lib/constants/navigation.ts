@@ -9,7 +9,7 @@ export const SITE_NAVIGATION : Navigation = {
                 {
                     id: "projects",
                     title: "Projects",
-                    href: "/",
+                    href: "/projects",
                     icon: "lucide:folder-closed"
                 },
                 {

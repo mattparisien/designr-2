@@ -3,15 +3,17 @@
 // app/projects/page.tsx
 // Full page using the generic EntityGrid + your Composition union split by role
 
-import { EntityGrid } from "@/components/EntityGrid";
-import { templatesAPI } from "@/lib/api/index";
+import { CreateButton } from "@/components/CreateButton";
+import { InteractiveGrid } from "@/components/EntityGrid/InteractiveGrid";
+import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
+import { createTemplate as createTemplateFactory } from "@/lib/factories";
+import { useInfiniteTemplates } from "@/lib/hooks/useInfiniteTemplates";
+import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
-import { Template } from "@/lib/types/api";
 import type { SelectionConfig } from "@/lib/types/config";
-import type { EntityConfig } from "@/lib/types/grid";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -22,43 +24,27 @@ interface SocialMediaFormat {
 }
 
 
-// --- Config object passed to the generic grid ---
-const compositionCfg: EntityConfig<Template> = {
-  key: "templates",
-  infiniteKey: "infiniteTemplates",
-  api: {
-    getPaginated: async (page?: number, limit?: number, filters?: Record<string, string | number | boolean>) => {
-      const result = await templatesAPI.getPaginated(page, limit, filters);
-      return {
-        items: result.templates,
-        totalItems: result.totalTemplates,
-        totalPages: result.totalPages,
-        currentPage: result.currentPage,
-      };
-    },
-    getAll: templatesAPI.getAll.bind(templatesAPI),
-    create: templatesAPI.create.bind(templatesAPI),
-    update: templatesAPI.update.bind(templatesAPI),
-    delete: templatesAPI.delete.bind(templatesAPI),
-    deleteMultiple: templatesAPI.deleteMultiple?.bind(templatesAPI),
-  },
-  nounSingular: "template",
-  createFactory: ({ width = 1080, height = 1080 }) => {
-    // Import the factory dynamically to avoid circular dependencies
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createComposition } = require("@/lib/utils/compositionFactory");
-    return createComposition({
-      width,
-      height,
-      isTemplate: true,
-      role: "template"
-    });
-  },
-};
+export default function Templatesage() {
 
-export default function TemplatesPage() {
+  const { templates, refetch } = useInfiniteTemplates({
+    limit: 20
+  });
 
+  const {
+    createTemplate,
+    updateTemplate,
+    deleteMultipleTemplates
+  } = useTemplateQuery();
 
+  const gridItems = useMemo(() => {
+    return templates?.map(template => ({
+      _id: template._id,
+      title: template.title,
+      image: { src: "", alt: template.title },
+      updatedAt: template.updatedAt,
+      type: template ? "template" : "project",
+    })) ?? [];
+  }, [templates])
 
 
   // Transform DESIGN_FORMATS into a SelectionConfig for the grid
@@ -66,13 +52,58 @@ export default function TemplatesPage() {
     return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
   }, []);
 
+
+
+  const handleCreate = useCallback(async (item: { key?: string; label?: string; data?: { files?: FileList } }) => {
+    try {
+      if (!item.key) {
+        throw new Error("No format key provided");
+      }
+
+      const templateData = createTemplateFactory(item.key, item.label);
+      await createTemplate(templateData);
+  
+
+      // Optionally refetch to ensure UI is updated immediately
+      refetch();
+    } catch (error) {
+      console.error('Failed to create template:', error);
+    }
+  }, [createTemplate, createTemplateFactory, refetch]);
+
+  // CRUD handlers for InteractiveGrid
+  const handleDeleteItems = useCallback(async (ids: string[]) => {
+    await deleteMultipleTemplates(ids);
+  }, [deleteMultipleTemplates]);
+
+  const handleUpdateItem = useCallback(async (id: string, updates: { title?: string; name?: string }) => {
+    const updateData: { title?: string } = {};
+    if (updates.title) updateData.title = updates.title;
+    if (updates.name) updateData.title = updates.name; // Map name to title
+
+    await updateTemplate({ id, data: updateData });
+  }, [updateTemplate]);
+
   return (
     <SelectionProvider>
-      <EntityGrid<Template, unknown>
-        cfg={compositionCfg}
-        filters={{}}
-        selectionConfig={socialMediaConfig}
-      />
+      <Section>
+        <div className="flex items-center justify-between pb-10">
+          <div>
+            <h3 className="text-xl font-medium">
+              My Templates
+            </h3>
+          </div>
+          <CreateButton
+            config={socialMediaConfig}
+            onCreate={handleCreate}
+          />
+        </div>
+        <InteractiveGrid
+          items={gridItems}
+          onDeleteItems={handleDeleteItems}
+          onUpdateItem={handleUpdateItem}
+        />
+      </Section>
     </SelectionProvider>
   );
 }

@@ -39,6 +39,7 @@ export function useTemplateQuery() {
     mutationFn: (newTemplate: Partial<Template>) => templatesAPI.create(newTemplate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteTemplates'] });
       toast({
         title: "Success",
         description: "Template created successfully!",
@@ -60,6 +61,7 @@ export function useTemplateQuery() {
       templatesAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteTemplates'] });
       toast({
         title: "Success",
         description: "Template updated successfully!",

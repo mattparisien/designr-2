@@ -39,6 +39,7 @@ export function useProjectQuery() {
     mutationFn: (newProject: Partial<Project>) => projectsAPI.create(newProject),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteProjects'] });
       toast({
         title: "Success",
         description: "Project created successfully!",
@@ -58,8 +59,9 @@ export function useProjectQuery() {
   const updateProjectMutation = useMutation({
     mutationFn: ({ id, data }: { id: string, data: Partial<Project> }) =>
       projectsAPI.update(id, data),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteProjects'] });
       toast({
         title: "Success",
         description: "Project updated successfully!",
