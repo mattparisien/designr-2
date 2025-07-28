@@ -4,7 +4,7 @@
 // Full page using the generic EntityGrid + your Composition union split by role
 
 import { CreateButton } from "@/components/CreateButton";
-import { InteractiveGrid } from "@/components/EntityGrid/InteractiveGrid";
+import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";

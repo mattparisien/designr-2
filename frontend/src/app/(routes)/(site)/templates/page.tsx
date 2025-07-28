@@ -4,7 +4,7 @@
 // Full page using the generic EntityGrid + your Composition union split by role
 
 import { CreateButton } from "@/components/CreateButton";
-import { InteractiveGrid } from "@/components/EntityGrid/InteractiveGrid";
+import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
@@ -24,7 +24,7 @@ interface SocialMediaFormat {
 }
 
 
-export default function Templatesage() {
+export default function TemplatesPage() {
 
   const { templates, refetch } = useInfiniteTemplates({
     limit: 20
@@ -48,10 +48,9 @@ export default function Templatesage() {
 
 
   // Transform DESIGN_FORMATS into a SelectionConfig for the grid
-  const socialMediaConfig = useMemo<SelectionConfig>(() => {
+  const selectionConfig = useMemo<SelectionConfig>(() => {
     return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
   }, []);
-
 
 
   const handleCreate = useCallback(async (item: { key?: string; label?: string; data?: { files?: FileList } }) => {
@@ -74,7 +73,8 @@ export default function Templatesage() {
   // CRUD handlers for InteractiveGrid
   const handleDeleteItems = useCallback(async (ids: string[]) => {
     await deleteMultipleTemplates(ids);
-  }, [deleteMultipleTemplates]);
+    refetch();
+  }, [deleteMultipleTemplates, refetch]);
 
   const handleUpdateItem = useCallback(async (id: string, updates: { title?: string; name?: string }) => {
     const updateData: { title?: string } = {};
@@ -94,7 +94,7 @@ export default function Templatesage() {
             </h3>
           </div>
           <CreateButton
-            config={socialMediaConfig}
+            config={selectionConfig}
             onCreate={handleCreate}
           />
         </div>

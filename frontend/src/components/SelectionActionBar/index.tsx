@@ -54,7 +54,7 @@ export function SelectionActionBar({
   const iconSize = "lg";
 
   return (
-    <Toolbar className={cn("px-4 py-5", className)} transition>
+    <Toolbar className={cn("px-4 py-5", className)} transition positionStatic>
       <ToolbarSection space={40}>
         <ToolbarLabel label={`${selectedIds.length} selected`} className="whitespace-nowrap" size="md"/>
         <ToolbarSection space={10}>
@@ -70,54 +70,5 @@ export function SelectionActionBar({
         </ToolbarButton>
       </ToolbarSection>
     </Toolbar>
-    // <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white border border-gray-100 shadow-lg rounded-2xl px-4 py-3 flex items-center z-50 ${className}`}>
-    //   <span className="text-sm font-medium text-gray-700 mr-6">
-    //     {selectedIds.length} selected
-    //   </span>
-
-    //   {onMove && (
-    //     <Button 
-    //       size="icon" 
-    //       variant="ghost" 
-    //       onClick={handleMove} 
-    //       disabled={isMoving || isDeleting}
-    //       className="rounded-md"
-    //     >
-    //       {isMoving ? (
-    //         <Loader2 className="h-5 w-5 animate-spin" />
-    //       ) : (
-    //         <Folder className="h-5 w-5" />
-    //       )}
-    //     </Button>
-    //   )}
-
-    //   {onDelete && (
-    //     <Button 
-    //       size="icon" 
-    //       variant="ghost" 
-    //       onClick={handleDelete} 
-    //       disabled={isDeleting || isMoving}
-    //       className="rounded-md"
-    //     >
-    //       {isDeleting ? (
-    //         <Loader2 className="h-5 w-5 animate-spin" />
-    //       ) : (
-    //         <Trash2 className="h-5 w-5" />
-    //       )}
-    //     </Button>
-    //   )}
-
-    //   <div className="h-5 w-px bg-gray-200 mx-2" />
-
-    //   <Button 
-    //     size="icon" 
-    //     variant="ghost" 
-    //     onClick={clearSelection} 
-    //     disabled={isDeleting || isMoving}
-    //     className="rounded-md"
-    //   >
-    //     <X className="h-5 w-5" />
-    //   </Button>
-    // </div>
   )
 }

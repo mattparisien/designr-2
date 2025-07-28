@@ -3,7 +3,6 @@
 import InteractiveCard from "@/components/InteractiveCard/InteractiveCard";
 import { LazyGrid } from "@/components/LazyGrid";
 import { SelectionActionBar } from "@/components/SelectionActionBar";
-import { Section } from "@/components/ui/section";
 import { useSelection } from "@/lib/context/selection-context";
 import { useToast } from "@/lib/hooks/useToast";
 import { getRelativeTime } from "@/lib/utils";
@@ -40,10 +39,9 @@ interface InteractiveGridProps {
 }
 
 
-export function InteractiveGrid({ 
+export function InteractiveGrid({
   items,
   onDeleteItems,
-  onDeleteItem,
   onUpdateItem,
   onDuplicateItems,
   onMoveItems,
@@ -70,7 +68,7 @@ export function InteractiveGrid({
 
       await onDeleteItems(selectedIds);
       clearSelection();
-      
+
       toast({
         title: "Success",
         description: `Deleted ${selectedIds.length} items successfully.`,
