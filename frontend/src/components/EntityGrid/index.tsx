@@ -6,7 +6,7 @@ import { SelectionActionBar } from "@/components/SelectionActionBar";
 import { ViewMode } from "@/components/StickyControlsBar";
 import ListView from "@/components/ui/list-view";
 import { Section } from "@/components/ui/section";
-import { useSelection } from "@/lib/context/selection";
+import { useSelection } from "@/lib/context/selection-context";
 import { useEntityCrud } from "@/lib/hooks/useEntityCrud";
 import { useInfiniteEntity } from "@/lib/hooks/useInfiniteEntity";
 import { useToast } from "@/lib/hooks/useToast";

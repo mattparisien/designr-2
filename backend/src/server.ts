@@ -18,7 +18,7 @@ import fontRoutes from './routes/fonts';
 import assetRoutes from './routes/assets';
 
 // Load environment variables
-dotenv.config({ path: '.env' });
+dotenv.config();
 
 console.log('Server startup - Environment check:');
 console.log('Current working directory:', process.cwd());

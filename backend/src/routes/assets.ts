@@ -9,21 +9,40 @@ import Asset from '../models/Asset';
 const router = express.Router();
 
 // Configure Cloudinary
+console.log('Configuring Cloudinary with:');
+console.log('- cloud_name:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('- api_key present:', !!process.env.CLOUDINARY_API_KEY);
+console.log('- api_secret present:', !!process.env.CLOUDINARY_API_SECRET);
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Verify Cloudinary configuration
+const cloudinaryConfig = cloudinary.config();
+console.log('Cloudinary config result:');
+console.log('- cloud_name:', cloudinaryConfig.cloud_name);
+console.log('- api_key present:', !!cloudinaryConfig.api_key);
+console.log('- api_secret present:', !!cloudinaryConfig.api_secret);
+
 // Configure Cloudinary storage for multer
-const cloudinaryStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'design-tool-assets',
-    resource_type: 'auto', // Automatically detect file type
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'mp4', 'mov', 'avi'],
-  } as any,
-});
+let cloudinaryStorage;
+try {
+  cloudinaryStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'design-tool-assets',
+      resource_type: 'auto', // Automatically detect file type
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'mp4', 'mov', 'avi'],
+    } as any,
+  });
+  console.log('CloudinaryStorage created successfully');
+} catch (error) {
+  console.error('Error creating CloudinaryStorage:', error);
+  cloudinaryStorage = null;
+}
 
 // Fallback to local storage if Cloudinary is not configured
 const localStorage = multer.diskStorage({
@@ -40,8 +59,13 @@ const localStorage = multer.diskStorage({
   }
 });
 
-// Use Cloudinary if configured, otherwise fall back to local storage
-const storage = process.env.CLOUDINARY_CLOUD_NAME ? cloudinaryStorage : localStorage;
+// Use Cloudinary if configured and successfully created, otherwise fall back to local storage
+const storage = (process.env.CLOUDINARY_CLOUD_NAME && cloudinaryStorage) ? cloudinaryStorage : localStorage;
+
+console.log('Storage configuration:');
+console.log('CLOUDINARY_CLOUD_NAME present:', !!process.env.CLOUDINARY_CLOUD_NAME);
+console.log('CloudinaryStorage created:', !!cloudinaryStorage);
+console.log('Using storage type:', (process.env.CLOUDINARY_CLOUD_NAME && cloudinaryStorage) ? 'Cloudinary' : 'Local');
 
 const fileFilter = (req: any, file: any, cb: any) => {
   // Check file type - allow various asset types
@@ -167,6 +191,16 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
     const { originalname, mimetype, size } = req.file;
     const userId = 'unknown'; // Remove user dependency since no auth
 
+    // Debug logging
+    console.log('Upload debug info:');
+    console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+    console.log('CLOUDINARY_API_KEY present:', !!process.env.CLOUDINARY_API_KEY);
+    console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
+    console.log('Storage type being used:', process.env.CLOUDINARY_CLOUD_NAME ? 'cloudinary' : 'local');
+    console.log('File object keys:', Object.keys(req.file));
+    console.log('File path:', req.file.path);
+    console.log('File filename:', req.file.filename);
+
     // Determine asset type
     const assetType = mimetype.startsWith('image/') ? 'image' :
       mimetype.startsWith('video/') ? 'video' :
@@ -176,10 +210,37 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
     let thumbnailUrl: string | undefined;
     let cloudinaryPublicId: string | undefined;
 
-    if (process.env.CLOUDINARY_CLOUD_NAME && (req.file as any).public_id) {
-      // Cloudinary upload
-      cloudinaryPublicId = (req.file as any).public_id;
-      assetUrl = (req.file as any).secure_url;
+    // Check if we're using Cloudinary (simplified logic)
+    const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && 
+                                      process.env.CLOUDINARY_API_KEY && 
+                                      process.env.CLOUDINARY_API_SECRET);
+
+    // Check if the file was actually uploaded to Cloudinary by examining the file properties
+    const fileAny = req.file as any;
+    const isActuallyCloudinaryUpload = isCloudinaryConfigured && 
+                                       (fileAny.public_id || fileAny.secure_url || 
+                                        (fileAny.path && !fileAny.path.includes('uploads/assets')));
+
+    console.log('Is Cloudinary configured?', isCloudinaryConfigured);
+    console.log('Is actually Cloudinary upload?', isActuallyCloudinaryUpload);
+    
+    if (isActuallyCloudinaryUpload) {
+      // When using Cloudinary storage, the file object will have cloudinary-specific properties
+      
+      console.log('Cloudinary file properties:');
+      console.log('- public_id:', fileAny.public_id);
+      console.log('- secure_url:', fileAny.secure_url);
+      console.log('- url:', fileAny.url);
+      console.log('- path:', fileAny.path);
+      console.log('- filename:', fileAny.filename);
+      
+      // Cloudinary upload - use the properties provided by multer-storage-cloudinary
+      cloudinaryPublicId = fileAny.public_id;
+      assetUrl = fileAny.secure_url || fileAny.url;
+
+      console.log('Using Cloudinary upload:');
+      console.log('- Final public_id:', cloudinaryPublicId);
+      console.log('- Final URL:', assetUrl);
 
       // Generate thumbnail for images using Cloudinary transformations
       if (assetType === 'image' && cloudinaryPublicId) {
@@ -189,8 +250,11 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
           quality: 'auto',
           format: 'auto'
         });
+        console.log('- Thumbnail URL:', thumbnailUrl);
       }
     } else {
+      console.log('Using local storage fallback');
+      console.log('Reason:', isCloudinaryConfigured ? 'File was not uploaded to Cloudinary' : 'Cloudinary not configured');
       // Local storage
       assetUrl = `/uploads/assets/${req.file.filename}`;
       thumbnailUrl = assetType === 'image' ? assetUrl : undefined;

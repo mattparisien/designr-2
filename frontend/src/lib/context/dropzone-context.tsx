@@ -10,12 +10,15 @@ interface DropZoneContextValue {
     onDragOver: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent, handler?: (files: FileList) => void) => void;
     processFiles: (files: FileList, acceptedTypes?: string[]) => File[];
+    uploadFiles: (files: FileList | File[]) => Promise<void>;
+    isUploading: boolean;
 }
 
 const DropZoneContext = createContext<DropZoneContextValue | undefined>(undefined);
 
 export function DropZoneProvider({ children }: PropsWithChildren) {
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const dragCounter = useRef(0);
     
@@ -102,6 +105,45 @@ export function DropZoneProvider({ children }: PropsWithChildren) {
         e.stopPropagation();
     }, []);
 
+    // Function to upload files using the assets API
+    const uploadFiles = useCallback(async (files: FileList | File[]) => {
+        setIsUploading(true);
+        
+        try {
+            const fileArray = Array.from(files);
+            
+            // Upload each file
+            for (const file of fileArray) {
+                const formData = new FormData();
+                formData.append('asset', file);
+                formData.append('name', file.name);
+                
+                // Use the assets API upload endpoint
+                const response = await fetch('/api/assets/upload', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // Note: Don't set Content-Type when using FormData
+                        // The browser will set it automatically with the boundary
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to upload ${file.name}`);
+                }
+                
+                const result = await response.json();
+                console.log('Asset uploaded successfully:', result);
+            }
+        } catch (error) {
+            console.error('Error uploading files:', error);
+            // You might want to add toast notifications here
+        } finally {
+            setIsUploading(false);
+        }
+    }, []);
+
     const onDrop = useCallback((e: React.DragEvent, handler?: (files: FileList) => void) => {
         e.preventDefault();
         e.stopPropagation();
@@ -110,12 +152,18 @@ export function DropZoneProvider({ children }: PropsWithChildren) {
 
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             console.log('Files dropped:', e.dataTransfer.files);
+            
+            // If a custom handler is provided, use it
             if (handler) {
                 handler(e.dataTransfer.files);
+            } else {
+                // Default behavior: automatically upload files
+                uploadFiles(e.dataTransfer.files);
             }
+            
             e.dataTransfer.clearData();
         }
-    }, []);
+    }, [uploadFiles]);
     
     // Utility function to filter and process dropped files
     const processFiles = useCallback((files: FileList, acceptedTypes?: string[]) => {
@@ -139,7 +187,7 @@ export function DropZoneProvider({ children }: PropsWithChildren) {
     }, []);
 
     return (
-        <DropZoneContext.Provider value={{ isDragging, dropZoneRef, onDragEnter, onDragLeave, onDragOver, onDrop, processFiles }}>
+        <DropZoneContext.Provider value={{ isDragging, dropZoneRef, onDragEnter, onDragLeave, onDragOver, onDrop, processFiles, uploadFiles, isUploading }}>
             {children}
             {isDragging && (
                 <div 
@@ -153,7 +201,16 @@ export function DropZoneProvider({ children }: PropsWithChildren) {
                     <div className="bg-white p-8 rounded-lg shadow-lg text-center">
                         <div className="text-4xl mb-4">📁</div>
                         <h3 className="text-2xl font-semibold mb-2">Drop files here</h3>
-                        <p className="text-gray-500">Drop your files to upload them</p>
+                        <p className="text-gray-500">Drop your files to upload them as assets</p>
+                    </div>
+                </div>
+            )}
+            {isUploading && (
+                <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center pointer-events-none">
+                    <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+                        <div className="text-4xl mb-4">⏳</div>
+                        <h3 className="text-2xl font-semibold mb-2">Uploading...</h3>
+                        <p className="text-gray-500">Please wait while your files are being uploaded</p>
                     </div>
                 </div>
             )}

@@ -1,7 +1,7 @@
 "use client"
 
 import { Toolbar, ToolbarButton, ToolbarIcon, ToolbarLabel, ToolbarSection } from "@/app/(routes)/editor/[id]/components/Toolbar/index";
-import { useSelection } from "@/lib/context/selection"
+import { useSelection } from "@/lib/context/selection-context"
 import { cn } from "@/lib/utils"
 import { Folder, Loader2, Trash2, X } from "lucide-react"
 import { useState } from "react"

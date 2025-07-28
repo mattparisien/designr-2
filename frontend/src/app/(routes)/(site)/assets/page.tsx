@@ -5,7 +5,7 @@
 
 import { EntityGrid } from "@/components/EntityGrid";
 import { assetsAPI } from "@/lib/api/index";
-import { SelectionProvider } from "@/lib/context/selection";
+import { SelectionProvider } from "@/lib/context/selection-context";
 import { type Asset } from "@/lib/types/api";
 import type { EntityConfig } from "@/lib/types/grid";
 import type { SelectionConfig, SelectionItem } from "@/lib/types/config";

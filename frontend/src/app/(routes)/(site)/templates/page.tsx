@@ -5,7 +5,7 @@
 
 import { EntityGrid } from "@/components/EntityGrid";
 import { compositionAPI } from "@/lib/api/index";
-import { SelectionProvider } from "@/lib/context/selection";
+import { SelectionProvider } from "@/lib/context/selection-context";
 import { ByRole, Composition } from "@/lib/types/api"; // helper: export type ByRole<R extends Role> = Extract<Composition, { role: R }>
 import type { SelectionConfig } from "@/lib/types/config";
 import type { EntityConfig } from "@/lib/types/grid";

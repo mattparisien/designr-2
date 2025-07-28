@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
-import { useSelection } from "@/lib/context/selection";
+import { useSelection } from "@/lib/context/selection-context";
 import { SelectionCheckbox } from "./SelectionCheckbox";
 import { EditableTitle } from "./EditableTitle";
 import { CardMedia } from "./CardMedia";

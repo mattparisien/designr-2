@@ -75,6 +75,15 @@ const compositionAPI = new CollectionAPI<
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
 >(apiClient, "/compositions", { list: "compositions", total: "totalCompositions" });
 
+
+// const assetsAPI = new CollectionAPI<
+//   Asset,
+//   "assets",
+//   "totalAssets",
+//   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
+// >(apiClient, "/assets", { list: "assets", total: "totalAssets" });
+
+
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);
 
