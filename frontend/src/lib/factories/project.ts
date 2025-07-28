@@ -11,7 +11,6 @@ export const createProject = (formatKey: string, customTitle?: string): CreatePr
     return {
         title: customTitle || format.name,
         description: `A ${format.name.toLowerCase()} project`,
-        templateId: "", // No template for new projects
         pages: [
             {
                 templatePageIndex: 0,

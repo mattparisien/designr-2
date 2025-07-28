@@ -38,7 +38,7 @@ const ProjectSchema = new Schema<ProjectDocument>(
   {
     title: { type: String, required: true },
     description: String,
-    templateId: { type: Schema.Types.ObjectId, ref: 'Template', required: true },
+    templateId: { type: Schema.Types.ObjectId, ref: 'Template', required: false },
     ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
     pages: { type: [PageContentSchema], default: [] },
   },

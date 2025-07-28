@@ -9,7 +9,7 @@ export interface Project {
   _id: string;
   title: string;
   description?: string;
-  templateId: string;
+  templateId?: string;
   ownerId?: string;
   pages: PageContent[];
   createdAt: string;
