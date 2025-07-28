@@ -464,16 +464,12 @@ const EditorSidebar = () => {
         }
     }, [activeItem?.id, fetchAssets]);
 
-    const handleItemMouseEnter = useCallback((item: NavigationItem) => {
-        openSidebar(item.id);
-    }, []);
-
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
         <Sidebar
             navigation={EDITOR_NAVIGATION}
             onItemClick={handleItemClick}
-            onItemMouseEnter={handleItemMouseEnter}
+            activeItem={sidebar.activeItemId || undefined}
         />
         {(sidebar.isOpen || sidebarPanel.isOpen) && (
             <EditorSidebarPanel

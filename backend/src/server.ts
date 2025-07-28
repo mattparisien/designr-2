@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 import authRoutes from './routes/auth';
 import brandRoutes from './routes/brands';
-import templateRoutes from './routes/templates';
+import templateRoutes from './routes/template';
 import projectRoutes from './routes/projects';
 import compositionRoutes from './routes/compositions';
 import aiRoutes from './routes/ai';
@@ -86,3 +86,5 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+export default app;

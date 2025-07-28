@@ -8,6 +8,7 @@ import * as React from "react"
 import { forwardRef, useCallback, useMemo, useState } from "react"
 import { type Navigation, type NavigationItem } from "@/lib/types/navigation"
 import * as LucideIcons from "lucide-react"
+import { usePathname } from "next/navigation"
 
 
 interface SidebarProps {
@@ -72,18 +73,36 @@ const MenuButton = (props: MenuButtonProps) => {
 
     const { onClick, isActive, level, icon, label, href } = props;
 
+    const buttonClass = cn(
+        "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer gap-1.5",
+        isActive
+            ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
+            : "text-black",
+        level > 0 && "ml-4"
+    );
+
+    if (href) {
+        return <Button
+            as="NextLink"
+            variant="ghost"
+            onClick={onClick}
+            className={buttonClass}
+            {...{ href }} // Pass href as a spread prop to avoid type issues
+        >
+            <span>
+                {icon}
+            </span>
+            <span>
+                {label}
+            </span>
+        </Button>
+    }
+
     return <Button
-        as={href ? "NextLink" : "button"}
-        href={href}
         variant="ghost"
         onClick={onClick}
-        className={cn(
-            "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-            "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer gap-1.5",
-            isActive
-                ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
-                : "text-black",
-            level > 0 && "ml-4")}
+        className={buttonClass}
     >
         <span>
             {icon}
@@ -105,9 +124,19 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         isDefaultCollapsed = false,
     }, ref) => {
 
-        const [activeItemId, setActiveItemId] = useState<string | null>(activeItem || null);
-        const [isCollapsed, setIsCollapsed] = useState<boolean>(isDefaultCollapsed);
-        const [searchQuery, setSearchQuery] = useState<string>("")
+        const pathname = usePathname();
+        const [isCollapsed] = useState<boolean>(isDefaultCollapsed);
+        const [searchQuery] = useState<string>("")
+
+        // Determine active item based on activeItem prop or current pathname
+        const activeItemId = useMemo(() => {
+            if (activeItem) return activeItem;
+            
+            // If no activeItem prop, try to match based on href in navigation items
+            const allItems = navigation.sections.flatMap(section => section.items);
+            const matchedItem = allItems.find(item => item.href && pathname.includes(item.href));
+            return matchedItem?.id || null;
+        }, [activeItem, pathname, navigation]);
 
         const filteredSections = useMemo(() => {
             if (!searchQuery) return navigation.sections;
@@ -121,12 +150,10 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         }, [navigation, searchQuery])
 
         const handleItemClick = useCallback((item: NavigationItem) => {
-            setActiveItemId(item.id);
             onItemClick?.(item);
         }, [onItemClick]);
 
         const handleItemMouseEnter = useCallback((item: NavigationItem) => {
-            setActiveItemId(item.id);
             onItemMouseEnter?.(item);
         }, [onItemMouseEnter]);
 
@@ -192,9 +219,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 .join("");
 
             // Dynamically access the icon component
-            const DynamicIcon = (LucideIcons as Record<string, React.ElementType>)[pascalCaseName];
+            const DynamicIcon = (LucideIcons as Record<string, unknown>)[pascalCaseName] as LucideIcon;
 
-            if (DynamicIcon) {
+            if (DynamicIcon && typeof DynamicIcon === 'function') {
                 return DynamicIcon;
             }
 
@@ -202,7 +229,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             return Plus;
         }
 
-        return null;
+        // If item.icon is already a LucideIcon component, return it directly
+        if (item.icon && typeof item.icon === 'function') {
+            return item.icon as LucideIcon;
+        }
+
+        return Plus;
     }, [item.icon]);
 
     return (
@@ -212,7 +244,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 level={level}
                 label={item.title}
                 href={item.href}
-                icon={<MenuIcon icon={icon || Plus} width="1.2rem" height="1.2rem" />}
+                icon={<MenuIcon icon={icon} width="1.2rem" height="1.2rem" />}
                 isActive={isActive}
             />
             {/* Render children if expanded */}

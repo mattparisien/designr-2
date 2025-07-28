@@ -36,6 +36,11 @@ export const EDITOR_NAVIGATION: Navigation = {
                     title: "Export",
                     icon: "lucide:download"
                 },
+                {
+                    id: "export",
+                    title: "Export",
+                    icon: "lucide:download"
+                },
             ]
         }
     ],

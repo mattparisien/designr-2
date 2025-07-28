@@ -1,191 +1,96 @@
-import express, { Request, Response } from 'express';
-import { Template } from '../models/Template';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import express from 'express';
+import mongoose from 'mongoose';
+import Template, { ITemplate, TemplateCategory } from '../models/Template';
 
 const router = express.Router();
 
-// Helper function to generate a unique slug
-const generateUniqueSlug = (name: string): string => {
-  const baseSlug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-  
-  const timestamp = Date.now();
-  return `${baseSlug}-${timestamp}`;
-};
-
-// Get templates filtered by vibe
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+/* ── Create a new template ───────────────────────────────────── */
+router.post('/', async (req, res) => {
   try {
-    const { vibe, category = 'social-post' } = req.query;
-
-    const filter: any = { isActive: true, category };
-    if (vibe) {
-      filter.vibe = vibe;
-    }
-
-    const templates = await Template.find(filter).sort({ createdAt: -1 });
-
-    res.json({ templates });
-  } catch (error) {
-    console.error('Get templates error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get specific template
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    const template = await Template.findById(id);
-    if (!template) {
-      res.status(404).json({ error: 'Template not found' });
-      return;
-    }
-
-    res.json({ template });
-  } catch (error) {
-    console.error('Get template error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Create template
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { name, category, vibe, width, height, thumbnailUrl, templateData } = req.body;
-
-    const templateName = name || 'Untitled Template';
-    const slug = generateUniqueSlug(templateName);
-
-    const template = new Template({
-      name: templateName,
-      slug: slug,
-      category: category || 'social-post',
-      vibe: vibe || 'minimal',
-      width: width || 1080,
-      height: height || 1080,
-      thumbnailUrl: thumbnailUrl || '',
-      templateData: templateData || {
-        elements: [],
-        backgroundImage: null,
-        backgroundColor: '#ffffff'
-      }
-    });
-
+    const templateData = req.body;
+    const template = new Template(templateData);
     await template.save();
-
-    res.status(201).json({
-      message: 'Template created successfully',
-      template: {
-        _id: template._id,
-        name: template.name,
-        slug: template.slug,
-        category: template.category,
-        vibe: template.vibe,
-        width: template.width,
-        height: template.height
-      }
-    });
+    res.status(201).json(template);
   } catch (error) {
-    console.error('Create template error:', error);
-    res.status(500).json({ error: 'Server error' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('[POST /templates] Error:', error);
+    }
+    res.status(500).json({ message: 'Failed to create template', error });
   }
 });
 
-// Update template
-router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+/* ── Get all templates (with optional filters) ───────────────── */
+router.get('/', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, category, vibe, width, height, thumbnailUrl, templateData } = req.body;
+    const filters: any = {};
 
-    const template = await Template.findById(id);
+    if (typeof req.query.category === 'string' && Object.values(TemplateCategory).includes(req.query.category as TemplateCategory)) {
+      filters.category = req.query.category as TemplateCategory;
+    }
+
+    if (typeof req.query.isPublic === 'string') {
+      filters.isPublic = req.query.isPublic === 'true';
+    }
+
+    const templates = await Template.find(filters).sort({ createdAt: -1 });
+    res.json(templates);
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('[GET /templates] Error:', error);
+    }
+    res.status(500).json({ message: 'Failed to fetch templates' });
+  }
+});
+
+/* ── Get a single template by ID ─────────────────────────────── */
+router.get('/:id', async (req, res) => {
+  try {
+    const template = await Template.findById(req.params.id);
     if (!template) {
-      res.status(404).json({ error: 'Template not found' });
-      return;
+      return res.status(404).json({ message: 'Template not found' });
     }
-
-    // Update fields if provided
-    if (name !== undefined) template.name = name;
-    if (category !== undefined) template.category = category;
-    if (vibe !== undefined) template.vibe = vibe;
-    if (width !== undefined) template.width = width;
-    if (height !== undefined) template.height = height;
-    if (thumbnailUrl !== undefined) template.thumbnailUrl = thumbnailUrl;
-    if (templateData !== undefined) template.templateData = templateData;
-
-    // Update slug if name changed
-    if (name && name !== template.name) {
-      template.slug = generateUniqueSlug(name);
-    }
-
-    await template.save();
-
-    res.json({
-      message: 'Template updated successfully',
-      template: {
-        _id: template._id,
-        name: template.name,
-        slug: template.slug,
-        category: template.category,
-        vibe: template.vibe,
-        width: template.width,
-        height: template.height,
-        updatedAt: template.updatedAt
-      }
-    });
+    res.json(template);
   } catch (error) {
-    console.error('Update template error:', error);
-    res.status(500).json({ error: 'Server error' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(`[GET /templates/${req.params.id}] Error:`, error);
+    }
+    res.status(500).json({ message: 'Failed to fetch template' });
   }
 });
 
-// Bulk delete templates
-router.delete('/bulk', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+/* ── Update a template ───────────────────────────────────────── */
+router.put('/:id', async (req, res) => {
   try {
-    console.log('Bulk delete request body:', req.body);
-    
-    // Handle different possible formats the frontend might send
-    const templateIds = req.body.templateIds || req.body.ids || req.body;
-    
-    console.log('Extracted templateIds:', templateIds);
-
-    if (!templateIds) {
-      console.log('No templateIds found in request');
-      res.status(400).json({ error: 'Template IDs are required' });
-      return;
+    const updatedTemplate = await Template.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedTemplate) {
+      return res.status(404).json({ message: 'Template not found' });
     }
-
-    // Ensure it's an array
-    const idsArray = Array.isArray(templateIds) ? templateIds : [templateIds];
-    
-    if (idsArray.length === 0) {
-      console.log('Empty templateIds array');
-      res.status(400).json({ error: 'At least one template ID is required' });
-      return;
-    }
-
-    console.log('Attempting to delete templates with IDs:', idsArray);
-
-    // Delete templates with the provided IDs
-    const deleteResult = await Template.deleteMany({
-      _id: { $in: idsArray }
-    });
-
-    console.log('Delete result:', deleteResult);
-
-    res.json({
-      message: `${deleteResult.deletedCount} template(s) deleted successfully`,
-      deletedCount: deleteResult.deletedCount,
-      requestedCount: idsArray.length
-    });
+    res.json(updatedTemplate);
   } catch (error) {
-    console.error('Bulk delete templates error:', error);
-    res.status(500).json({ error: 'Server error' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(`[PUT /templates/${req.params.id}] Error:`, error);
+    }
+    res.status(500).json({ message: 'Failed to update template' });
+  }
+});
+
+/* ── Delete a template ───────────────────────────────────────── */
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletedTemplate = await Template.findByIdAndDelete(req.params.id);
+    if (!deletedTemplate) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    res.json({ message: 'Template deleted' });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(`[DELETE /templates/${req.params.id}] Error:`, error);
+    }
+    res.status(500).json({ message: 'Failed to delete template' });
   }
 });
 

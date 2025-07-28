@@ -4,7 +4,7 @@ export interface Navigation {
   title: string
   sections: {
     id: string;
-    items: NavigationItem[]
+    items: NavigationItem[],
   }[]
 }
 
