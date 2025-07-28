@@ -5,14 +5,13 @@ import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Asset from '../models/Asset';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = express.Router();
 
-// Configure Cloudinary
-console.log('Configuring Cloudinary with:');
-console.log('- cloud_name:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('- api_key present:', !!process.env.CLOUDINARY_API_KEY);
-console.log('- api_secret present:', !!process.env.CLOUDINARY_API_SECRET);
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -32,11 +31,20 @@ let cloudinaryStorage;
 try {
   cloudinaryStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-      folder: 'design-tool-assets',
-      resource_type: 'auto', // Automatically detect file type
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'mp4', 'mov', 'avi'],
-    } as any,
+    params: (req, file) => {
+      // Generate a unique public_id using timestamp and random number
+      const timestamp = Date.now();
+      const randomId = Math.round(Math.random() * 1E9);
+      const fileExtension = path.extname(file.originalname).toLowerCase().replace('.', '');
+      const uniqueId = `asset_${timestamp}_${randomId}`;
+      
+      return {
+        folder: 'design-tool-assets',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'mp4', 'mov', 'avi'],
+        resource_type: 'auto',
+        public_id: uniqueId,
+      };
+    },
   });
   console.log('CloudinaryStorage created successfully');
 } catch (error) {
@@ -87,6 +95,10 @@ const upload = multer({
   }
 });
 
+console.log('Multer upload middleware created');
+console.log('Storage instance type:', storage.constructor.name);
+console.log('Is CloudinaryStorage?', storage.constructor.name === 'CloudinaryStorage');
+
 // Get all assets (only images and graphics for sidebar)
 router.get('/', async (req, res) => {
   try {
@@ -126,7 +138,7 @@ router.get('/', async (req, res) => {
 
     // Get total count for pagination metadata
     const totalItems = await Asset.countDocuments(filter);
-    
+
     // Apply pagination to the query
     const assets = await Asset.find(filter)
       .sort({ createdAt: -1 })
@@ -188,69 +200,52 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
       });
     }
 
+    console.log(req.file, 'the file')
+
     const { originalname, mimetype, size } = req.file;
     const userId = 'unknown'; // Remove user dependency since no auth
-
-    // Debug logging
-    console.log('Upload debug info:');
-    console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-    console.log('CLOUDINARY_API_KEY present:', !!process.env.CLOUDINARY_API_KEY);
-    console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
-    console.log('Storage type being used:', process.env.CLOUDINARY_CLOUD_NAME ? 'cloudinary' : 'local');
-    console.log('File object keys:', Object.keys(req.file));
-    console.log('File path:', req.file.path);
-    console.log('File filename:', req.file.filename);
 
     // Determine asset type
     const assetType = mimetype.startsWith('image/') ? 'image' :
       mimetype.startsWith('video/') ? 'video' :
         mimetype.startsWith('audio/') ? 'audio' : 'document';
 
-    let assetUrl: string;
-    let thumbnailUrl: string | undefined;
+    let assetUrl: string = req.file.path;
+    let thumbnailUrl: string | undefined = req.file.path;
     let cloudinaryPublicId: string | undefined;
 
     // Check if we're using Cloudinary (simplified logic)
-    const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && 
-                                      process.env.CLOUDINARY_API_KEY && 
-                                      process.env.CLOUDINARY_API_SECRET);
+    const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET);
 
     // Check if the file was actually uploaded to Cloudinary by examining the file properties
     const fileAny = req.file as any;
-    const isActuallyCloudinaryUpload = isCloudinaryConfigured && 
-                                       (fileAny.public_id || fileAny.secure_url || 
-                                        (fileAny.path && !fileAny.path.includes('uploads/assets')));
+    const hasCloudinaryProperties = true;
+    if (hasCloudinaryProperties) {
 
-    console.log('Is Cloudinary configured?', isCloudinaryConfigured);
-    console.log('Is actually Cloudinary upload?', isActuallyCloudinaryUpload);
-    
-    if (isActuallyCloudinaryUpload) {
-      // When using Cloudinary storage, the file object will have cloudinary-specific properties
-      
-      console.log('Cloudinary file properties:');
-      console.log('- public_id:', fileAny.public_id);
-      console.log('- secure_url:', fileAny.secure_url);
-      console.log('- url:', fileAny.url);
-      console.log('- path:', fileAny.path);
-      console.log('- filename:', fileAny.filename);
-      
-      // Cloudinary upload - use the properties provided by multer-storage-cloudinary
-      cloudinaryPublicId = fileAny.public_id;
-      assetUrl = fileAny.secure_url || fileAny.url;
+      // For CloudinaryStorage, 'path' contains the URL and 'filename' contains the public_id
+      cloudinaryPublicId = fileAny.filename || fileAny.public_id;
+      assetUrl = fileAny.path || fileAny.secure_url || fileAny.url;
 
-      console.log('Using Cloudinary upload:');
-      console.log('- Final public_id:', cloudinaryPublicId);
-      console.log('- Final URL:', assetUrl);
+      // Validate that we have a URL
+      if (!assetUrl) {
+        console.error('ERROR: No URL found in Cloudinary file object!');
+        console.error('File object keys:', Object.keys(fileAny));
+        throw new Error('Cloudinary upload succeeded but no URL was provided');
+      }
 
       // Generate thumbnail for images using Cloudinary transformations
       if (assetType === 'image' && cloudinaryPublicId) {
-        thumbnailUrl = cloudinary.url(cloudinaryPublicId, {
-          width: 150,
-          crop: 'fit',
-          quality: 'auto',
-          format: 'auto'
-        });
-        console.log('- Thumbnail URL:', thumbnailUrl);
+        console.log('yoooo!')
+        thumbnailUrl = assetUrl;
+        // thumbnailUrl = cloudinary.url(cloudinaryPublicId, {
+        //   width: 150,
+        //   crop: 'fit',
+        //   quality: 'auto',
+        //   format: 'auto'
+        // });
+        // console.log('- Thumbnail URL:', thumbnailUrl);
       }
     } else {
       console.log('Using local storage fallback');
@@ -259,6 +254,21 @@ router.post('/upload', upload.single('asset'), async (req: express.Request, res)
       assetUrl = `/uploads/assets/${req.file.filename}`;
       thumbnailUrl = assetType === 'image' ? assetUrl : undefined;
     }
+
+    // Final validation before saving
+    if (!assetUrl) {
+      console.error('CRITICAL ERROR: assetUrl is still undefined!');
+      console.error('File object:', JSON.stringify(req.file, null, 2));
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to determine asset URL'
+      });
+    }
+
+    console.log('Final asset data before saving:');
+    console.log('- URL:', assetUrl);
+    console.log('- Public ID:', cloudinaryPublicId);
+    console.log('- Thumbnail:', thumbnailUrl);
 
     // Create new asset in database
     const newAsset = new Asset({
@@ -297,9 +307,9 @@ router.delete('/bulk', async (req, res) => {
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'ids array is required and must not be empty' 
+        error: 'ids array is required and must not be empty'
       });
     }
 
@@ -339,9 +349,9 @@ router.delete('/bulk', async (req, res) => {
     });
   } catch (error) {
     console.error('Error bulk deleting assets:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Failed to delete assets' 
+      error: 'Failed to delete assets'
     });
   }
 });

@@ -1,10 +1,9 @@
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
 import { useSelection } from "@/lib/context/selection-context";
-import { SelectionCheckbox } from "./SelectionCheckbox";
-import { EditableTitle } from "./EditableTitle";
+import { useState } from "react";
 import { CardMedia } from "./CardMedia";
-import { Ellipsis } from "lucide-react";
+import { EditableTitle } from "./EditableTitle";
+import { SelectionCheckbox } from "./SelectionCheckbox";
 
 interface InteractiveCardProps {
     id: string;
@@ -16,6 +15,7 @@ interface InteractiveCardProps {
     subtitleLeft?: string;
     subtitleRight?: string;
     disableClick?: boolean; // if true, clicking does nothing
+    objectFit?: "none" | "cover" | "contain" | "fill";
     onClick: () => void;
     onSelect?: (id: string, isSelected: boolean) => void;
     onTitleChange?: (id: string, newTitle: string) => void;
@@ -29,6 +29,7 @@ export default function InteractiveCard({
     subtitleLeft,
     subtitleRight,
     disableClick = false,
+    objectFit = "contain",
     onClick,
     onSelect,
     onTitleChange,
@@ -53,6 +54,7 @@ export default function InteractiveCard({
             <CardMedia
                 image={children ? undefined : image}
                 selected={selected}
+                objectFit={objectFit}
             >
                 {children}
             </CardMedia>

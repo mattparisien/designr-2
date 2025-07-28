@@ -3,16 +3,6 @@
 
 require('dotenv').config({ path: '.env' });
 
-console.log('=== Cloudinary Environment Variables Test ===');
-console.log('Current working directory:', process.cwd());
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('');
-
-console.log('Cloudinary Configuration:');
-console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
-console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
-console.log('');
 
 // Test Cloudinary connection
 const { v2: cloudinary } = require('cloudinary');
@@ -23,11 +13,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-console.log('Cloudinary config object:');
-console.log('cloud_name:', cloudinary.config().cloud_name);
-console.log('api_key:', cloudinary.config().api_key);
-console.log('api_secret present:', !!cloudinary.config().api_secret);
-console.log('');
 
 // Test if Cloudinary is properly configured
 const isConfigured = !!(
