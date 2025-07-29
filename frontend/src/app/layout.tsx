@@ -36,7 +36,7 @@ export default function Layout({
   return (
     <html lang="en" className={LaNord.className}>
       <body
-        className={"antialiased flex"}
+        className={"antialiased flex min-h-screen"}
       >
         {children}
       </body>

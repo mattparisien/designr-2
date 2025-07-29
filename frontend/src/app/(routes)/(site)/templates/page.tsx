@@ -4,6 +4,7 @@
 // Full page using the generic EntityGrid + your Composition union split by role
 
 import { CreateButton } from "@/components/CreateButton";
+import Heading from "@/components/Heading/Heading";
 import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
@@ -13,6 +14,7 @@ import { useInfiniteTemplates } from "@/lib/hooks/useInfiniteTemplates";
 import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 // Define the social media format type
@@ -22,7 +24,6 @@ interface SocialMediaFormat {
   name: string;
   category: string;
 }
-
 
 export default function TemplatesPage() {
 
@@ -35,6 +36,8 @@ export default function TemplatesPage() {
     updateTemplate,
     deleteMultipleTemplates
   } = useTemplateQuery();
+
+  const router = useRouter()
 
   const gridItems = useMemo(() => {
     return templates?.map(template => ({
@@ -60,15 +63,17 @@ export default function TemplatesPage() {
       }
 
       const templateData = createTemplateFactory(item.key, item.label);
-      await createTemplate(templateData);
-  
+      const template = await createTemplate(templateData);
+
+
 
       // Optionally refetch to ensure UI is updated immediately
+      router.push(`/editor/${template._id}`);
       refetch();
     } catch (error) {
       console.error('Failed to create template:', error);
     }
-  }, [createTemplate, createTemplateFactory, refetch]);
+  }, [createTemplate, refetch, router,]);
 
   // CRUD handlers for InteractiveGrid
   const handleDeleteItems = useCallback(async (ids: string[]) => {
@@ -87,11 +92,14 @@ export default function TemplatesPage() {
   return (
     <SelectionProvider>
       <Section>
-        <div className="flex items-center justify-between pb-10">
+        <div className="pt-10 flex items-center justify-between pb-10">
           <div>
-            <h3 className="text-xl font-medium">
+            <Heading
+              as={1}
+              styleLevel={3}
+            >
               My Templates
-            </h3>
+            </Heading>
           </div>
           <CreateButton
             config={selectionConfig}
@@ -107,3 +115,5 @@ export default function TemplatesPage() {
     </SelectionProvider>
   );
 }
+
+

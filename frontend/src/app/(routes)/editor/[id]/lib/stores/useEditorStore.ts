@@ -3,6 +3,7 @@ import { create } from "zustand";
 import React from "react";
 import { DEFAULT_CANVAS_SIZE } from "../constants";
 import { CanvasSize, EditorContextType, Element, Page } from "../types/canvas";
+import { Project, Template } from "@/lib/types/api";
 
 // Define API types for better type safety
 interface APIElement {
@@ -31,12 +32,6 @@ interface APIDesign {
   };
 }
 
-interface APITemplate {
-  title: string;
-  layout?: {
-    pages: APIPage[];
-  };
-}
 
 interface APILayout {
   pages: APIPage[];
@@ -47,10 +42,6 @@ interface APILayout {
   };
 }
 
-interface PresetItem {
-  id: string;
-  [key: string]: unknown;
-}
 
 // Helper function to convert API Page to frontend Page
 const convertAPIPageToFrontend = (apiPage: APIPage): Page => {
@@ -103,7 +94,6 @@ const convertFrontendPageToAPI = (frontendPage: Page): APIPage => {
 // Define the store state interface
 export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   designId: string | null;
-  // Template operations
   templateId: string | null;
   compositionId: string | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
@@ -543,80 +533,42 @@ const useEditorStore = create<EditorState>((set, get) => ({
   loadComposition: async (compositionId: string) => {
 
     try {
+
+      let composition: Project | Template;
+      let role: "project" | "template" | null = null;
+
       // Set loading indicator
       set({ isSaving: true });
 
       // Import the API client
-      const { compositionAPI } = await import('@/lib/api/index');
+      const { projectsAPI, templatesAPI } = await import('@/lib/api/index');
 
       // Get the composition data
-      const composition = await compositionAPI.getById(compositionId);
-      console.log('the composition:', composition);
+      role = "template";
+      composition = await templatesAPI.getById(compositionId);
+
+
       if (!composition) {
-        throw new Error('Composition not found');
+        throw new Error('Template not found. Searching for project...');
       }
 
-      // Add more detailed logging to help debug
-      console.log('Composition loaded:', composition);
-      
-      // Try to get layout data from the composition - check all possible property names
-      let layoutData: APILayout | null = null;
-      
-      // Use type assertion to safely access possible properties
-      const compositionAny = composition as any;
-      
-      // First check the expected property compositionData
-      if (compositionAny.compositionData && typeof compositionAny.compositionData === 'object') {
-        layoutData = compositionAny.compositionData as APILayout;
-        console.log('Found layout data in composition.compositionData:', layoutData);
-      } 
-      // Then try data as fallback
-      else if (composition.data && typeof composition.data === 'object') {
-        layoutData = composition.data as APILayout;
-        console.log('Found layout data in composition.data:', layoutData);
-      }
-      // Finally check if pages array is directly on the composition object
-      else if (compositionAny.pages && Array.isArray(compositionAny.pages)) {
-        layoutData = {
-          pages: compositionAny.pages,
-          canvasSize: compositionAny.canvasSize || DEFAULT_CANVAS_SIZE
-        };
-        console.log('Found pages directly on composition:', layoutData);
-      }
-      
-      // Final check if we have valid layout data
-      if (!layoutData || !layoutData.pages) {
-        console.error('Layout data structure:', composition);
-        throw new Error('Layout data not found in composition');
-      }
-      
-      // Ensure we have a valid pages array
-      if (!Array.isArray(layoutData.pages) || layoutData.pages.length === 0) {
-        console.warn('Pages array is empty or not an array, creating default page');
-        layoutData.pages = [{
-          name: 'Page 1',
-          canvas: { 
-            width: layoutData.canvasSize?.width || DEFAULT_CANVAS_SIZE.width,
-            height: layoutData.canvasSize?.height || DEFAULT_CANVAS_SIZE.height 
-          },
-          background: { type: 'color', value: '#ffffff' },
-          elements: []
-        }];
-      }
-      
-      console.log('Final layoutData with pages:', layoutData);
-      
-      // Convert composition pages to frontend format
-      const frontendPages = layoutData.pages.map(convertAPIPageToFrontend);
+      role = "project";
+      composition = await projectsAPI.getById(compositionId);
 
-      set({
-        designName: composition.name || 'Untitled Composition',
-        pages: frontendPages,
-        currentPageId: frontendPages[0]?.id || '',
-        currentPageIndex: 0,
-        isDesignSaved: true,
-        compositionId: compositionId
-      });
+      if (!composition) {
+        throw new Error('Project not found');
+      }
+
+      
+      
+      // set({
+      //   designName: composition.title || 'Untitled Composition',
+      //   pages: frontendPages,
+      //   currentPageId: frontendPages[0]?.id || '',
+      //   currentPageIndex: 0,
+      //   isDesignSaved: true,
+      //   compositionId: compositionId
+      // });
 
       console.log('Composition loaded successfully');
     } catch (error) {
@@ -648,7 +600,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       const { compositionAPI } = await import('@/lib/api/index');
 
       console.log('About to save composition with data:', layoutData);
-      
+
       // Call the API to update the composition
       // Using multiple properties to ensure compatibility
       const updateData = {
@@ -659,7 +611,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
         updatedAt: new Date().toISOString(),
         thumbnailUrl: thumbnailImage // Include the thumbnail image
       };
-      
+
       console.log('Update payload:', updateData);
       await compositionAPI.update(compositionId, updateData);
 
@@ -742,7 +694,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       // Extract HTML content from the capture element
       const html = captureElement.innerHTML;
-      
+
       // Get computed styles
       const computedStyles = window.getComputedStyle(captureElement);
       const css = Array.from(document.styleSheets)
@@ -793,7 +745,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       }
 
       const result = await response.json();
-      
+
       if (!result.success) {
         console.error('Screenshot generation failed:', result.error);
         return undefined;

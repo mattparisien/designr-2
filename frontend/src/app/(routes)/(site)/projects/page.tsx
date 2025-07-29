@@ -4,6 +4,7 @@
 // Full page using the generic EntityGrid + your Composition union split by role
 
 import { CreateButton } from "@/components/CreateButton";
+import Heading from "@/components/Heading/Heading";
 import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
@@ -12,7 +13,9 @@ import { createProject as createProjectFactory } from "@/lib/factories";
 import { useInfiniteProjects } from "@/lib/hooks/useInfiniteProjects";
 import { useProjectQuery } from "@/lib/hooks/useProjects";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
+import { Project } from "@/lib/types/api";
 import type { SelectionConfig } from "@/lib/types/config";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 // Define the social media format type
@@ -22,7 +25,6 @@ interface SocialMediaFormat {
   name: string;
   category: string;
 }
-
 
 export default function ProjectsPage() {
 
@@ -36,13 +38,16 @@ export default function ProjectsPage() {
     deleteMultipleProjects
   } = useProjectQuery();
 
+  const router = useRouter()
+
+
   const gridItems = useMemo(() => {
     return projects?.map(project => ({
       _id: project._id,
       title: project.title,
       image: { src: "", alt: project.title },
       updatedAt: project.updatedAt,
-      type: project ? "template" : "project",
+      type: "project",
     })) ?? [];
   }, [projects])
 
@@ -60,15 +65,13 @@ export default function ProjectsPage() {
       }
 
       const projectData = createProjectFactory(item.key, item.label);
-      await createProject(projectData);
-
-
-      // Optionally refetch to ensure UI is updated immediately
+      const project: Project = await createProject(projectData);
+      router.push(`/editor/${project._id}`);
       refetch();
     } catch (error) {
       console.error('Failed to create project:', error);
     }
-  }, [createProject, createProjectFactory, refetch]);
+  }, [createProject, refetch, router]);
 
   // CRUD handlers for InteractiveGrid
   const handleDeleteItems = useCallback(async (ids: string[]) => {
@@ -87,11 +90,14 @@ export default function ProjectsPage() {
   return (
     <SelectionProvider>
       <Section>
-        <div className="flex items-center justify-between pb-10">
+        <div className="pt-10 flex items-center justify-between pb-10">
           <div>
-            <h3 className="text-xl font-medium">
+            <Heading
+              as={1}
+              styleLevel={3}
+            >
               My Projects
-            </h3>
+            </Heading>
           </div>
           <CreateButton
             config={selectionConfig}
