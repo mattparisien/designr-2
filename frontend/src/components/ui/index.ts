@@ -1,5 +1,6 @@
 export { Button, buttonVariants, type ButtonProps } from "./button"
 export { Input, type InputProps } from "./input"
+export { Textarea, type TextareaProps } from "./text-area"
 export { ScrollArea, ScrollBar } from "./scroll-area"
 export { Sidebar, type SidebarProps } from "./sidebar"
 export { ColorPicker } from "./color-picker"
