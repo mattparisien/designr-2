@@ -16,19 +16,11 @@ import stripeRoutes from './routes/stripe';
 import telemetryRoutes from './routes/telemetry';
 import fontRoutes from './routes/fonts';
 import assetRoutes from './routes/assets';
+import chatRoutes from "./routes/chat";
 
 // Load environment variables
 dotenv.config();
 
-console.log('Server startup - Environment check:');
-console.log('Current working directory:', process.cwd());
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT);
-console.log('OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
-console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('CLOUDINARY_API_KEY present:', !!process.env.CLOUDINARY_API_KEY);
-console.log('CLOUDINARY_API_SECRET present:', !!process.env.CLOUDINARY_API_SECRET);
-console.log('OPENAI_API_KEY value (first 10 chars):', process.env.OPENAI_API_KEY?.substring(0, 10));
 
 const app = express();
 const PORT = process.env.PORT || 5001; // Changed to 5001 to match frontend expectations
@@ -40,12 +32,6 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting removed for editor functionality
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100 // limit each IP to 100 requests per windowMs
-// });
-// app.use(limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -68,6 +54,7 @@ app.use('/api/compositions', compositionRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/fonts', fontRoutes);
 app.use('/api/assets', assetRoutes);

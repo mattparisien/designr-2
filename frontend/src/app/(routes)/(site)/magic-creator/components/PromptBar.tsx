@@ -4,23 +4,51 @@ import { ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const PromptBar = () => {
+interface PromptBarProps {
+    onSubmit: (prompt: string) => void;
+    placeholder?: string;
+    disabled?: boolean;
+}
+
+const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disabled = false }: PromptBarProps) => {
     const [inputValue, setInputValue] = useState("");
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmedValue = inputValue.trim();
+        if (trimmedValue && !disabled) {
+            onSubmit(trimmedValue);
+            setInputValue(""); // Clear input after submission
+        }
+    };
+
+    const handleButtonClick = () => {
+        const trimmedValue = inputValue.trim();
+        if (trimmedValue && !disabled) {
+            onSubmit(trimmedValue);
+            setInputValue(""); // Clear input after submission
+        }
+    };
 
     return (
         <div className="w-full max-w-xl">
-            <form className="overflow-hidden rounded-[28px] border border-neutral-200 w-full min-h-30">
+            <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-neutral-200 w-full min-h-30">
                 <div className="w-full h-full flex flex-col items-center justify-start">
                     <Textarea 
-                        placeholder="Type your prompt here..." 
+                        placeholder={placeholder} 
                         className="h-full border-0 focus:ring-0 focus:outline-none resize-none p-5" 
                         value={inputValue}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
                         focusNone 
                         borderNone
+                        disabled={disabled}
                     />
                     <div className="w-full flex pb-4 px-4">
-                        <Button className={cn(
+                        <Button 
+                            type="button"
+                            onClick={handleButtonClick}
+                            disabled={disabled || !inputValue.trim()}
+                            className={cn(
                             "ml-auto bg-neutral-300 rounded-full p-1 transition-opacity duration-200",
                             !inputValue.trim() ? "opacity-0 pointer-events-none" : "opacity-100"
                         )} variant="ghost">
