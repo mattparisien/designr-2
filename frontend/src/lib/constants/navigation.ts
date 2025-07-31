@@ -1,6 +1,7 @@
 import { Navigation } from "../types/navigation";
 
 export const SITE_NAVIGATION : Navigation = {
+    id: "site-navigation",
     title: "Site",
     sections: [
         {
@@ -8,31 +9,31 @@ export const SITE_NAVIGATION : Navigation = {
             items: [
                 {
                     id: "projects",
-                    title: "Projects",
+                    label: "Projects",
                     href: "/projects",
                     icon: "lucide:folder-closed"
                 },
                 {
                     id: "templates",
-                    title: "Templates",
+                    label: "Templates",
                     href: "/templates",
                     icon: "lucide:panels-top-left"
                 },
                 {
                     id: "brands",
-                    title: "Brands",
+                    label: "Brands",
                     href: "/brands",
                     icon: "lucide:id-card"
                 },
                 {
                     id: "assets",
-                    title: "Assets",
+                    label: "Assets",
                     href: "/assets",
                     icon: "lucide:image"
                 },
                 {
                     id: "magic-creator",
-                    title: "Magic Creator",
+                    label: "Magic Creator",
                     href: "/magic-creator",
                     icon: "lucide:sparkle"
                 },

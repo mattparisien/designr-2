@@ -228,18 +228,18 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
   );
 };
 
-export const useNavigationContext = () => {
+export const useNavigation = () => {
   const context = useContext(NavigationContext);
   if (!context) {
     throw new Error(
-      'useNavigationContext must be used within a NavigationProvider'
+      'useNavigation must be used within a NavigationProvider'
     );
   }
   return context;
 };
 
 export const useNavigationItems = (items: NavigationItem[]) => {
-  const { getActiveItem, isActiveRoute } = useNavigationContext();
+  const { getActiveItem, isActiveRoute } = useNavigation();
 
   const activeItem = getActiveItem(items);
 
@@ -262,14 +262,14 @@ export const useNavigationItems = (items: NavigationItem[]) => {
   };
 };
 
-export const useNavigation = (navigationId: string) => {
+export const useNavigationById = (navigationId: string) => {
   const {
     navigations,
     getNavigation,
     addNavigation,
     removeNavigation,
     toggleNavigation,
-  } = useNavigationContext();
+  } = useNavigation();
 
   const navigation = getNavigation(navigationId);
   const isVisible = navigation?.isVisible ?? true;

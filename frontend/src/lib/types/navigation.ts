@@ -6,9 +6,18 @@ import type { LucideIcon } from 'lucide-react';
 export interface Navigation {
   id: string;
   title?: string;
-  items: NavigationItem[];
+  sections: NavigationSection[];
   /** Defaults to true if omitted. */
   isVisible?: boolean;
+}
+
+/**
+ * A navigation section within a navigation group.
+ */
+export interface NavigationSection {
+  id: string;
+  title?: string;
+  items: NavigationItem[];
 }
 
 /**
