@@ -155,7 +155,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             return navigation.sections.map(section => ({
                 ...section,
                 items: section.items.filter(item =>
-                    item.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    item.label.toLowerCase().includes(searchQuery.toLowerCase())
                 )
             })).filter(section => section.items.length > 0)
         }, [navigation, searchQuery])
@@ -173,10 +173,10 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                 <ScrollArea className="flex-1">
                     <div className="p-1">
                         {filteredSections.map((section) => (
-                            <div key={section.id} className="mb-6">
+                            <nav key={section.id} className="mb-6">
 
                                 {/* Section Items */}
-                                <div className="space-y-1">
+                                <ul className="space-y-1">
                                     {section.items.map((item) => (
                                         <SidebarItem
                                             isCollapsed={isCollapsed}
@@ -189,8 +189,8 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                                             activeItem={activeItem}
                                         />
                                     ))}
-                                </div>
-                            </div>
+                                </ul>
+                            </nav>
                         ))}
                     </div>
                 </ScrollArea>
@@ -244,11 +244,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     }, [item.icon]);
 
     return (
-        <div onMouseEnter={() => onItemMouseEnter?.(item)}>
+        <li onMouseEnter={() => onItemMouseEnter?.(item)}>
             <MenuButton
                 onClick={handleClick}
                 level={level}
-                label={item.title}
+                label={item.label}
                 href={item.href}
                 icon={<MenuIcon icon={icon} width="1.2rem" height="1.2rem" />}
                 isActive={isActive}
@@ -269,7 +269,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                     ))}
                 </div>
             )}
-        </div>
+        </li>
     )
 }
 

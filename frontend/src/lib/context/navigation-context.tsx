@@ -15,7 +15,7 @@ import { SITE_NAVIGATION } from '../constants';
 interface NavigationState {
   isCollapsed: boolean;
   activeItemId: string | null;
-  navigations: Navigation[];
+  navigation: Navigation | null;
   isLoading: boolean;
 }
 
@@ -23,10 +23,8 @@ type Action =
   | { type: 'TOGGLE_COLLAPSED' }
   | { type: 'SET_COLLAPSED'; payload: boolean }
   | { type: 'SET_ACTIVE_ITEM'; payload: string | null }
-  | { type: 'SET_NAVIGATIONS'; payload: Navigation[] }
-  | { type: 'ADD_NAVIGATION'; payload: Navigation }
-  | { type: 'REMOVE_NAVIGATION'; payload: string }
-  | { type: 'TOGGLE_NAVIGATION_VISIBILITY'; payload: string }
+  | { type: 'SET_NAVIGATION'; payload: Navigation | null }
+  | { type: 'TOGGLE_NAVIGATION_VISIBILITY' }
   | { type: 'SET_LOADING'; payload: boolean };
 
 
@@ -38,23 +36,14 @@ function reducer(state: NavigationState, action: Action): NavigationState {
       return { ...state, isCollapsed: action.payload };
     case 'SET_ACTIVE_ITEM':
       return { ...state, activeItemId: action.payload };
-    case 'SET_NAVIGATIONS':
-      return { ...state, navigations: action.payload };
-    case 'ADD_NAVIGATION':
-      return { ...state, navigations: [...state.navigations, action.payload] };
-    case 'REMOVE_NAVIGATION':
-      return {
-        ...state,
-        navigations: state.navigations.filter(n => n.id !== action.payload),
-      };
+    case 'SET_NAVIGATION':
+      return { ...state, navigation: action.payload };
     case 'TOGGLE_NAVIGATION_VISIBILITY':
       return {
         ...state,
-        navigations: state.navigations.map(nav =>
-          nav.id === action.payload
-            ? { ...nav, isVisible: !nav.isVisible }
-            : nav
-        ),
+        navigation: state.navigation 
+          ? { ...state.navigation, isVisible: !state.navigation.isVisible }
+          : null
       };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
@@ -67,10 +56,8 @@ interface NavigationContextType extends NavigationState {
   toggleCollapsed: () => void;
   setCollapsed: (collapsed: boolean) => void;
   setActiveItem: (id: string | null) => void;
-  setNavigations: (navigations: Navigation[]) => void;
-  addNavigation: (navigation: Navigation) => void;
-  removeNavigation: (navigationId: string) => void;
-  toggleNavigation: (navigationId: string) => void;
+  setNavigation: (navigation: Navigation | null) => void;
+  toggleNavigationVisibility: () => void;
 
   navigateTo: (href: string, replace?: boolean) => void;
   goBack: () => void;
@@ -79,7 +66,6 @@ interface NavigationContextType extends NavigationState {
 
   isActiveRoute: (href: string) => boolean;
   getActiveItem: (items: NavigationItem[]) => NavigationItem | null;
-  getNavigation: (navigationId: string) => Navigation | null;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(
@@ -89,7 +75,7 @@ const NavigationContext = createContext<NavigationContextType | undefined>(
 const defaultState: NavigationState = {
   isCollapsed: false,
   activeItemId: null,
-  navigations: [SITE_NAVIGATION],
+  navigation: SITE_NAVIGATION,
   isLoading: false,
 };
 
@@ -111,20 +97,12 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
     dispatch({ type: 'SET_ACTIVE_ITEM', payload: id });
   }, []);
 
-  const setNavigations = useCallback((navigations: Navigation[]) => {
-    dispatch({ type: 'SET_NAVIGATIONS', payload: navigations });
+  const setNavigation = useCallback((navigation: Navigation | null) => {
+    dispatch({ type: 'SET_NAVIGATION', payload: navigation });
   }, []);
 
-  const addNavigation = useCallback((navigation: Navigation) => {
-    dispatch({ type: 'ADD_NAVIGATION', payload: navigation });
-  }, []);
-
-  const removeNavigation = useCallback((navigationId: string) => {
-    dispatch({ type: 'REMOVE_NAVIGATION', payload: navigationId });
-  }, []);
-
-  const toggleNavigation = useCallback((navigationId: string) => {
-    dispatch({ type: 'TOGGLE_NAVIGATION_VISIBILITY', payload: navigationId });
+  const toggleNavigationVisibility = useCallback(() => {
+    dispatch({ type: 'TOGGLE_NAVIGATION_VISIBILITY' });
   }, []);
 
   const navigateTo = useCallback(
@@ -177,47 +155,34 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
     [isActiveRoute]
   );
 
-  const getNavigation = useCallback(
-    (navigationId: string): Navigation | null => {
-      return state.navigations.find(n => n.id === navigationId) || null;
-    },
-    [state.navigations]
-  );
-
   const contextValue = useMemo<NavigationContextType>(
     () => ({
       ...state,
       toggleCollapsed,
       setCollapsed,
       setActiveItem,
-      setNavigations,
-      addNavigation,
-      removeNavigation,
-      toggleNavigation,
+      setNavigation,
+      toggleNavigationVisibility,
       navigateTo,
       goBack,
       goForward,
       refresh,
       isActiveRoute,
       getActiveItem,
-      getNavigation,
     }),
     [
       state,
       toggleCollapsed,
       setCollapsed,
       setActiveItem,
-      setNavigations,
-      addNavigation,
-      removeNavigation,
-      toggleNavigation,
+      setNavigation,
+      toggleNavigationVisibility,
       navigateTo,
       goBack,
       goForward,
       refresh,
       isActiveRoute,
       getActiveItem,
-      getNavigation,
     ]
   );
 
@@ -262,25 +227,20 @@ export const useNavigationItems = (items: NavigationItem[]) => {
   };
 };
 
-export const useNavigationById = (navigationId: string) => {
+export const useCurrentNavigation = () => {
   const {
-    navigations,
-    getNavigation,
-    addNavigation,
-    removeNavigation,
-    toggleNavigation,
+    navigation,
+    setNavigation,
+    toggleNavigationVisibility,
   } = useNavigation();
 
-  const navigation = getNavigation(navigationId);
   const isVisible = navigation?.isVisible ?? true;
 
   return {
     navigation,
     isVisible,
     exists: !!navigation,
-    addNavigation,
-    removeNavigation: () => removeNavigation(navigationId),
-    toggleVisibility: () => toggleNavigation(navigationId),
-    allNavigations: navigations,
+    setNavigation,
+    toggleVisibility: toggleNavigationVisibility,
   };
 };
