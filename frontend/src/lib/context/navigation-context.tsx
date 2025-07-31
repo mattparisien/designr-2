@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Navigation, NavigationItem } from '../types/navigation';
+import { SITE_NAVIGATION } from '../constants';
 
 interface NavigationState {
   isCollapsed: boolean;
@@ -28,12 +29,6 @@ type Action =
   | { type: 'TOGGLE_NAVIGATION_VISIBILITY'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean };
 
-const initialState: NavigationState = {
-  isCollapsed: false,
-  activeItemId: null,
-  navigations: [],
-  isLoading: false,
-};
 
 function reducer(state: NavigationState, action: Action): NavigationState {
   switch (action.type) {
@@ -91,7 +86,14 @@ const NavigationContext = createContext<NavigationContextType | undefined>(
   undefined
 );
 
-export const NavigationProvider = ({ children }: { children: ReactNode }) => {
+const defaultState: NavigationState = {
+  isCollapsed: false,
+  activeItemId: null,
+  navigations: [SITE_NAVIGATION],
+  isLoading: false,
+};
+
+export const NavigationProvider = ({ children, initialState = defaultState }: { children: ReactNode, initialState?: NavigationState }) => {
   const router = useRouter();
   const pathname = usePathname();
 
