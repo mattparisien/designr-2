@@ -11,7 +11,7 @@ export interface ChatSessionDocument extends Document {
 
 const ChatSessionSchema = new Schema<ChatSessionDocument>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     title: { type: String, default: 'New Chat' },
     aiModel: { type: String, default: 'gpt-4' },
     messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],

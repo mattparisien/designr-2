@@ -1,19 +1,25 @@
-import { type LucideIcon } from "lucide-react";
+import type { LucideIcon } from 'lucide-react';
 
+/**
+ * A top-level navigation group.
+ */
 export interface Navigation {
-  title: string
-  sections: {
-    id: string;
-    items: NavigationItem[],
-  }[]
+  id: string;
+  title?: string;
+  items: NavigationItem[];
+  /** Defaults to true if omitted. */
+  isVisible?: boolean;
 }
 
+/**
+ * An individual navigation entry; can nest recursively.
+ */
 export interface NavigationItem {
-  id: string
-  title: string
-  href?: string
-  children?: NavigationItem[]
-  icon?: string | LucideIcon
+  id: string;
+  label: string;
+  href: string;
+  children?: NavigationItem[];
+  icon?: string | LucideIcon;
+  badge?: string | number;
+  isExternal?: boolean;
 }
-
-

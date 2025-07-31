@@ -71,7 +71,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
     dispatch({ type: 'send_start', message: userMsg });
     try {
-      const res = await fetch('/api/ai', {
+      const res = await fetch('/api/chat/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: content }),

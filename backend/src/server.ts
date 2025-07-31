@@ -1,22 +1,20 @@
-import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import express from 'express';
+import helmet from 'helmet';
 import mongoose from 'mongoose';
 
+import assetRoutes from './routes/assets';
 import authRoutes from './routes/auth';
 import brandRoutes from './routes/brands';
-import templateRoutes from './routes/template';
-import projectRoutes from './routes/projects';
+import chatRoutes from "./routes/chat";
 import compositionRoutes from './routes/compositions';
-import aiRoutes from './routes/ai';
 import exportRoutes from './routes/export';
+import fontRoutes from './routes/fonts';
+import projectRoutes from './routes/projects';
 import stripeRoutes from './routes/stripe';
 import telemetryRoutes from './routes/telemetry';
-import fontRoutes from './routes/fonts';
-import assetRoutes from './routes/assets';
-import chatRoutes from "./routes/chat";
+import templateRoutes from './routes/template';
 
 // Load environment variables
 dotenv.config();
@@ -51,7 +49,6 @@ app.use('/api/brand', brandRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/compositions', compositionRoutes);
-app.use('/api/ai', aiRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/chat', chatRoutes);
