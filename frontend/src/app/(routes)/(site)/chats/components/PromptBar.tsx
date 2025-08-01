@@ -32,7 +32,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
     };
 
     return (
-        <div className={cn("w-full max-w-xl", className)}>
+        <div className={cn("w-full max-w-[var(--thread-max-width)]", className)}>
             <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-neutral-200 w-full min-h-30">
                 <div className="w-full h-full flex flex-col items-center justify-start">
                     <Textarea 

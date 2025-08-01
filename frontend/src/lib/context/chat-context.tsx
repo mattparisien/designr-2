@@ -22,6 +22,8 @@ type Action =
   | { type: 'send_error'; error: string }
   | { type: 'set_session'; sessionId: string }
   | { type: 'load_messages'; messages: ChatMessage[] }
+  | { type: 'stream_chunk'; content: string }
+  | { type: 'stream_complete'; sessionId?: string }
   | { type: 'clear' };
 
 function chatReducer(state: State, action: Action): State {
@@ -58,6 +60,39 @@ function chatReducer(state: State, action: Action): State {
         loading: false,
         error: undefined,
       };
+    case 'stream_chunk':
+      // Update the last message (assistant message) with streaming content
+      const messages = [...state.messages];
+      const lastMessageIndex = messages.length - 1;
+      const lastMessage = messages[lastMessageIndex];
+      
+      if (lastMessage && lastMessage.role === 'assistant') {
+        // Create a new message object to avoid mutation
+        messages[lastMessageIndex] = {
+          ...lastMessage,
+          content: lastMessage.content + action.content
+        };
+      } else {
+        // Create a new assistant message if one doesn't exist
+        messages.push({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: action.content,
+          timestamp: Date.now(),
+        });
+      }
+      
+      return {
+        ...state,
+        messages,
+        loading: true, // Keep loading during stream
+      };
+    case 'stream_complete':
+      return {
+        ...state,
+        loading: false,
+        currentSessionId: action.sessionId || state.currentSessionId,
+      };
     case 'clear':
       return { messages: [], loading: false, error: undefined, currentSessionId: undefined };
     default:
@@ -85,7 +120,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   });
 
   // Use the chat session query hook for managing sessions and AI interactions
-  const { createChatSession, chatSessions, isLoading, askAI, isAskingAI, getSessionWithMessages } = useChatSessionQuery();
+  const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages } = useChatSessionQuery();
 
   const setCurrentSession = useCallback((sessionId: string) => {
     dispatch({ type: 'set_session', sessionId });
@@ -120,6 +155,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       timestamp: Date.now(),
     };
     dispatch({ type: 'send_start', message: userMsg });
+    
     try {
       let sessionId = state.currentSessionId;
 
@@ -138,33 +174,34 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         console.log("Using existing session ID:", sessionId);
       }
 
-
-      // Use the askAI function from the hook
-      const askData = await askAI({
+      // Use streaming API - don't create assistant message here, let stream chunks handle it
+      await streamAI({
         chatSessionId: sessionId,
         content: content,
         model: 'gpt-4o'
+      }, (chunk) => {
+        if (chunk.type === 'chunk' && chunk.content) {
+          dispatch({ type: 'stream_chunk', content: chunk.content });
+        } else if (chunk.type === 'complete') {
+          // Stream is complete, stop loading
+          dispatch({ type: 'stream_complete', sessionId });
+        } else if (chunk.type === 'error') {
+          dispatch({ type: 'send_error', error: chunk.message || 'Streaming failed' });
+        }
       });
 
-      const assistantMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: askData.assistantMessage?.content || 'No response received',
-        timestamp: Date.now(),
-      };
-      dispatch({ type: 'send_success', message: assistantMsg, sessionId });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
       dispatch({ type: 'send_error', error: errorMessage });
     }
-  }, [createChatSession, state.currentSessionId, setCurrentSession, askAI]);
+  }, [createChatSession, state.currentSessionId, setCurrentSession, streamAI]);
 
   const clear = useCallback(() => dispatch({ type: 'clear' }), []);
 
   return (
     <ChatContext.Provider value={{ 
       ...state, 
-      loading: state.loading || isAskingAI, // Include AI loading state
+      loading: state.loading, // Remove isAskingAI since we're using streaming now
       send, 
       clear, 
       setCurrentSession,

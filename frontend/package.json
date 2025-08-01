@@ -67,6 +67,7 @@
     "@storybook/nextjs": "^9.0.15",
     "@storybook/nextjs-vite": "^9.0.15",
     "@storybook/react-vite": "^9.0.15",
+    "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4",
     "@types/fabric": "^5.3.10",
     "@types/node": "^20",

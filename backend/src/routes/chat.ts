@@ -1,7 +1,7 @@
 import express from 'express';
 import ChatSession from '../models/ChatSession';
 import Message from '../models/Message';
-import { generateSimpleResponse, generateAIResponse, type ChatMessage as AIChatMessage } from '../services/aiService';
+import { generateSimpleResponse, generateAIResponse, generateAIResponseStream, type ChatMessage as AIChatMessage } from '../services/aiService';
 
 const router = express.Router();
 
@@ -152,6 +152,123 @@ router.post('/ask', async (req, res) => {
       message: 'Failed to generate AI response',
       error: error.message 
     });
+  }
+});
+
+/* ── Ask AI for a streaming response ──────────────── */
+router.post('/ask/stream', async (req, res) => {
+  try {
+    const { chatSessionId, content, model = 'gpt-4o' } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ message: 'Content is required' });
+    }
+
+    // Set up Server-Sent Events headers
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    });
+
+    // Save user message first
+    const userMessage = await Message.create({
+      chatSessionId: chatSessionId || null,
+      role: 'user',
+      content,
+    });
+
+    let conversationHistory: AIChatMessage[] = [
+      {
+        role: 'system',
+        content: 'You are a helpful AI assistant. Provide clear, concise, and helpful responses based on the conversation history.'
+      }
+    ];
+
+    if (chatSessionId) {
+      // Update session with user message
+      await ChatSession.findByIdAndUpdate(chatSessionId, {
+        $push: { messages: userMessage._id },
+        $set: { updatedAt: new Date() }
+      });
+
+      // Get the conversation history
+      const session = await ChatSession.findById(chatSessionId).populate('messages');
+      if (session) {
+        const messages = session.messages.slice(-20) as any[];
+        messages.forEach((msg: any) => {
+          if (msg.role === 'user' || msg.role === 'assistant') {
+            conversationHistory.push({
+              role: msg.role,
+              content: msg.content
+            });
+          }
+        });
+      }
+    }
+
+    // Add the new user message
+    conversationHistory.push({
+      role: 'user',
+      content
+    });
+
+    let fullResponse = '';
+    let totalTokens = 0;
+
+    // Generate streaming AI response
+    for await (const chunk of generateAIResponseStream(conversationHistory, model)) {
+      if (!chunk.done) {
+        fullResponse += chunk.content;
+        res.write(JSON.stringify({
+          type: 'chunk',
+          content: chunk.content
+        }) + '\n');
+      } else {
+        // Final chunk with usage info
+        if (chunk.usage) {
+          totalTokens = chunk.usage.total_tokens;
+        }
+        
+        // Save AI response to database
+        const assistantMessage = await Message.create({
+          chatSessionId: chatSessionId || null,
+          role: 'assistant',
+          content: fullResponse,
+          tokenCount: totalTokens
+        });
+
+        if (chatSessionId) {
+          // Update session with AI message
+          await ChatSession.findByIdAndUpdate(chatSessionId, {
+            $push: { messages: assistantMessage._id },
+            $set: { updatedAt: new Date() }
+          });
+        }
+
+        // Send final message with complete response data
+        res.write(JSON.stringify({
+          type: 'complete',
+          userMessage,
+          assistantMessage,
+          usage: chunk.usage
+        }) + '\n');
+        
+        res.end();
+        return;
+      }
+    }
+
+  } catch (error: any) {
+    console.error('[POST /ask/stream] Error:', error);
+    res.write(JSON.stringify({
+      type: 'error',
+      message: 'Failed to generate AI response',
+      error: error.message
+    }) + '\n');
+    res.end();
   }
 });
 

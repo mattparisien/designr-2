@@ -30,6 +30,70 @@ export interface AIResponse {
   };
 }
 
+export interface StreamChunk {
+  content: string;
+  done: boolean;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+/**
+ * Generate AI response using OpenAI's chat completion API with streaming
+ */
+export async function* generateAIResponseStream(
+  messages: ChatMessage[],
+  model: string = 'gpt-4o'
+): AsyncGenerator<StreamChunk, void, unknown> {
+  const client = getOpenAIClient();
+  
+  if (!client) {
+    throw new Error('OpenAI client not available. Please check your API key configuration.');
+  }
+
+  try {
+    const stream = await client.chat.completions.create({
+      model,
+      messages,
+      temperature: 0.7,
+      max_tokens: 2000,
+      stream: true,
+    });
+
+    let fullContent = '';
+    
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta;
+      
+      if (delta?.content) {
+        fullContent += delta.content;
+        yield {
+          content: delta.content,
+          done: false,
+        };
+      }
+      
+      // Check if this is the final chunk
+      if (chunk.choices[0]?.finish_reason) {
+        yield {
+          content: '',
+          done: true,
+          usage: chunk.usage ? {
+            prompt_tokens: chunk.usage.prompt_tokens,
+            completion_tokens: chunk.usage.completion_tokens,
+            total_tokens: chunk.usage.total_tokens,
+          } : undefined,
+        };
+      }
+    }
+  } catch (error: any) {
+    console.error('OpenAI API Error:', error);
+    throw new Error(`AI response generation failed: ${error.message}`);
+  }
+}
+
 /**
  * Generate AI response using OpenAI's chat completion API
  */

@@ -10,6 +10,39 @@ export interface AskAIRequest {
   model?: string;
 }
 
+export interface StreamAIRequest {
+  chatSessionId?: string;
+  content: string;
+  model?: string;
+}
+
+export interface StreamChunk {
+  type: 'chunk' | 'complete' | 'error';
+  content?: string;
+  userMessage?: {
+    _id: string;
+    chatSessionId: string;
+    role: string;
+    content: string;
+    createdAt: string;
+  };
+  assistantMessage?: {
+    _id: string;
+    chatSessionId: string;
+    role: string;
+    content: string;
+    tokenCount?: number;
+    createdAt: string;
+  };
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  message?: string;
+  error?: string;
+}
+
 export interface AskAIResponse {
   userMessage: {
     _id: string;
@@ -212,6 +245,65 @@ export function useChatSessionQuery() {
     }
   });
 
+  // Function for streaming AI responses
+  const streamAI = useCallback(async (
+    request: StreamAIRequest,
+    onChunk: (chunk: StreamChunk) => void
+  ): Promise<void> => {
+    try {
+      const response = await fetch('/api/chat/ask/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start AI stream');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Process complete lines, keep the last incomplete line in buffer
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const chunk: StreamChunk = JSON.parse(line);
+              onChunk(chunk);
+              
+              if (chunk.type === 'complete' || chunk.type === 'error') {
+                return;
+              }
+            } catch (parseError) {
+              console.error('Failed to parse chunk:', parseError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Streaming error:', error);
+      onChunk({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Streaming failed'
+      });
+    }
+  }, []);
+
   return {
     chatSessions: chatSessionsQuery.data || [],
     isLoading: chatSessionsQuery.isLoading,
@@ -223,5 +315,6 @@ export function useChatSessionQuery() {
     askAI: askAIMutation.mutateAsync,
     isAskingAI: askAIMutation.isPending,
     getSessionWithMessages,
+    streamAI,
   };
 }

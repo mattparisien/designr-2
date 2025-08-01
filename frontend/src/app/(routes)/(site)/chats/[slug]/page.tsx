@@ -2,11 +2,12 @@
 import { useChat } from "@/lib/context/chat-context";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const ChatSessionPage = () => {
     const { slug } = useParams();
     const { messages, loadSessionMessages } = useChat();
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (slug && typeof slug === 'string') {
@@ -15,10 +16,17 @@ const ChatSessionPage = () => {
         }
     }, [slug, loadSessionMessages]);
 
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
+
 
     return (
-        <div className="w-full overflow-y-scroll">
-            <div className="w-full flex flex-col flex-1 h-full mt-10 space-y-10 max-w-xl mx-auto">
+        <div ref={scrollContainerRef} className="w-full overflow-y-scroll">
+            <div className="w-full flex flex-col flex-1 h-full mt-10 space-y-10 max-w-[var(--thread-max-width)] mx-auto">
                 {messages.length && messages.map((message) => (
                     <div key={message.id} className={cn("flex", {
                         "justify-end w-full": message.role === "user"
