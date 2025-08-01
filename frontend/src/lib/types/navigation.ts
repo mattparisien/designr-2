@@ -31,4 +31,5 @@ export interface NavigationItem {
   icon?: string | LucideIcon;
   badge?: string | number;
   isExternal?: boolean;
+  onDelete?: (item: NavigationItem) => void;
 }

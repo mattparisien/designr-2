@@ -107,6 +107,7 @@ interface ChatContextType extends State {
   isLoading: boolean; // Add loading state from the hook
   setCurrentSession: (sessionId?: string) => void; // Add method to set current session
   loadSessionMessages: (sessionId: string) => Promise<void>; // Add method to load messages
+  deleteSession: (sessionId: string) => Promise<void>; // Add method to delete a session
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -120,7 +121,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   });
 
   // Use the chat session query hook for managing sessions and AI interactions
-  const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages } = useChatSessionQuery();
+  const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages, deleteChatSession } = useChatSessionQuery();
 
   const setCurrentSession = useCallback((sessionId?: string) => {
     if (sessionId) {
@@ -149,6 +150,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: 'send_error', error: 'Failed to load messages' });
     }
   }, [getSessionWithMessages]);
+
+  const deleteSession = useCallback(async (sessionId: string) => {
+    try {
+      await deleteChatSession(sessionId);
+      
+      // If the deleted session is the current session, clear it
+      if (state.currentSessionId === sessionId) {
+        dispatch({ type: 'clear' });
+      }
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      dispatch({ type: 'send_error', error: 'Failed to delete session' });
+    }
+  }, [deleteChatSession, state.currentSessionId]);
 
   const send = useCallback(async (content: string, createNewSession?: boolean) => {
     console.log("Sending message:", content, "Create new session:", createNewSession);
@@ -210,6 +225,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       clear, 
       setCurrentSession,
       loadSessionMessages,
+      deleteSession,
       chatSessions, 
       isLoading 
     }}>

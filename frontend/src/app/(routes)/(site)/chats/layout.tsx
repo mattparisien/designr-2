@@ -8,10 +8,22 @@ import { useCallback, useEffect, useMemo } from "react";
 import PromptBar from "./components/PromptBar";
 
 const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
-    const { send, loading, error, currentSessionId, chatSessions } = useChat();
+    const { send, loading, error, currentSessionId, chatSessions, deleteSession } = useChat();
 
     const { addNavigationSection, removeNavigationSection } = useNavigation();
     const router = useRouter();
+
+    const handleDeleteSession = useCallback(async (sessionId: string) => {
+        try {
+            await deleteSession(sessionId);
+            // If we deleted the current session, redirect to chats home
+            if (currentSessionId === sessionId) {
+                router.push('/chats');
+            }
+        } catch (error) {
+            console.error('Failed to delete session:', error);
+        }
+    }, [deleteSession, currentSessionId, router]);
 
     const chatNavigation: NavigationSection = useMemo(() => {
         return {
@@ -20,10 +32,13 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
             items: chatSessions.map(session => ({
                 id: session._id,
                 label: session.title || "Chat Session",
-                href: `/chats/${session._id}`
+                href: `/chats/${session._id}`,
+                onDelete: (item: NavigationItem) => {
+                    handleDeleteSession(item.id);
+                }
             }) as NavigationItem)
         };
-    }, [chatSessions]);
+    }, [chatSessions, handleDeleteSession]);
 
 
     useEffect(() => {

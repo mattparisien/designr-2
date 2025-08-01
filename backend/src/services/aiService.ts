@@ -1,6 +1,14 @@
 import OpenAI from 'openai';
 
 // ────────────────────────────────────────────────────────────────
+// AI Service for Design Tool - DESIGN PURPOSES ONLY
+// ────────────────────────────────────────────────────────────────
+// This service provides AI assistance exclusively for design-related
+// tasks including graphic design, branding, visual content creation,
+// and design tool usage. All non-design requests are rejected.
+// ────────────────────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────────────────────
 // OpenAI client setup
 // ────────────────────────────────────────────────────────────────
 let openai: OpenAI | null = null;
@@ -41,7 +49,51 @@ export interface StreamChunk {
 }
 
 /**
- * Generate AI response using OpenAI's chat completion API with streaming
+ * Design-focused system prompt for all AI interactions
+ */
+const DESIGN_SYSTEM_PROMPT = `You are a specialized AI assistant for design and creative projects ONLY.
+
+IMPORTANT RESTRICTIONS:
+- You can ONLY help with design, visual arts, creativity, branding, marketing content, and design tool usage
+- You cannot provide assistance with: programming, coding, technical support, general knowledge, personal advice, medical/legal/financial advice, or any non-design topics
+- If asked about non-design topics, politely redirect the user back to design-related questions
+
+Your expertise includes:
+- Graphic design principles and best practices
+- Color theory, typography, and layout
+- Brand identity and visual branding
+- Marketing copy and content creation
+- Creative direction and visual storytelling
+- Design tool tips and workflows
+- Social media content design
+- Print and digital design formats
+
+Always respond in a helpful, creative, and design-focused manner.`;
+
+/**
+ * Ensures messages include design-focused system prompt
+ */
+function ensureDesignFocus(messages: ChatMessage[]): ChatMessage[] {
+  // Check if there's already a system message
+  const hasSystemMessage = messages.some(msg => msg.role === 'system');
+  
+  if (!hasSystemMessage) {
+    return [
+      { role: 'system', content: DESIGN_SYSTEM_PROMPT },
+      ...messages
+    ];
+  }
+  
+  // Replace existing system message with design-focused one
+  return messages.map(msg => 
+    msg.role === 'system' 
+      ? { role: 'system', content: DESIGN_SYSTEM_PROMPT }
+      : msg
+  );
+}
+
+/**
+ * Generate AI response using OpenAI's chat completion API with streaming - DESIGN PURPOSES ONLY
  */
 export async function* generateAIResponseStream(
   messages: ChatMessage[],
@@ -53,10 +105,13 @@ export async function* generateAIResponseStream(
     throw new Error('OpenAI client not available. Please check your API key configuration.');
   }
 
+  // Ensure design focus in all conversations
+  const designFocusedMessages = ensureDesignFocus(messages);
+
   try {
     const stream = await client.chat.completions.create({
       model,
-      messages,
+      messages: designFocusedMessages,
       temperature: 0.7,
       max_tokens: 2000,
       stream: true,
@@ -95,7 +150,7 @@ export async function* generateAIResponseStream(
 }
 
 /**
- * Generate AI response using OpenAI's chat completion API
+ * Generate AI response using OpenAI's chat completion API - DESIGN PURPOSES ONLY
  */
 export async function generateAIResponse(
   messages: ChatMessage[],
@@ -107,10 +162,13 @@ export async function generateAIResponse(
     throw new Error('OpenAI client not available. Please check your API key configuration.');
   }
 
+  // Ensure design focus in all conversations
+  const designFocusedMessages = ensureDesignFocus(messages);
+
   try {
     const completion = await client.chat.completions.create({
       model,
-      messages,
+      messages: designFocusedMessages,
       temperature: 0.7,
       max_tokens: 2000,
     });
@@ -135,7 +193,7 @@ export async function generateAIResponse(
 }
 
 /**
- * Generate AI response for a simple user prompt
+ * Generate AI response for a simple user prompt - DESIGN PURPOSES ONLY
  */
 export async function generateSimpleResponse(
   userPrompt: string,
@@ -144,7 +202,7 @@ export async function generateSimpleResponse(
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: 'You are a helpful AI assistant. Provide clear, concise, and helpful responses to user questions.'
+      content: DESIGN_SYSTEM_PROMPT
     },
     {
       role: 'user',

@@ -6,10 +6,22 @@ import { cn } from "@/lib/utils"
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   focusNone?: boolean;
   borderNone?: boolean;
+  disableEnterNewLine?: boolean;
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, focusNone, borderNone, ...props }, ref) => {
+  ({ className, focusNone, borderNone, disableEnterNewLine, ...props }, ref) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (disableEnterNewLine && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+      }
+      
+      // Call the original onKeyDown if it exists
+      if (props.onKeyDown) {
+        props.onKeyDown(e);
+      }
+    };
+
     return (
       <textarea
         className={cn(
@@ -22,6 +34,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         ref={ref}
         {...props}
+        onKeyDown={handleKeyDown}
       />
     )
   }

@@ -56,6 +56,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
                         focusNone 
                         borderNone
+                        disableEnterNewLine
                         disabled={disabled}
                     />
                     <div className="w-full flex pb-4 px-4">

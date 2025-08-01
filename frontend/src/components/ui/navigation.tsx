@@ -104,6 +104,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     activeItem,
 }) => {
     const [isExpanded, setIsExpanded] = React.useState(false)
+    const [isHovering, setIsHovering] = React.useState(false)
     const hasChildren = item.children && item.children.length > 0
 
     const handleClick = () => {
@@ -111,6 +112,14 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
             setIsExpanded(!isExpanded)
         }
         onItemClick?.(item)
+    }
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (item.onDelete) {
+            item.onDelete(item)
+        }
     }
 
     const icon = useMemo(() => {
@@ -140,15 +149,37 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     }, [item.icon])
 
     return (
-        <li onMouseEnter={() => onItemMouseEnter?.(item)}>
-            <NavButton
-                onClick={handleClick}
-                level={level}
-                label={item.label}
-                href={item.href}
-                icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
-                isActive={isActive}
-            />
+        <li 
+            onMouseEnter={() => {
+            onItemMouseEnter?.(item)
+                setIsHovering(true)
+            }}
+            onMouseLeave={() => setIsHovering(false)}
+            className="relative group"
+        >
+            <div className="flex items-center">
+                <div className="flex-1">
+                    <NavButton
+                        onClick={handleClick}
+                        level={level}
+                        label={item.label}
+                        href={item.href}
+                        icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
+                        isActive={isActive}
+                    />
+                </div>
+                {/* Delete button - only show on hover and if onDelete exists */}
+                {item.onDelete && isHovering && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDelete}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                    >
+                        <LucideIcons.Trash className="h-4 w-4 text-neutral-500" />
+                    </Button>
+                )}
+            </div>
             {/* Render children if expanded */}
             {hasChildren && isExpanded && (
                 <div className="mt-1 space-y-1">
