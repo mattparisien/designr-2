@@ -16,6 +16,10 @@ const ChatSessionPage = () => {
             setActiveItem(slug);
             loadSessionMessages(slug);
         }
+
+        return () => {
+            setActiveItem(null);
+        }
     }, [slug, loadSessionMessages, setActiveItem]);
 
     // Auto-scroll to bottom when messages change
@@ -29,7 +33,7 @@ const ChatSessionPage = () => {
 
 
     return (
-        <div ref={scrollContainerRef} className="w-full overflow-y-scroll">
+        <div ref={scrollContainerRef} className="w-full h-full overflow-y-scroll">
             <div className="w-full flex flex-col flex-1 h-full mt-10 space-y-10 max-w-[var(--thread-max-width)] mx-auto">
                 {messages.length && messages.map((message) => (
                     <div key={message.id} className={cn("flex", {

@@ -8,6 +8,9 @@ export function middleware(request: NextRequest) {
     if (request.nextUrl.pathname === '/') {
         console.log('Redirecting to /projects');
         return NextResponse.redirect(new URL('/projects', request.url));
+    } else if (request.nextUrl.pathname == "/chats") {
+        console.log('Redirecting to /chats/new');
+        return NextResponse.redirect(new URL('/chats/new', request.url));
     }
 
     // Continue with the request for all other paths

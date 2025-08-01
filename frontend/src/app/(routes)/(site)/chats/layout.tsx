@@ -13,11 +13,6 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     const { addNavigationSection, removeNavigationSection } = useNavigation();
     const router = useRouter();
 
-    useEffect(() => {
-        console.log("Current session ID:", currentSessionId);
-    }, [currentSessionId,])
-
-
     const chatNavigation: NavigationSection = useMemo(() => {
         return {
             id: "chats",
