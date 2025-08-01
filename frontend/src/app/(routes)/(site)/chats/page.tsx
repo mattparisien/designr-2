@@ -1,12 +1,37 @@
 
 "use client";
 import Heading from "@/components/Heading/Heading";
-import PromptBar from "./components/PromptBar";
 import { useChat } from "@/lib/context/chat-context";
-import { useCallback } from "react";
+import { useNavigation } from "@/lib/context/navigation-context";
+import { type NavigationSection } from "@/lib/types/navigation";
+import { useCallback, useEffect, useMemo } from "react";
+import PromptBar from "./components/PromptBar";
 
-const MagicCreatorPage = () => {
+const ChatsPage = () => {
     const { send, loading, error } = useChat();
+
+    const { addNavigationSection, removeNavigationSection } = useNavigation();
+
+    const navigationSection: NavigationSection = useMemo(() => ({
+        id: "chats",
+        items: [
+            {
+                id: "prompt",
+                label: "Prompt",
+                href: "#prompt",
+                icon: "lucide:sparkle",
+            },
+
+        ]
+    }), [])
+
+    useEffect(() => {
+        addNavigationSection(navigationSection);
+
+        return () => {
+            removeNavigationSection(navigationSection.id);
+        }
+    }, [navigationSection, addNavigationSection, removeNavigationSection]);
 
 
     const handleSubmit = useCallback((prompt: string) => {
@@ -23,7 +48,7 @@ const MagicCreatorPage = () => {
                 >
                     What do you want to create today?
                 </Heading>
-                <PromptBar 
+                <PromptBar
                     onSubmit={handleSubmit}
                     disabled={loading}
                     placeholder={loading ? "Generating..." : "Describe what you want to create..."}
@@ -39,4 +64,4 @@ const MagicCreatorPage = () => {
 }
 
 
-export default MagicCreatorPage;
+export default ChatsPage;

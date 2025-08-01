@@ -1,8 +1,7 @@
 import { Navigation } from "../types/navigation";
 
-export const SITE_NAVIGATION : Navigation = {
-    id: "site-navigation",
-    title: "Site",
+export const APP_NAVIGATION : Navigation = {
+    id: "app-navigation",
     sections: [
         {
             id: "main",
@@ -32,9 +31,9 @@ export const SITE_NAVIGATION : Navigation = {
                     icon: "lucide:image"
                 },
                 {
-                    id: "magic-creator",
+                    id: "chats",
                     label: "Magic Creator",
-                    href: "/magic-creator",
+                    href: "/chats",
                     icon: "lucide:sparkle"
                 },
             ],

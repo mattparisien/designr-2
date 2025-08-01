@@ -1,6 +1,7 @@
 import { type Navigation } from "@/lib/types/navigation";
 
 export const EDITOR_NAVIGATION: Navigation = {
+    id: "editor-navigation",
     title: "Editor",
     sections: [
         {
@@ -8,37 +9,38 @@ export const EDITOR_NAVIGATION: Navigation = {
             items: [
                 {
                     id: "design",
-                    title: "Design",
+                    label: "Design",
+                    href: "#design",
                     icon: "lucide:layout-panel-top",
                 },
                 {
                     id: "brand",
-                    title: "Brands",
+                    label: "Brands",
+                    href: "#brand",
                     icon: "lucide:palette",
                 },
                 {
                     id: "shape",
-                    title: "Shapes",
+                    label: "Shapes",
+                    href: "#shape",
                     icon: "lucide:shapes",
                 },
                 {
                     id: "text",
-                    title: "Text",
+                    label: "Text",
+                    href: "#text",
                     icon: "lucide:type"
                 },
                 {
                     id: "assets",
-                    title: "Assets",
+                    label: "Assets",
+                    href: "#assets",
                     icon: "lucide:camera",
                 },
                 {
                     id: "export",
-                    title: "Export",
-                    icon: "lucide:download"
-                },
-                {
-                    id: "export",
-                    title: "Export",
+                    label: "Export",
+                    href: "#export",
                     icon: "lucide:download"
                 },
             ]

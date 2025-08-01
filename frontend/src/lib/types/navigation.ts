@@ -5,7 +5,7 @@ import type { LucideIcon } from 'lucide-react';
  */
 export interface Navigation {
   id: string;
-  title?: string;
+  label?: string;
   sections: NavigationSection[];
   /** Defaults to true if omitted. */
   isVisible?: boolean;
@@ -16,7 +16,7 @@ export interface Navigation {
  */
 export interface NavigationSection {
   id: string;
-  title?: string;
+  label?: string;
   items: NavigationItem[];
 }
 

@@ -9,8 +9,8 @@ import {
   useMemo,
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Navigation, NavigationItem } from '../types/navigation';
-import { SITE_NAVIGATION } from '../constants';
+import { Navigation, NavigationItem, NavigationSection } from '../types/navigation';
+import { APP_NAVIGATION } from '../constants';
 
 interface NavigationState {
   isCollapsed: boolean;
@@ -24,6 +24,8 @@ type Action =
   | { type: 'SET_COLLAPSED'; payload: boolean }
   | { type: 'SET_ACTIVE_ITEM'; payload: string | null }
   | { type: 'SET_NAVIGATION'; payload: Navigation | null }
+  | { type: 'ADD_NAVIGATION_SECTION'; payload: NavigationSection }
+  | { type: 'REMOVE_NAVIGATION_SECTION'; payload: string }
   | { type: 'TOGGLE_NAVIGATION_VISIBILITY' }
   | { type: 'SET_LOADING'; payload: boolean };
 
@@ -38,6 +40,26 @@ function reducer(state: NavigationState, action: Action): NavigationState {
       return { ...state, activeItemId: action.payload };
     case 'SET_NAVIGATION':
       return { ...state, navigation: action.payload };
+    case 'ADD_NAVIGATION_SECTION':
+      return {
+        ...state,
+        navigation: state.navigation 
+          ? { 
+              ...state.navigation, 
+              sections: [...state.navigation.sections, action.payload] 
+            }
+          : null
+      };
+    case 'REMOVE_NAVIGATION_SECTION':
+      return {
+        ...state,
+        navigation: state.navigation 
+          ? { 
+              ...state.navigation, 
+              sections: state.navigation.sections.filter(section => section.id !== action.payload)
+            }
+          : null
+      };
     case 'TOGGLE_NAVIGATION_VISIBILITY':
       return {
         ...state,
@@ -57,6 +79,8 @@ interface NavigationContextType extends NavigationState {
   setCollapsed: (collapsed: boolean) => void;
   setActiveItem: (id: string | null) => void;
   setNavigation: (navigation: Navigation | null) => void;
+  addNavigationSection: (section: NavigationSection) => void;
+  removeNavigationSection: (sectionId: string) => void;
   toggleNavigationVisibility: () => void;
 
   navigateTo: (href: string, replace?: boolean) => void;
@@ -75,7 +99,7 @@ const NavigationContext = createContext<NavigationContextType | undefined>(
 const defaultState: NavigationState = {
   isCollapsed: false,
   activeItemId: null,
-  navigation: SITE_NAVIGATION,
+  navigation: APP_NAVIGATION,
   isLoading: false,
 };
 
@@ -99,6 +123,14 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
 
   const setNavigation = useCallback((navigation: Navigation | null) => {
     dispatch({ type: 'SET_NAVIGATION', payload: navigation });
+  }, []);
+
+  const addNavigationSection = useCallback((section: NavigationSection) => {
+    dispatch({ type: 'ADD_NAVIGATION_SECTION', payload: section });
+  }, []);
+
+  const removeNavigationSection = useCallback((sectionId: string) => {
+    dispatch({ type: 'REMOVE_NAVIGATION_SECTION', payload: sectionId });
   }, []);
 
   const toggleNavigationVisibility = useCallback(() => {
@@ -162,6 +194,8 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
       setCollapsed,
       setActiveItem,
       setNavigation,
+      addNavigationSection,
+      removeNavigationSection,
       toggleNavigationVisibility,
       navigateTo,
       goBack,
@@ -176,6 +210,8 @@ export const NavigationProvider = ({ children, initialState = defaultState }: { 
       setCollapsed,
       setActiveItem,
       setNavigation,
+      addNavigationSection,
+      removeNavigationSection,
       toggleNavigationVisibility,
       navigateTo,
       goBack,
@@ -231,6 +267,8 @@ export const useCurrentNavigation = () => {
   const {
     navigation,
     setNavigation,
+    addNavigationSection,
+    removeNavigationSection,
     toggleNavigationVisibility,
   } = useNavigation();
 
@@ -241,6 +279,8 @@ export const useCurrentNavigation = () => {
     isVisible,
     exists: !!navigation,
     setNavigation,
+    addSection: addNavigationSection,
+    removeSection: removeNavigationSection,
     toggleVisibility: toggleNavigationVisibility,
   };
 };
