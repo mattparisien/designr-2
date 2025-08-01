@@ -105,7 +105,7 @@ interface ChatContextType extends State {
   clear: () => void;
   chatSessions: ChatSession[]; // Add chat sessions from the hook
   isLoading: boolean; // Add loading state from the hook
-  setCurrentSession: (sessionId: string) => void; // Add method to set current session
+  setCurrentSession: (sessionId?: string) => void; // Add method to set current session
   loadSessionMessages: (sessionId: string) => Promise<void>; // Add method to load messages
 }
 

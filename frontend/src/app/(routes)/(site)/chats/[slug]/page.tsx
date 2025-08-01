@@ -21,7 +21,7 @@ const ChatSessionPage = () => {
             setActiveItem(null);
             setCurrentSession(null);
         }
-    }, [slug, loadSessionMessages, setActiveItem]);
+    }, [slug, loadSessionMessages, setActiveItem, setCurrentSession]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
