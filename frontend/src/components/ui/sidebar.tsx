@@ -131,19 +131,19 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         // Determine active item based on activeItem prop or current pathname
         const activeItemId = useMemo(() => {
             if (activeItem) return activeItem;
-            
+
             // If no activeItem prop, try to match based on href in navigation items
             const allItems = navigation.sections.flatMap(section => section.items);
             const matchedItem = allItems.find(item => {
                 console.log(item, 'item', pathname)
                 if (!item.href) return false;
-                
+
                 // Exact match for root paths or when pathname exactly matches href
                 if (item.href === pathname) return true;
-                
+
                 // For non-root paths, check if pathname starts with the href
                 if (item.href !== '/' && pathname.startsWith(item.href)) return true;
-                
+
                 return false;
             });
             return matchedItem?.id || null;
@@ -171,26 +171,29 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         return (
             <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
                 <ScrollArea className="flex-1">
-                    <div className="p-1">
+                    <div className="p-1 flex flex-col space-y-10">
                         {filteredSections.map((section) => (
-                            <nav key={section.id} className="mb-6">
+                            <div key={section.id}>
+                                {section.label && <div className="px-3 pb-2 text-sm text-neutral-400">{section.label}</div>}
+                                <nav>
 
-                                {/* Section Items */}
-                                <ul className="space-y-1">
-                                    {section.items.map((item) => (
-                                        <SidebarItem
-                                            isCollapsed={isCollapsed}
-                                            key={item.id}
-                                            item={item}
-                                            onItemClick={handleItemClick}
-                                            onItemMouseEnter={handleItemMouseEnter}
-                                            isActive={activeItemId === item.id}
-                                            level={0}
-                                            activeItem={activeItem}
-                                        />
-                                    ))}
-                                </ul>
-                            </nav>
+                                    {/* Section Items */}
+                                    <ul className="space-y-1">
+                                        {section.items.map((item) => (
+                                            <SidebarItem
+                                                isCollapsed={isCollapsed}
+                                                key={item.id}
+                                                item={item}
+                                                onItemClick={handleItemClick}
+                                                onItemMouseEnter={handleItemMouseEnter}
+                                                isActive={activeItemId === item.id}
+                                                level={0}
+                                                activeItem={activeItem}
+                                            />
+                                        ))}
+                                    </ul>
+                                </nav>
+                            </div>
                         ))}
                     </div>
                 </ScrollArea>

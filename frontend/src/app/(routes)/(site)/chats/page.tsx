@@ -14,6 +14,7 @@ const ChatsPage = () => {
 
     const navigationSection: NavigationSection = useMemo(() => ({
         id: "chats",
+        label: "Chats",
         items: [
             {
                 id: "prompt",
