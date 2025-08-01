@@ -15,7 +15,7 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         console.log("Current session ID:", currentSessionId);
-    }, [currentSessionId, ])
+    }, [currentSessionId,])
 
 
     const chatNavigation: NavigationSection = useMemo(() => {
@@ -46,7 +46,7 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (!currentSessionId) return;
         router.push("/chats/" + currentSessionId);
-        
+
     }, [currentSessionId, router]);
 
 
@@ -55,20 +55,22 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     }, [send]);
 
     return (
-        <div className="flex items-center justify-center h-full overflow-hidden h-screen [--thread-max-width:32rem] [min-width:34rem]:[--thread-max-width:40rem] [min-width:64rem]:[--thread-max-width:48rem]">
-            <div className="flex flex-col items-center justify-center w-full h-full gap-10">
-                {children}
-                <PromptBar
-                    onSubmit={handleSubmit}
-                    disabled={loading}
-                    placeholder={loading ? "Generating..." : "Describe what you want to create..."}
-                    className={currentSessionId && "mb-5"}
-                />
-                {error && (
-                    <div className="text-red-500 text-sm max-w-md text-center">
-                        {error}
-                    </div>
-                )}
+        <div className="w-full h-full @container">
+            <div className="flex items-center justify-center h-full overflow-hidden h-screen [--thread-max-width:32rem] @lg:[--thread-max-width:40rem] @5xl:[--thread-max-width:48rem]">
+                <div className="flex flex-col items-center justify-center w-full h-full gap-10">
+                    {children}
+                    <PromptBar
+                        onSubmit={handleSubmit}
+                        disabled={loading}
+                        placeholder={loading ? "Generating..." : "Describe what you want to create..."}
+                        className={currentSessionId && "mb-5"}
+                    />
+                    {error && (
+                        <div className="text-red-500 text-sm max-w-md text-center">
+                            {error}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

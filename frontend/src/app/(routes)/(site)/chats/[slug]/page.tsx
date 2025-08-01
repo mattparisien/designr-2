@@ -1,5 +1,6 @@
 "use client"
 import { useChat } from "@/lib/context/chat-context";
+import { useNavigation } from "@/lib/context/navigation-context";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -7,14 +8,15 @@ import { useEffect, useRef } from "react";
 const ChatSessionPage = () => {
     const { slug } = useParams();
     const { messages, loadSessionMessages } = useChat();
+    const { setActiveItem } = useNavigation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (slug && typeof slug === 'string') {
-            // Load messages for this session
+            setActiveItem(slug);
             loadSessionMessages(slug);
         }
-    }, [slug, loadSessionMessages]);
+    }, [slug, loadSessionMessages, setActiveItem]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -22,6 +24,8 @@ const ChatSessionPage = () => {
             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
         }
     }, [messages]);
+
+
 
 
     return (
