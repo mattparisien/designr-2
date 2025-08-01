@@ -55,7 +55,7 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     }, [send]);
 
     return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full overflow-hidden h-screen">
             <div className="flex flex-col items-center justify-center w-full h-full gap-10">
                 {children}
                 <PromptBar

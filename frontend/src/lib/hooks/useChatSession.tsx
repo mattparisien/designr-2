@@ -2,7 +2,7 @@ import { useToast } from '@/lib/hooks/useToast';
 import { chatSessionAPI } from '../api/index';
 import { type ChatSession } from '@/lib/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 
 export interface AskAIRequest {
   chatSessionId?: string;
@@ -51,6 +51,17 @@ export function useChatSessionQuery() {
     },
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Query for fetching a specific session with messages
+  const getSessionWithMessages = useCallback(async (sessionId: string) => {
+    try {
+      const session = await chatSessionAPI.getById(sessionId);
+      return session;
+    } catch (error) {
+      console.error("Error fetching session with messages:", error);
+      throw error;
+    }
+  }, []);
 
   // Handle error with useEffect to prevent render-time state updates
   useEffect(() => {
@@ -211,5 +222,6 @@ export function useChatSessionQuery() {
     deleteMultipleChatSessions: deleteMultipleChatSessionsMutation.mutateAsync,
     askAI: askAIMutation.mutateAsync,
     isAskingAI: askAIMutation.isPending,
+    getSessionWithMessages,
   };
 }

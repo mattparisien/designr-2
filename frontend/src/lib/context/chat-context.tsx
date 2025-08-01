@@ -21,6 +21,7 @@ type Action =
   | { type: 'send_success'; message: ChatMessage; sessionId?: string }
   | { type: 'send_error'; error: string }
   | { type: 'set_session'; sessionId: string }
+  | { type: 'load_messages'; messages: ChatMessage[] }
   | { type: 'clear' };
 
 function chatReducer(state: State, action: Action): State {
@@ -50,6 +51,13 @@ function chatReducer(state: State, action: Action): State {
         ...state,
         currentSessionId: action.sessionId,
       };
+    case 'load_messages':
+      return {
+        ...state,
+        messages: action.messages,
+        loading: false,
+        error: undefined,
+      };
     case 'clear':
       return { messages: [], loading: false, error: undefined, currentSessionId: undefined };
     default:
@@ -63,6 +71,7 @@ interface ChatContextType extends State {
   chatSessions: ChatSession[]; // Add chat sessions from the hook
   isLoading: boolean; // Add loading state from the hook
   setCurrentSession: (sessionId: string) => void; // Add method to set current session
+  loadSessionMessages: (sessionId: string) => Promise<void>; // Add method to load messages
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -76,11 +85,31 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   });
 
   // Use the chat session query hook for managing sessions and AI interactions
-  const { createChatSession, chatSessions, isLoading, askAI, isAskingAI } = useChatSessionQuery();
+  const { createChatSession, chatSessions, isLoading, askAI, isAskingAI, getSessionWithMessages } = useChatSessionQuery();
 
   const setCurrentSession = useCallback((sessionId: string) => {
     dispatch({ type: 'set_session', sessionId });
   }, []);
+
+  const loadSessionMessages = useCallback(async (sessionId: string) => {
+    try {
+      dispatch({ type: 'set_session', sessionId });
+      const session = await getSessionWithMessages(sessionId);
+      
+      // Convert backend messages to frontend format
+      const messages: ChatMessage[] = (session.messages || []).map((msg: { _id: string; role: string; content: string; createdAt: string }) => ({
+        id: msg._id,
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content,
+        timestamp: new Date(msg.createdAt).getTime(),
+      }));
+      
+      dispatch({ type: 'load_messages', messages });
+    } catch (error) {
+      console.error('Failed to load session messages:', error);
+      dispatch({ type: 'send_error', error: 'Failed to load messages' });
+    }
+  }, [getSessionWithMessages]);
 
   const send = useCallback(async (content: string, createNewSession?: boolean) => {
     console.log("Sending message:", content, "Create new session:", createNewSession);
@@ -139,6 +168,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       send, 
       clear, 
       setCurrentSession,
+      loadSessionMessages,
       chatSessions, 
       isLoading 
     }}>
