@@ -9,7 +9,14 @@ router.post('/sessions', async (req, res) => {
   try {
     const { userId, title, aiModel } = req.body;
     const session = await ChatSession.create({ userId, title, aiModel });
-    res.status(201).json(session);
+    
+    // Return the session with explicit sessionId field
+    const response = {
+      ...session.toObject(),
+      sessionId: session._id,
+    };
+    
+    res.status(201).json(response);
   } catch (err) {
     console.error('[POST /sessions] Error:', err);
     res.status(500).json({ message: 'Failed to create session' });

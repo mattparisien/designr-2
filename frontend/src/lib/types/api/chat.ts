@@ -13,6 +13,7 @@ export interface Message {
 
 export interface ChatSession {
     _id: string;
+    sessionId?: string; // Explicit sessionId for consistency
     userId: string;
     title: string;
     aiModel: string;

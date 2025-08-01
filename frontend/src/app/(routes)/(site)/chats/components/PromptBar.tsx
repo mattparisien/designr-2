@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 interface PromptBarProps {
     onSubmit: (prompt: string) => void;
     placeholder?: string;
+    className?: string;
     disabled?: boolean;
 }
 
-const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disabled = false }: PromptBarProps) => {
+const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disabled = false, className }: PromptBarProps) => {
     const [inputValue, setInputValue] = useState("");
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -31,7 +32,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
     };
 
     return (
-        <div className="w-full max-w-xl">
+        <div className={cn("w-full max-w-xl", className)}>
             <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-neutral-200 w-full min-h-30">
                 <div className="w-full h-full flex flex-col items-center justify-start">
                     <Textarea 

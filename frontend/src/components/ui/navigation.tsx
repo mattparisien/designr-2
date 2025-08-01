@@ -28,7 +28,7 @@ interface NavButtonProps {
 }
 
 interface NavIconProps {
-    icon: LucideIcon
+    icon?: LucideIcon
     isFill?: boolean
     width?: string
     height?: string
@@ -48,7 +48,7 @@ const NavIcon = (props: NavIconProps) => {
     const { icon: Icon, width, height, isFill = false } = props
 
     return (
-        <Icon
+        Icon && <Icon
             style={{
                 width: width || "0.98rem",
                 height: height || "0.98rem",
@@ -137,7 +137,6 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
             return item.icon as LucideIcon
         }
 
-        return Plus
     }, [item.icon])
 
     return (

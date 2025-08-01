@@ -32,7 +32,14 @@ export async function POST(request: NextRequest) {
         });
 
         const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
+        
+        // Ensure we return the sessionId explicitly
+        const response = {
+            ...data,
+            sessionId: data._id || data.sessionId, // Handle both _id and sessionId
+        };
+        
+        return NextResponse.json(response, { status: res.status });
     } catch (error) {
         console.error('[POST /api/chat/sessions] Error:', error);
         return NextResponse.json({ message: 'Failed to create chat session' }, { status: 500 });
