@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 
 const ChatSessionPage = () => {
     const { slug } = useParams();
-    const { messages, loadSessionMessages } = useChat();
+    const { messages, loadSessionMessages, setCurrentSession } = useChat();
     const { setActiveItem } = useNavigation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -19,6 +19,7 @@ const ChatSessionPage = () => {
 
         return () => {
             setActiveItem(null);
+            setCurrentSession(null);
         }
     }, [slug, loadSessionMessages, setActiveItem]);
 
@@ -34,7 +35,7 @@ const ChatSessionPage = () => {
 
     return (
         <div ref={scrollContainerRef} className="w-full h-full overflow-y-scroll">
-            <div className="w-full flex flex-col flex-1 h-full mt-10 space-y-10 max-w-[var(--thread-max-width)] mx-auto">
+            <div className="w-full flex flex-col flex-1 mt-10 space-y-10 max-w-[var(--thread-max-width)] mx-auto">
                 {messages.length && messages.map((message) => (
                     <div key={message.id} className={cn("flex", {
                         "justify-end w-full": message.role === "user"

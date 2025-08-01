@@ -1,8 +1,9 @@
 "use client"
 import { Button, Textarea } from "@/components/ui";
 import { ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useChat } from "@/lib/context/chat-context";
 
 interface PromptBarProps {
     onSubmit: (prompt: string) => void;
@@ -13,6 +14,18 @@ interface PromptBarProps {
 
 const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disabled = false, className }: PromptBarProps) => {
     const [inputValue, setInputValue] = useState("");
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { loading } = useChat();
+
+    // Keep textarea focused when AI response completes
+    useEffect(() => {
+        if (!loading && textareaRef.current) {
+            // Small delay to ensure DOM updates are complete
+            setTimeout(() => {
+                textareaRef.current?.focus();
+            }, 100);
+        }
+    }, [loading]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,6 +49,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
             <form onSubmit={handleSubmit} className="overflow-hidden rounded-[28px] border border-neutral-200 w-full min-h-30">
                 <div className="w-full h-full flex flex-col items-center justify-start">
                     <Textarea 
+                        ref={textareaRef}
                         placeholder={placeholder} 
                         className="h-full border-0 focus:ring-0 focus:outline-none resize-none p-5" 
                         value={inputValue}

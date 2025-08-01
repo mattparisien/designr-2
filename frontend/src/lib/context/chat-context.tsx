@@ -20,7 +20,7 @@ type Action =
   | { type: 'send_start'; message: ChatMessage }
   | { type: 'send_success'; message: ChatMessage; sessionId?: string }
   | { type: 'send_error'; error: string }
-  | { type: 'set_session'; sessionId: string }
+  | { type: 'set_session'; sessionId?: string }
   | { type: 'load_messages'; messages: ChatMessage[] }
   | { type: 'stream_chunk'; content: string }
   | { type: 'stream_complete'; sessionId?: string }
@@ -122,8 +122,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Use the chat session query hook for managing sessions and AI interactions
   const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages } = useChatSessionQuery();
 
-  const setCurrentSession = useCallback((sessionId: string) => {
-    dispatch({ type: 'set_session', sessionId });
+  const setCurrentSession = useCallback((sessionId?: string) => {
+    if (sessionId) {
+      dispatch({ type: 'set_session', sessionId });
+    } else {
+      dispatch({ type: 'set_session', sessionId: undefined });
+    }
   }, []);
 
   const loadSessionMessages = useCallback(async (sessionId: string) => {
