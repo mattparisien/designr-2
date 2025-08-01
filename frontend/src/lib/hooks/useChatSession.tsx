@@ -4,6 +4,35 @@ import { type ChatSession } from '@/lib/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+export interface AskAIRequest {
+  chatSessionId?: string;
+  content: string;
+  model?: string;
+}
+
+export interface AskAIResponse {
+  userMessage: {
+    _id: string;
+    chatSessionId: string;
+    role: string;
+    content: string;
+    createdAt: string;
+  };
+  assistantMessage: {
+    _id: string;
+    chatSessionId: string;
+    role: string;
+    content: string;
+    tokenCount?: number;
+    createdAt: string;
+  };
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
 export function useChatSessionQuery() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -37,7 +66,7 @@ export function useChatSessionQuery() {
   // Mutation for creating a new chat session
   const createChatSessionMutation = useMutation({
     mutationFn: (newChatSession: Partial<ChatSession>) => chatSessionAPI.create(newChatSession),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteChatSessions'] });
       toast({
@@ -46,7 +75,7 @@ export function useChatSessionQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to create project. Please try again.",
@@ -68,7 +97,7 @@ export function useChatSessionQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to update project. Please try again.",
@@ -91,7 +120,7 @@ export function useChatSessionQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete project. Please try again.",
@@ -139,10 +168,34 @@ export function useChatSessionQuery() {
         });
       }
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete chat sessions. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation for asking AI questions
+  const askAIMutation = useMutation({
+    mutationFn: async (request: AskAIRequest): Promise<AskAIResponse> => {
+      const response = await fetch('/api/chat/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      return response.json();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
         variant: "destructive"
       });
     }
@@ -156,5 +209,7 @@ export function useChatSessionQuery() {
     updateChatSession: updateChatSessionMutation.mutateAsync,
     deleteChatSession: deleteChatSessionMutation.mutateAsync,
     deleteMultipleChatSessions: deleteMultipleChatSessionsMutation.mutateAsync,
+    askAI: askAIMutation.mutateAsync,
+    isAskingAI: askAIMutation.isPending,
   };
 }

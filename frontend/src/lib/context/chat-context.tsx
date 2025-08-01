@@ -75,8 +75,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     currentSessionId: undefined,
   });
 
-  // Use the chat session query hook for managing sessions
-  const { createChatSession, chatSessions, isLoading } = useChatSessionQuery();
+  // Use the chat session query hook for managing sessions and AI interactions
+  const { createChatSession, chatSessions, isLoading, askAI, isAskingAI } = useChatSessionQuery();
 
   const setCurrentSession = useCallback((sessionId: string) => {
     dispatch({ type: 'set_session', sessionId });
@@ -109,12 +109,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         console.log("Using existing session ID:", sessionId);
       }
 
-      // For now, simulate an AI response since we don't have a message sending API yet
-      // TODO: Create a separate API endpoint for sending messages to AI
+
+      // Use the askAI function from the hook
+      const askData = await askAI({
+        chatSessionId: sessionId,
+        content: content,
+        model: 'gpt-4o'
+      });
+
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `AI response to: "${content}"`, // This would be the actual AI response
+        content: askData.assistantMessage?.content || 'No response received',
         timestamp: Date.now(),
       };
       dispatch({ type: 'send_success', message: assistantMsg, sessionId });
@@ -122,13 +128,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
       dispatch({ type: 'send_error', error: errorMessage });
     }
-  }, [createChatSession, state.currentSessionId, setCurrentSession]);
+  }, [createChatSession, state.currentSessionId, setCurrentSession, askAI]);
 
   const clear = useCallback(() => dispatch({ type: 'clear' }), []);
 
   return (
     <ChatContext.Provider value={{ 
       ...state, 
+      loading: state.loading || isAskingAI, // Include AI loading state
       send, 
       clear, 
       setCurrentSession,
