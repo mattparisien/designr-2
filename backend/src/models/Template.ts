@@ -30,6 +30,7 @@ export interface TemplateDocument extends Document {
   title: string;
   description?: string;
   category: TemplateCategory;
+  tags: string[]
   thumbnailUrl?: string;
   canvasSize: { width: number; height: number };
   pages: Page[];
@@ -71,6 +72,7 @@ const TemplateSchema = new Schema<TemplateDocument>(
       enum: ['presentation', 'social', 'print', 'custom'],
       required: true,
     },
+    tags: { type: [String], default: [], required: true },
     thumbnailUrl: String,
     canvasSize: {
       width: { type: Number, required: true },

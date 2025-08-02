@@ -1,20 +1,43 @@
 import { Agent, run, StreamedRunResult, AgentInputItem } from '@openai/agents';
-import type { StreamRunOptions } from '@openai/agents';
-import { domainGuardrail } from './guardrails/domain';
 import { paletteTool } from './tools/palette';
-import { brandingAgent, layoutAgent } from './designAgent';
-import { SYSTEM_PROMPT } from './constants';
+import { DESIGN_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS, DESIGN_TRIAGE_AGENT_INSTRUCTIONS } from './constants';
 
-export const systemInstructions = SYSTEM_PROMPT;
+export const layoutAgent = new Agent({
+  name: 'Layout Expert',
+  handoffDescription: 'Handles layout, grid, spacing, and component hierarchy in design',
+  instructions: LAYOUT_AGENT_INSTRUCTIONS,
+  tools: [paletteTool],
+  model: 'gpt-4o-mini',
+  modelSettings: { temperature: 0.6 },
+  // inputGuardrails: [domainGuardrail],
+});
+
 
 export const designAgent = new Agent({
   name: 'Design Assistant',
-  instructions: systemInstructions,
+  instructions: DESIGN_AGENT_INSTRUCTIONS,
   tools: [paletteTool],
   // inputGuardrails: [domainGuardrail],
-  handoffs: [brandingAgent, layoutAgent],  // sub-agents for specialization
+  handoffs: [layoutAgent],  // sub-agents for specialization
   modelSettings: { temperature: 0.6 },
   toolUseBehavior: 'run_llm_again',
+});
+
+// export const brandingAgent = new Agent({
+//   name: 'Branding Specialist',
+//   handoffDescription: 'Handles branding-related design tasks like logo, color, tone of voice',
+//   instructions: BRANDING_AGENT_INSTRUCTIONS,
+//   tools: [paletteTool],
+//   model: 'gpt-4o-mini',
+//   modelSettings: { temperature: 0.6 },
+//   // inputGuardrails: [domainGuardrail],
+// });
+
+export const designTriageAgent = new Agent({
+  name: 'Design Triage',
+  instructions: DESIGN_TRIAGE_AGENT_INSTRUCTIONS,
+  model: 'gpt-4o',
+  modelSettings: { temperature: 0 },
 });
 
 export async function runDesignAgent(prompt: string | AgentInputItem[]) {
