@@ -36,6 +36,17 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const trimmedValue = inputValue.trim();
+            if (trimmedValue && !disabled) {
+                onSubmit(trimmedValue);
+                setInputValue(""); // Clear input after submission
+            }
+        }
+    };
+
     const handleButtonClick = () => {
         const trimmedValue = inputValue.trim();
         if (trimmedValue && !disabled) {
@@ -54,6 +65,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
                         className="h-full border-0 focus:ring-0 focus:outline-none resize-none p-5" 
                         value={inputValue}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         focusNone 
                         borderNone
                         disableEnterNewLine

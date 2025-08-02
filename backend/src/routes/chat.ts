@@ -1,164 +1,150 @@
+// src/routes/agent.ts
+
 import express from 'express';
 import ChatSession from '../models/ChatSession';
 import Message from '../models/Message';
-import { generateSimpleResponse, generateAIResponse, generateAIResponseStream, type ChatMessage as AIChatMessage } from '../services/aiService';
 
-// ────────────────────────────────────────────────────────────────
-// Chat Routes for Design Tool - DESIGN PURPOSES ONLY
-// ────────────────────────────────────────────────────────────────
-// These routes provide AI chat functionality exclusively for design-
-// related conversations. All AI responses are restricted to design,
-// branding, visual arts, and creative content topics only.
-// ────────────────────────────────────────────────────────────────
+import { runDesignAgent } from '../agents/openai/factory';
+import {
+  InputGuardrailTripwireTriggered
+} from '@openai/agents';
+import type {
+  StreamedRunResult
+} from '@openai/agents';
+import { AgentInputItem } from '@openai/agents';
+import { buildConversationHistory } from '../utils';
 
 const router = express.Router();
 
-/* ── Create a new chat session ─────────────────────── */
+/* ── SESSION CRUD ROUTES ───────────────────────────────────── */
+
+/* Create new chat session */
 router.post('/sessions', async (req, res) => {
   try {
     const { userId, title, aiModel } = req.body;
     const session = await ChatSession.create({ userId, title, aiModel });
-    
-    // Return the session with explicit sessionId field
-    const response = {
-      ...session.toObject(),
-      sessionId: session._id,
-    };
-    
-    res.status(201).json(response);
+    res.status(201).json({ ...session.toObject(), sessionId: session._id });
   } catch (err) {
     console.error('[POST /sessions] Error:', err);
     res.status(500).json({ message: 'Failed to create session' });
   }
 });
 
-/* ── Get all chat sessions for a user ──────────────── */
+/* List all sessions for a user */
 router.get('/sessions', async (req, res) => {
   try {
     const { userId } = req.query;
     const sessions = await ChatSession.find({ userId }).sort({ updatedAt: -1 });
     res.json(sessions);
   } catch (err) {
+    console.error('[GET /sessions] Error:', err);
     res.status(500).json({ message: 'Failed to fetch sessions' });
   }
 });
 
-/* ── Get a single session and its messages ─────────── */
+/* Get one session with all messages */
 router.get('/sessions/:id', async (req, res) => {
   try {
     const session = await ChatSession.findById(req.params.id).populate('messages');
     if (!session) return res.status(404).json({ message: 'Session not found' });
     res.json(session);
   } catch (err) {
+    console.error('[GET /sessions/:id] Error:', err);
     res.status(500).json({ message: 'Failed to fetch session' });
   }
 });
 
-/* ── Post a message to a session ───────────────────── */
+/* Delete a session and its messages */
+router.delete('/sessions/:id', async (req, res) => {
+  try {
+    const session = await ChatSession.findByIdAndDelete(req.params.id);
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    await Message.deleteMany({ chatSessionId: session._id });
+    res.json({ message: 'Session and messages deleted' });
+  } catch (err) {
+    console.error('[DELETE /sessions/:id] Error:', err);
+    res.status(500).json({ message: 'Failed to delete session' });
+  }
+});
+
+/* Optional: Simple manual message endpoint (still supported) */
 router.post('/messages', async (req, res) => {
   try {
     const { chatSessionId, role, content, tokenCount } = req.body;
-    const message = await Message.create({ chatSessionId, role, content, tokenCount });
+    const msg = await Message.create({ chatSessionId, role, content, tokenCount });
     await ChatSession.findByIdAndUpdate(chatSessionId, {
-      $push: { messages: message._id },
+      $push: { messages: msg._id },
       $set: { updatedAt: new Date() }
     });
-    res.status(201).json(message);
+    res.status(201).json(msg);
   } catch (err) {
+    console.error('[POST /messages] Error:', err);
     res.status(500).json({ message: 'Failed to send message' });
   }
 });
 
-/* ── Ask AI for a response (with session context) ─── */
-router.post('/ask', async (req, res) => {
-  try {
-    const { chatSessionId, content, model = 'gpt-4o' } = req.body;
+/* ── AI RESPONSES VIA DESIGN AGENT ───────────────────────────── */
 
-    if (!content) {
-      return res.status(400).json({ message: 'Content is required' });
-    }
+/**
+ * Build a chronological list of last 20 user/assistant messages,
+ * formatted as simple "User: …"/"Assistant: …" strings.
+ */
+async function loadHistory(
+  chatSessionId: string | null,
+): Promise<{
+  role: 'user' | 'assistant';
+  content: string;
+}[]> {
+  if (!chatSessionId) return null;
+  const session = await ChatSession.findById(chatSessionId).populate('messages');
+  if (!session) return null;
+  // Convert to simple lines for context
+  return (session.messages as any[])
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .slice(-20)
+    .map((m) => ({
+      role: m.role,
+      content: m.content
+    }));
+}
 
-    // Save user message first
-    const userMessage = await Message.create({
-      chatSessionId: chatSessionId || null,
-      role: 'user',
-      content,
+/* ------------------------ POST /ask ------------------------ */
+
+router.post('/ask', async (req, res, next) => {
+  const { chatSessionId, userId, content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ message: 'Content required' });
+
+  const userMessage = await Message.create({
+    chatSessionId: chatSessionId || null,
+    role: 'user',
+    content,
+  });
+
+  if (chatSessionId) {
+    await ChatSession.findByIdAndUpdate(chatSessionId, {
+      $push: { messages: userMessage._id },
+      $set: { updatedAt: new Date() }
     });
+  }
 
-    let aiResponse;
-    
-    if (chatSessionId) {
-      // If we have a session, get the conversation history
-      const session = await ChatSession.findById(chatSessionId).populate('messages');
-      if (!session) {
-        return res.status(404).json({ message: 'Chat session not found' });
-      }
+  const prevHistory = await loadHistory(chatSessionId);
+  const input = [...prevHistory, { role: 'user', content }];
+  console.log('Input for agent:', input);
+  const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
 
-      // Build conversation history for context
-      const conversationHistory: AIChatMessage[] = [
-        {
-          role: 'system',
-          content: `You are a specialized AI assistant for design and creative projects ONLY.
 
-IMPORTANT RESTRICTIONS:
-- You can ONLY help with design, visual arts, creativity, branding, marketing content, and design tool usage
-- You cannot provide assistance with: programming, coding, technical support, general knowledge, personal advice, medical/legal/financial advice, or any non-design topics
-- If asked about non-design topics, politely redirect the user back to design-related questions
+  try {
+    const result = await runDesignAgent(designAgentInput);
+    const assistantText: string = result.finalOutput as string;
 
-Your expertise includes:
-- Graphic design principles and best practices
-- Color theory, typography, and layout
-- Brand identity and visual branding
-- Marketing copy and content creation
-- Creative direction and visual storytelling
-- Design tool tips and workflows
-- Social media content design
-- Print and digital design formats
-
-Always respond in a helpful, creative, and design-focused manner.`
-        }
-      ];
-
-      // Add existing messages to history (limit to last 20 for context)
-      const messages = session.messages.slice(-20) as any[];
-      messages.forEach((msg: any) => {
-        if (msg.role === 'user' || msg.role === 'assistant') {
-          conversationHistory.push({
-            role: msg.role,
-            content: msg.content
-          });
-        }
-      });
-
-      // Add the new user message
-      conversationHistory.push({
-        role: 'user',
-        content
-      });
-
-      // Generate AI response with full context
-      aiResponse = await generateAIResponse(conversationHistory, model);
-
-      // Update session with user message
-      await ChatSession.findByIdAndUpdate(chatSessionId, {
-        $push: { messages: userMessage._id },
-        $set: { updatedAt: new Date() }
-      });
-    } else {
-      // No session context, generate simple response
-      aiResponse = await generateSimpleResponse(content, model);
-    }
-
-    // Save AI response
     const assistantMessage = await Message.create({
       chatSessionId: chatSessionId || null,
       role: 'assistant',
-      content: aiResponse.content,
-      tokenCount: aiResponse.usage?.total_tokens
+      content: assistantText,
+      tokenCount: result.usage?.total_tokens,
     });
 
     if (chatSessionId) {
-      // Update session with AI message
       await ChatSession.findByIdAndUpdate(chatSessionId, {
         $push: { messages: assistantMessage._id },
         $set: { updatedAt: new Date() }
@@ -168,161 +154,118 @@ Always respond in a helpful, creative, and design-focused manner.`
     res.status(200).json({
       userMessage,
       assistantMessage,
-      usage: aiResponse.usage
+      usage: result.usage,
     });
 
-  } catch (error: any) {
-    console.error('[POST /ask] Error:', error);
-    res.status(500).json({ 
-      message: 'Failed to generate AI response',
-      error: error.message 
-    });
+  } catch (err: any) {
+    if (err instanceof InputGuardrailTripwireTriggered) {
+      // Extract the generic message from the guardrail output if available
+      const genericMessage = err.state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
+      const message = genericMessage || 'Sorry, I can only help with design-related tasks.';
+      
+      return res.status(200).json({
+        message: message
+      });
+    }
+    next(err);
   }
 });
 
-/* ── Ask AI for a streaming response ──────────────── */
-router.post('/ask/stream', async (req, res) => {
+/* --------------------- POST /ask/stream --------------------- */
+
+router.post('/ask/stream', async (req, res, next) => {
+  const { chatSessionId, userId, content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ message: 'Content required' });
+
+  // Setup streaming response (SSE style using text/plain)
+  res.writeHead(200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+
+  const userMessage = await Message.create({
+    chatSessionId: chatSessionId || null,
+    role: 'user',
+    content,
+  });
+
+  if (chatSessionId) {
+    await ChatSession.findByIdAndUpdate(chatSessionId, {
+      $push: { messages: userMessage._id },
+      $set: { updatedAt: new Date() }
+    });
+  }
+
+  const prevHistory = await loadHistory(chatSessionId);
+  const input = [...prevHistory, { role: 'user', content }];
+  console.log('Input for agent:', input);
+  const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
+
+
   try {
-    const { chatSessionId, content, model = 'gpt-4o' } = req.body;
+    // stream mode
+    const streamRun = await runDesignAgent(designAgentInput);
 
-    if (!content) {
-      return res.status(400).json({ message: 'Content is required' });
-    }
+    let chunkIndex = 0;
+    const textStream = streamRun.toTextStream({ compatibleWithNodeStreams: true });
 
-    // Set up Server-Sent Events headers
-    res.writeHead(200, {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control',
+    textStream.on('data', (buf: Buffer) => {
+      const txt = buf.toString();
+      res.write(JSON.stringify({ type: 'chunk', index: ++chunkIndex, content: txt }) + '\n');
     });
 
-    // Save user message first
-    const userMessage = await Message.create({
-      chatSessionId: chatSessionId || null,
-      role: 'user',
-      content,
-    });
+    streamRun.completed.then(async () => {
+      const finalOutput = (streamRun as any).analysis?.finalOutput
+        || streamRun.usage
+        ? streamRun.usage.total_tokens! > 0 && '' // fallback placeholder
+        : '';
 
-    let conversationHistory: AIChatMessage[] = [
-      {
-        role: 'system',
-        content: `You are a specialized AI assistant for design and creative projects ONLY.
-
-IMPORTANT RESTRICTIONS:
-- You can ONLY help with design, visual arts, creativity, branding, marketing content, and design tool usage
-- You cannot provide assistance with: programming, coding, technical support, general knowledge, personal advice, medical/legal/financial advice, or any non-design topics
-- If asked about non-design topics, politely redirect the user back to design-related questions
-
-Your expertise includes:
-- Graphic design principles and best practices
-- Color theory, typography, and layout
-- Brand identity and visual branding
-- Marketing copy and content creation
-- Creative direction and visual storytelling
-- Design tool tips and workflows
-- Social media content design
-- Print and digital design formats
-
-Always respond in a helpful, creative, and design-focused manner.`
-      }
-    ];
-
-    if (chatSessionId) {
-      // Update session with user message
-      await ChatSession.findByIdAndUpdate(chatSessionId, {
-        $push: { messages: userMessage._id },
-        $set: { updatedAt: new Date() }
+      const assistantMessage = await Message.create({
+        chatSessionId: chatSessionId || null,
+        role: 'assistant',
+        content: finalOutput || '[streaming complete – no content]',
+        tokenCount: streamRun.usage?.total_tokens,
       });
 
-      // Get the conversation history
-      const session = await ChatSession.findById(chatSessionId).populate('messages');
-      if (session) {
-        const messages = session.messages.slice(-20) as any[];
-        messages.forEach((msg: any) => {
-          if (msg.role === 'user' || msg.role === 'assistant') {
-            conversationHistory.push({
-              role: msg.role,
-              content: msg.content
-            });
-          }
+      if (chatSessionId) {
+        await ChatSession.findByIdAndUpdate(chatSessionId, {
+          $push: { messages: assistantMessage._id },
+          $set: { updatedAt: new Date() }
         });
       }
-    }
 
-    // Add the new user message
-    conversationHistory.push({
-      role: 'user',
-      content
+      res.write(JSON.stringify({
+        type: 'complete',
+        assistantMessage,
+        usage: streamRun.usage
+      }) + '\n');
+      res.end();
+
+    }).catch((innerErr) => {
+      console.error('[stream.run.completed] Error:', innerErr);
+      res.write(JSON.stringify({ type: 'error', error: innerErr.message }) + '\n');
+      res.end();
     });
 
-    let fullResponse = '';
-    let totalTokens = 0;
-
-    // Generate streaming AI response
-    for await (const chunk of generateAIResponseStream(conversationHistory, model)) {
-      if (!chunk.done) {
-        fullResponse += chunk.content;
-        res.write(JSON.stringify({
-          type: 'chunk',
-          content: chunk.content
-        }) + '\n');
-      } else {
-        // Final chunk with usage info
-        if (chunk.usage) {
-          totalTokens = chunk.usage.total_tokens;
-        }
-        
-        // Save AI response to database
-        const assistantMessage = await Message.create({
-          chatSessionId: chatSessionId || null,
-          role: 'assistant',
-          content: fullResponse,
-          tokenCount: totalTokens
-        });
-
-        if (chatSessionId) {
-          // Update session with AI message
-          await ChatSession.findByIdAndUpdate(chatSessionId, {
-            $push: { messages: assistantMessage._id },
-            $set: { updatedAt: new Date() }
-          });
-        }
-
-        // Send final message with complete response data
-        res.write(JSON.stringify({
-          type: 'complete',
-          userMessage,
-          assistantMessage,
-          usage: chunk.usage
-        }) + '\n');
-        
-        res.end();
-        return;
-      }
+  } catch (err: any) {
+    if (err instanceof InputGuardrailTripwireTriggered) {
+      // Extract the generic message from the guardrail output if available
+      const genericMessage = err.state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
+      const message = genericMessage || 'Only design‑related requests allowed.';
+      
+      // Reset headers and return standard JSON response instead of streaming
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+      return res.end(JSON.stringify({
+        message: message
+      }));
     }
-
-  } catch (error: any) {
-    console.error('[POST /ask/stream] Error:', error);
-    res.write(JSON.stringify({
-      type: 'error',
-      message: 'Failed to generate AI response',
-      error: error.message
-    }) + '\n');
-    res.end();
-  }
-});
-
-/* ── Delete a chat session ─────────────────────────── */
-router.delete('/sessions/:id', async (req, res) => {
-  try {
-    const session = await ChatSession.findByIdAndDelete(req.params.id);
-    if (!session) return res.status(404).json({ message: 'Session not found' });
-    await Message.deleteMany({ chatSessionId: session._id });
-    res.json({ message: 'Session and messages deleted' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete session' });
+    next(err);
   }
 });
 
