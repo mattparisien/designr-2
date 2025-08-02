@@ -8,7 +8,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const res = await fetch(`${BASE_URL}/chat/sessions/${id}`);
         
         if (!res.ok) {
