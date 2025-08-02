@@ -8,10 +8,6 @@ import { runDesignAgent } from '../agents/openai/factory';
 import {
   InputGuardrailTripwireTriggered
 } from '@openai/agents';
-import type {
-  StreamedRunResult
-} from '@openai/agents';
-import { AgentInputItem } from '@openai/agents';
 import { buildConversationHistory } from '../utils';
 
 const router = express.Router();
@@ -47,11 +43,12 @@ router.get('/sessions/:id', async (req, res) => {
   try {
     const session = await ChatSession.findById(req.params.id).populate('messages');
     if (!session) return res.status(404).json({ message: 'Session not found' });
+    console.log('the session', session);
     res.json(session);
   } catch (err) {
     console.error('[GET /sessions/:id] Error:', err);
     res.status(500).json({ message: 'Failed to fetch session' });
-  }
+  } 
 });
 
 /* Delete a session and its messages */
@@ -209,23 +206,20 @@ router.post('/ask/stream', async (req, res, next) => {
     const streamRun = await runDesignAgent(designAgentInput);
 
     let chunkIndex = 0;
+    let accumulatedContent = ''; // Track the accumulated content
     const textStream = streamRun.toTextStream({ compatibleWithNodeStreams: true });
 
     textStream.on('data', (buf: Buffer) => {
       const txt = buf.toString();
+      accumulatedContent += txt; // Accumulate the content
       res.write(JSON.stringify({ type: 'chunk', index: ++chunkIndex, content: txt }) + '\n');
     });
 
     streamRun.completed.then(async () => {
-      const finalOutput = (streamRun as any).analysis?.finalOutput
-        || streamRun.usage
-        ? streamRun.usage.total_tokens! > 0 && '' // fallback placeholder
-        : '';
-
       const assistantMessage = await Message.create({
         chatSessionId: chatSessionId || null,
         role: 'assistant',
-        content: finalOutput || '[streaming complete – no content]',
+        content: accumulatedContent || 'No response generated',
         tokenCount: streamRun.usage?.total_tokens,
       });
 

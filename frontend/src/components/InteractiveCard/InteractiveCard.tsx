@@ -18,7 +18,7 @@ interface InteractiveCardProps {
     objectFit?: "none" | "cover" | "contain" | "fill";
     onClick: () => void;
     onSelect?: (id: string, isSelected: boolean) => void;
-    onTitleChange?: (id: string, newTitle: string) => void;
+    onTitleChange?: (newTitle: string) => void;
     children?: React.ReactNode;
 }
 

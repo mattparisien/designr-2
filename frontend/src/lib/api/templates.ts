@@ -55,7 +55,7 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
   // Get template by ID
   async getById(id: string): Promise<Template> {
     try {
-      const response = await this.apiClient.get<Template>(`/api/templates/${id}`);
+      const response = await this.apiClient.get<Template>(`/templates/${id}`);
       return response.data;
     } catch (error: unknown) {
       this.handleError(error, 'Failed to fetch template');

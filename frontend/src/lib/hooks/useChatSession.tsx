@@ -89,6 +89,7 @@ export function useChatSessionQuery() {
   const getSessionWithMessages = useCallback(async (sessionId: string) => {
     try {
       const session = await chatSessionAPI.getById(sessionId);
+      console.log('the session', session);
       return session;
     } catch (error) {
       console.error("Error fetching session with messages:", error);

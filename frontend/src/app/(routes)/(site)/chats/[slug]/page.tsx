@@ -5,9 +5,20 @@ import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+// Loading dots component
+const LoadingDots = () => (
+    <div className="flex space-x-1 p-4">
+        <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+        </div>
+    </div>
+);
+
 const ChatSessionPage = () => {
     const { slug } = useParams();
-    const { messages, loadSessionMessages, setCurrentSession } = useChat();
+    const { messages, loadSessionMessages, setCurrentSession, loading } = useChat();
     const { setActiveItem } = useNavigation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -19,7 +30,7 @@ const ChatSessionPage = () => {
 
         return () => {
             setActiveItem(null);
-            setCurrentSession(null);
+            setCurrentSession(undefined);
         }
     }, [slug, loadSessionMessages, setActiveItem, setCurrentSession]);
 
@@ -45,6 +56,13 @@ const ChatSessionPage = () => {
                         })}>{message.content}</div>
                     </div>
                 ))}
+                
+                {/* Show loading indicator when waiting for AI response */}
+                {loading && (
+                    <div className="flex justify-start w-full">
+                        <LoadingDots />
+                    </div>
+                )}
             </div>
         </div>
     )

@@ -4,10 +4,10 @@ import { Pencil } from "lucide-react";
 interface EditableTitleProps {
     id: string;
     title: string;
-    onTitleChange?: (id: string, newTitle: string) => void;
+    onTitleChange?: (newTitle: string) => void;
 }
 
-export function EditableTitle({ id, title, onTitleChange }: EditableTitleProps) {
+export function EditableTitle({ title, onTitleChange }: EditableTitleProps) {
     const [isTitleHovered, setIsTitleHovered] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     // Add local title state to display optimistically
@@ -52,7 +52,7 @@ export function EditableTitle({ id, title, onTitleChange }: EditableTitleProps) 
             
             // Only call the API if the title actually changed
             if (editedTitle !== title) {
-                onTitleChange?.(id, editedTitle);
+                onTitleChange?.(editedTitle);
             }
         } else {
             // If empty, revert to the original title

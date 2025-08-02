@@ -85,7 +85,7 @@ function chatReducer(state: State, action: Action): State {
       return {
         ...state,
         messages,
-        loading: true, // Keep loading during stream
+        loading: false, // Stop loading when streaming starts
       };
     case 'stream_complete':
       return {
