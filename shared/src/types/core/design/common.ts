@@ -1,9 +1,11 @@
 export type DesignBackgroundType = 'color' | 'image' | 'gradient';
 
 // Common position interface
-export interface Position {
+export interface Rect {
     x: number;
     y: number;
+    width: number;
+    height: number;
 }
 
 // Common size interface

@@ -7,6 +7,7 @@ import { DEFAULT_CANVAS_SIZE } from "../constants";
 import { CanvasSize, EditorContextType, Element, Page } from "../types/canvas";
 import { ProjectsAPI } from "@/lib/api/projects";
 import { TemplatesAPI } from "@/lib/api/templates";
+import { mapPage } from "../mappers/api";
 
 
 // Define the store state interface
@@ -303,7 +304,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
       set({
         designName: design.title || 'Untitled Design',
-        pages: design.pages,
+        pages: design.pages.map(page => mapPage(page)),
         currentPageId: design.pages[0]?.id || '',
         currentPageIndex: 0,
         isDesignSaved: true,
@@ -343,12 +344,12 @@ const useEditorStore = create<EditorState>((set, get) => ({
         throw new Error('API client is not available.');
       }
 
-    
-      const updateData : UpdateDesignTemplateRequest = {
-        title: state.designName, 
+
+      const updateData: UpdateDesignTemplateRequest = {
+        title: state.designName,
         thumbnailUrl: thumbnailImage,
         pages: state.pages,
-        
+
       };
 
       console.log('Update payload:', updateData);

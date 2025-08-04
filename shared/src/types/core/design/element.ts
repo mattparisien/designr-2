@@ -1,4 +1,4 @@
-import { Position, Size } from "./common";
+import { Rect, Size } from "./common";
 
 export type DesignElementType = 'text' | 'shape' | 'image';
 
@@ -12,8 +12,7 @@ interface DesignElementBase {
   id: string;
   type: DesignElementType;
   placeholder?: string;
-  position: Position;
-  size: Size;
+  rect: Rect;
 }
 
 export interface DesignTextElement extends DesignElementBase {

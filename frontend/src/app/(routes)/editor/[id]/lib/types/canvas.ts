@@ -1,11 +1,9 @@
 // Import base size from shared types
 import { Size, DesignElement, DesignPage, DesignCanvas, DesignElementType } from "@shared/types";
-import { Rect } from "./common";
 
 // Frontend-specific Page type
 export type CanvasSize = Size;
 export type Element = DesignElement & {
-  rect: Rect;
   isNew: boolean;
 }
 export type Canvas = Omit<DesignCanvas, "elements"> & {

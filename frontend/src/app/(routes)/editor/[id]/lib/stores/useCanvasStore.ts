@@ -149,25 +149,17 @@ const useCanvasStore = create<CanvasState>((set, get) => {
         lineHeight?: number;
         isStrikethrough?: boolean;
       };
-      
+
       const data = elementData as LegacyElementData;
-      
+
       // Generate a unique ID for the new element
       let newElement: Element;
-      
+
       if (type === 'text') {
         newElement = {
           id: nanoid(),
           type: 'text',
           placeholder: data.placeholder,
-          position: {
-            x: data.x || 0,
-            y: data.y || 0
-          },
-          size: {
-            width: data.width || 100,
-            height: data.height || 50
-          },
           content: data.content || 'Add your text here',
           fontSize: data.fontSize,
           fontFamily: data.fontFamily,
@@ -189,24 +181,17 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           id: nanoid(),
           type: 'shape',
           placeholder: data.placeholder,
-          position: {
-            x: data.x || 0,
-            y: data.y || 0
-          },
-          size: {
-            width: data.width || 100,
-            height: data.height || 50
-          },
-          form: data.form || 'rectangle',
-          backgroundColor: data.backgroundColor,
-          borderColor: data.borderColor,
-          borderWidth: data.borderWidth,
           rect: data.rect || {
             x: data.x || 0,
             y: data.y || 0,
             width: data.width || 100,
             height: data.height || 50
           },
+
+          form: data.form || 'rectangle',
+          backgroundColor: data.backgroundColor,
+          borderColor: data.borderColor,
+          borderWidth: data.borderWidth,
           isNew: true
         };
       } else if (type === 'image') {
@@ -214,22 +199,14 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           id: nanoid(),
           type: 'image',
           placeholder: data.placeholder,
-          position: {
-            x: data.x || 0,
-            y: data.y || 0
-          },
-          size: {
-            width: data.width || 100,
-            height: data.height || 50
-          },
-          src: data.src || '',
-          alt: data.alt,
           rect: data.rect || {
             x: data.x || 0,
             y: data.y || 0,
             width: data.width || 100,
             height: data.height || 50
           },
+          src: data.src || '',
+          alt: data.alt,
           isNew: true
         };
       } else {
@@ -238,21 +215,13 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           id: nanoid(),
           type: 'text',
           placeholder: data.placeholder,
-          position: {
-            x: data.x || 0,
-            y: data.y || 0
-          },
-          size: {
-            width: data.width || 100,
-            height: data.height || 50
-          },
-          content: data.content || 'Add your text here',
           rect: data.rect || {
             x: data.x || 0,
             y: data.y || 0,
             width: data.width || 100,
             height: data.height || 50
           },
+          content: data.content || 'Add your text here',
           isNew: true
         };
       }
