@@ -116,12 +116,146 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
       if (!currentPageId || !currentPage) return;
 
-      // Generate a unique ID for the new element
-      const newElement: Element = {
-        id: nanoid(),
-        type,
-        ...elementData,
+      // Create a helper to extract properties from elementData
+      // The elementData might come from ElementFactory (with 'kind' and flat properties)
+      // or from other sources, so we need to handle both structures
+      type LegacyElementData = {
+        kind?: string;
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+        rect?: { x: number; y: number; width: number; height: number };
+        content?: string;
+        fontSize?: number;
+        fontFamily?: string;
+        textAlign?: "left" | "center" | "right";
+        bold?: boolean;
+        italic?: boolean;
+        underline?: boolean;
+        color?: string;
+        form?: "rectangle" | "circle" | "line";
+        backgroundColor?: string;
+        borderColor?: string;
+        borderWidth?: number;
+        src?: string;
+        alt?: string;
+        placeholder?: string;
+        isNew?: boolean;
+        isEditable?: boolean;
+        opacity?: number;
+        rotation?: number;
+        letterSpacing?: number;
+        lineHeight?: number;
+        isStrikethrough?: boolean;
       };
+      
+      const data = elementData as LegacyElementData;
+      
+      // Generate a unique ID for the new element
+      let newElement: Element;
+      
+      if (type === 'text') {
+        newElement = {
+          id: nanoid(),
+          type: 'text',
+          placeholder: data.placeholder,
+          position: {
+            x: data.x || 0,
+            y: data.y || 0
+          },
+          size: {
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          content: data.content || 'Add your text here',
+          fontSize: data.fontSize,
+          fontFamily: data.fontFamily,
+          textAlign: data.textAlign,
+          bold: data.bold,
+          italic: data.italic,
+          underline: data.underline,
+          color: data.color,
+          rect: data.rect || {
+            x: data.x || 0,
+            y: data.y || 0,
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          isNew: true
+        };
+      } else if (type === 'shape') {
+        newElement = {
+          id: nanoid(),
+          type: 'shape',
+          placeholder: data.placeholder,
+          position: {
+            x: data.x || 0,
+            y: data.y || 0
+          },
+          size: {
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          form: data.form || 'rectangle',
+          backgroundColor: data.backgroundColor,
+          borderColor: data.borderColor,
+          borderWidth: data.borderWidth,
+          rect: data.rect || {
+            x: data.x || 0,
+            y: data.y || 0,
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          isNew: true
+        };
+      } else if (type === 'image') {
+        newElement = {
+          id: nanoid(),
+          type: 'image',
+          placeholder: data.placeholder,
+          position: {
+            x: data.x || 0,
+            y: data.y || 0
+          },
+          size: {
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          src: data.src || '',
+          alt: data.alt,
+          rect: data.rect || {
+            x: data.x || 0,
+            y: data.y || 0,
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          isNew: true
+        };
+      } else {
+        // Default to text if unknown type
+        newElement = {
+          id: nanoid(),
+          type: 'text',
+          placeholder: data.placeholder,
+          position: {
+            x: data.x || 0,
+            y: data.y || 0
+          },
+          size: {
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          content: data.content || 'Add your text here',
+          rect: data.rect || {
+            x: data.x || 0,
+            y: data.y || 0,
+            width: data.width || 100,
+            height: data.height || 50
+          },
+          isNew: true
+        };
+      }
 
       // Add element to current page
       const updatedElements = [...currentPage.canvas.elements, newElement];
