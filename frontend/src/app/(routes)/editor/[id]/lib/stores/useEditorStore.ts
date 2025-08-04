@@ -203,7 +203,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
     set(state => ({
       pages: state.pages.map(page =>
         page.id === pageId
-          ? { ...page, elements }
+          ? { ...page, canvas: { ...page.canvas, elements } }
           : page
       ),
       isDesignSaved: false
@@ -270,7 +270,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
     } else {
       set({
         designName: design.title || get().designName,
-        pages: design.pages,
+        pages: design.pages.map(page => mapPage(page)),
       })
     }
 
