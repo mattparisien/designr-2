@@ -11,7 +11,7 @@ interface DesignElementBase {
     position: Position;
     size: Size;
 }
-interface DesignTextElement extends DesignElementBase {
+export interface DesignTextElement extends DesignElementBase {
     content: string;
     fontSize?: number;
     fontFamily?: string;
@@ -21,7 +21,7 @@ interface DesignTextElement extends DesignElementBase {
     underline?: boolean;
     color?: string;
 }
-interface DesignImageElement extends DesignElementBase {
+export interface DesignImageElement extends DesignElementBase {
     src: string;
     alt?: string;
 }

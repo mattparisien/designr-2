@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { DesignElementType, DesignElement, DesignPage, DesignProject } from "@shared/types";
-
+import { DesignPage, DesignProject } from "@shared/types";
+import mongoose, { Document, Schema } from 'mongoose';
+import { PageSchema } from 'src/schemas';
 
 export interface ProjectDocument extends Document, Omit<DesignProject, "id" | "createdAt" | "updatedAt" | "createdBy" | "templateId"> {
   title: string;
@@ -12,22 +12,15 @@ export interface ProjectDocument extends Document, Omit<DesignProject, "id" | "c
   createdBy?: mongoose.Types.ObjectId;
 }
 
-const ElementContentSchema = new Schema<DesignElement>({
-  placeholder: { type: String, required: true },
-  type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
-});
-
-const PageContentSchema = new Schema<DesignPage>({
-  elements: { type: [ElementContentSchema], default: [] },
-});
-
 const ProjectSchema = new Schema<ProjectDocument>(
   {
     title: { type: String, required: true },
     description: String,
     templateId: { type: Schema.Types.ObjectId, ref: 'Template', required: false },
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
-    pages: { type: [PageContentSchema], default: [] },
+    pages: { type: [PageSchema], default: [] },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+    updatedAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

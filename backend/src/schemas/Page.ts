@@ -1,10 +1,10 @@
 
 import { DesignPage } from "@shared/types";
 import { Schema } from "mongoose";
-import ElementSchema from "./Element";
+import { ElementSchema } from "./Element";
 
-const PageSchema = new Schema<DesignPage>({
-  canvas: {
-    elements: { type: [ElementSchema], default: [] },
-  }
+export const PageSchema = new Schema<DesignPage>({
+    canvas: {
+        elements: { type: [ElementSchema], default: [] },
+    }
 });

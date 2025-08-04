@@ -1,5 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { DesignElementType, DesignTemplateCategory, DesignElement, DesignPage, DesignTemplate } from '@shared/types';
+import { DesignElementType, DesignPage, DesignTemplate, DesignTemplateCategory } from '@shared/types';
+import mongoose, { Document, Schema } from 'mongoose';
+import { PageSchema } from 'src/schemas';
 
 export type ElementType = DesignElementType;
 export type BackgroundType = 'color' | 'image' | 'gradient';
@@ -13,30 +14,10 @@ export interface TemplateDocument extends Document, Omit<DesignTemplate, "id" | 
   tags: string[]
   thumbnailUrl?: string;
   pages: DesignPage[];
-  isPublic: boolean;
   createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
-
-const ElementSchema = new Schema<DesignElement>({
-  type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
-  placeholder: String,
-  position: {
-    x: { type: Number, required: true },
-    y: { type: Number, required: true },
-  },
-  size: {
-    width: { type: Number, required: true },
-    height: { type: Number, required: true },
-  }
-});
-
-const PageSchema = new Schema<DesignPage>({
-  canvas: {
-    elements: { type: [ElementSchema], default: [] },
-  }
-});
 
 const TemplateSchema = new Schema<TemplateDocument>(
   {
@@ -50,8 +31,9 @@ const TemplateSchema = new Schema<TemplateDocument>(
     tags: { type: [String], default: [], required: true },
     thumbnailUrl: String,
     pages: { type: [PageSchema], default: [] },
-    isPublic: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   },
   { timestamps: true }
 );

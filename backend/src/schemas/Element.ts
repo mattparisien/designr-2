@@ -2,7 +2,7 @@ import { DesignElement } from "@shared/types";
 import e from "cors";
 import { Schema } from "mongoose";
 
-const ElementSchema = new Schema<DesignElement>({
+export const ElementSchema = new Schema<DesignElement>({
   type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
   placeholder: String,
   position: {
@@ -14,5 +14,3 @@ const ElementSchema = new Schema<DesignElement>({
     height: { type: Number, required: true },
   }
 });
-
-export default ElementSchema;
