@@ -5,7 +5,7 @@ import ToolbarIcon from "./ToolbarIcon"
 
 interface ToolbarButtonProps {
     onClick?: (e: React.MouseEvent) => void
-    isActive?: boolean
+    isActive?: boolean|null,
     children: React.ReactNode
     className?: string
     direction?: 'row' | 'col'

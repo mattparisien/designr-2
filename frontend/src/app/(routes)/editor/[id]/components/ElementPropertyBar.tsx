@@ -65,17 +65,15 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   onPositionChange,
   canvasWidth,
 }, ref) => {
-  const [fontSize, setFontSize] = useState(selectedElement?.fontSize || DEFAULT_FONT_SIZE)
-  const [letterSpacing, setLetterSpacing] = useState(selectedElement?.letterSpacing || DEFAULT_LETTER_SPACING)
-  const [lineHeight, setLineHeight] = useState(selectedElement?.lineHeight || DEFAULT_LINE_HEIGHT)
-  const [showFontUpload, setShowFontUpload] = useState(false)
 
-  // Add text formatting states
-  const [isBold, setIsBold] = useState(selectedElement?.bold || false)
-  const [isItalic, setIsItalic] = useState(selectedElement?.italic || false)
-  const [isUnderlined, setIsUnderlined] = useState(selectedElement?.underline || false)
-  const [isStrikethrough, setIsStrikethrough] = useState(selectedElement?.isStrikethrough || false)
-  // Add position state
+  const [fontSize, setFontSize] = useState<number | null>(null);
+  const [letterSpacing, setLetterSpacing] = useState<number | null>(null);
+  const [lineHeight, setLineHeight] = useState<number | null>(null);
+  const [showFontUpload, setShowFontUpload] = useState<boolean>(false);
+  const [isBold, setIsBold] = useState<boolean | null>(null);
+  const [isItalic, setIsItalic] = useState<boolean | null>(null);
+  const [isUnderlined, setIsUnderlined] = useState<boolean | null>(null);
+  const [isStrikethrough, setIsStrikethrough] = useState<boolean | null>(null);
 
   const openSidebarPanel = useEditorStore((state) => state.openSidebarPanel);
   const closeSidebarPanel = useEditorStore((state) => state.closeSidebarPanel);
@@ -83,7 +81,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
   // Get fonts from the custom hook
   const { allFonts, isCustomFont, deleteFontByName } = useFonts();
-  const [fontFamily, setFontFamily] = useState(selectedElement?.fontFamily || allFonts[0] || "Inter")
+  const [fontFamily, setFontFamily] = useState(selectedElement?.type === "text" ? selectedElement?.fontFamily || allFonts[0] || "Inter" : "Inter")
 
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -91,14 +89,14 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
   // Update local state when selected element changes
   useEffect(() => {
-    if (selectedElement?.kind === "text") {
+    if (selectedElement?.type === "text") {
       setFontSize(selectedElement.fontSize || DEFAULT_FONT_SIZE)
       setFontFamily(selectedElement.fontFamily || allFonts[0] || "Inter")
       setLetterSpacing(selectedElement.letterSpacing || DEFAULT_LETTER_SPACING)
       setLineHeight(selectedElement.lineHeight || DEFAULT_LINE_HEIGHT)
-      setIsBold(selectedElement.bold || false)
-      setIsItalic(selectedElement.italic || false)
-      setIsUnderlined(selectedElement.underline || false)
+      setIsBold(selectedElement.isBold || false)
+      setIsItalic(selectedElement.isItalic || false)
+      setIsUnderlined(selectedElement.isUnderline || false)
       setIsStrikethrough(selectedElement.isStrikethrough || false)
     }
   }, [selectedElement, allFonts])
@@ -187,14 +185,14 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   const handleAlignCenter = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!selectedElement || !onPositionChange) return;
-    const centerX = (canvasWidth - selectedElement.width) / 2;
+    const centerX = (canvasWidth - selectedElement.rect.width) / 2;
     onPositionChange({ x: centerX });
   }
 
   const handleAlignEnd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!selectedElement || !onPositionChange) return;
-    const endX = canvasWidth - selectedElement.width;
+    const endX = canvasWidth - selectedElement.rect.width;
     onPositionChange({ x: endX });
   }
 
@@ -238,7 +236,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
   }, [])
 
   // Determine if we're dealing with a text element or shape element
-  const isTextElement = selectedElement?.kind === "text";
+  const isTextElement = selectedElement?.type === "text";
   const isShapeElement = selectedElement && !isTextElement;
 
   return (
@@ -332,14 +330,17 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
                 <ToolbarButton onClick={(e) => {
                   e.stopPropagation();
-                  handleFontSizeChange(fontSize - 1);
+
+                  if (fontSize) {
+                    handleFontSizeChange(fontSize - 1);
+                  }
                 }}>
                   <ToolbarIcon icon={Minus} />
                 </ToolbarButton>
 
                 <input
                   type="number"
-                  value={fontSize}
+                  value={fontSize || DEFAULT_FONT_SIZE}
                   min={MIN_FONT_SIZE}
                   max={MAX_FONT_SIZE}
                   placeholder="– –"
@@ -350,7 +351,10 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
 
                 <ToolbarButton onClick={(e) => {
                   e.stopPropagation();
-                  handleFontSizeChange(fontSize + 1);
+
+                  if (fontSize) {
+                    handleFontSizeChange(fontSize + 1);
+                  }
                 }}>
                   <ToolbarIcon icon={Plus} />
                 </ToolbarButton>
@@ -395,10 +399,10 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-gray-700">Letter Spacing</label>
-                    <span className="text-sm text-gray-500">{letterSpacing.toFixed(2)}em</span>
+                    <span className="text-sm text-gray-500">{letterSpacing?.toFixed(2)}em</span>
                   </div>
                   <Slider
-                    value={[letterSpacing]}
+                    value={[letterSpacing || DEFAULT_LETTER_SPACING]}
                     onValueChange={handleLetterSpacingChange}
                     min={MIN_LETTER_SPACING}
                     max={MAX_LETTER_SPACING}
@@ -420,10 +424,10 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-gray-700">Line Height</label>
-                    <span className="text-sm text-gray-500">{lineHeight.toFixed(1)}</span>
+                    <span className="text-sm text-gray-500">{lineHeight?.toFixed(1)}</span>
                   </div>
                   <Slider
-                    value={[lineHeight]}
+                    value={[lineHeight || DEFAULT_LINE_HEIGHT]}
                     onValueChange={handleLineHeightChange}
                     min={MIN_LINE_HEIGHT}
                     max={MAX_LINE_HEIGHT}

@@ -38,10 +38,16 @@ export interface DesignShapeElement extends DesignElementBase {
   borderWidth?: number;
 }
 
+export interface DesignLineElement extends DesignElementBase {
+  type: "line";
+  backgroundColor?: string;
+  width?: number;
+}
+
 export interface DesignImageElement extends DesignElementBase {
   type: "image";
   src: string;
   alt?: string;
 }
 
-export type DesignElement = DesignTextElement | DesignShapeElement | DesignImageElement;
+export type DesignElement = DesignTextElement | DesignShapeElement | DesignLineElement | DesignImageElement;

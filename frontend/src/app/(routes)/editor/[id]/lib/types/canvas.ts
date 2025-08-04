@@ -1,5 +1,5 @@
 // Import base size from shared types
-import { DesignCanvas, DesignElementType, DesignImageElement, DesignPage, DesignShapeElement, DesignTextElement, Size } from "@shared/types";
+import { DesignCanvas, DesignElementType, DesignImageElement, DesignLineElement, DesignPage, DesignShapeElement, DesignTextElement, Size } from "@shared/types";
 
 // Frontend-specific Page type
 export type CanvasSize = Size;
@@ -12,10 +12,11 @@ export type ElementBase = {
 
 export type TextElement = ElementBase & DesignTextElement;
 export type ShapeElement = ElementBase & DesignShapeElement;
+export type LineElement = ElementBase & DesignLineElement;
 export type ImageElement = ElementBase & DesignImageElement;
 
 
-export type Element = TextElement | ShapeElement | ImageElement;
+export type Element = TextElement | ShapeElement | LineElement | ImageElement;
 
 export type Canvas = Omit<DesignCanvas, "elements"> & {
   elements: Element[];
