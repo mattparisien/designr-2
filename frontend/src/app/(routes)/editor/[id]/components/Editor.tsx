@@ -2,12 +2,12 @@
 
 import { addToRefArrayOfObjects } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
-import useCanvasStore, { useCurrentCanvasSize } from "../lib/stores/useCanvasStore";
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
 import { ElementFactory } from "../lib/factories/elementFactory";
 import useElementActionBar from "../lib/hooks/useElementActionBar";
+import useCanvasStore, { useCurrentCanvasSize } from "../lib/stores/useCanvasStore";
 import useEditorStore from "../lib/stores/useEditorStore";
-import { Element } from "../lib/types/canvas";
+import { TextElement } from "../lib/types/canvas";
 import BottomBar from "./BottomBar";
 import Canvas from "./Canvas/Canvas";
 import ElementControls from "./Canvas/controls/ElementControls";
@@ -15,14 +15,14 @@ import { ElementActionBar } from "./Canvas/ElementActionBar";
 import { ElementPropertyBar } from "./ElementPropertyBar";
 
 interface EditorProps {
-    compositionId: string;
+    designId: string;
 }
 
 /**
  * Editor component serves as the main wrapper for the canvas editing experience.
  * It focuses exclusively on the canvas area and related editing functionality.
  */
-export default function Editor({ compositionId }: EditorProps) {
+export default function Editor({ designId }: EditorProps) {
     // Reference for the editor container
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export default function Editor({ compositionId }: EditorProps) {
     const canvasSize = useCurrentCanvasSize()
     const selectedElementIds = useCanvasStore(state => state.selectedElementIds)
     const selectedElement = useCanvasStore(state => state.selectedElement)
-    const elements = useEditorStore(state => state.pages[currentPageIndex]?.elements || [])
+    const elements = useEditorStore(state => state.pages[currentPageIndex]?.canvas.elements || [])
     const updateElement = useCanvasStore(state => state.updateElement)
     const clearSelection = useCanvasStore(state => state.clearSelection)
     const deleteSelectedElements = useCanvasStore(state => state.deleteSelectedElements)
@@ -150,9 +150,10 @@ export default function Editor({ compositionId }: EditorProps) {
 
     // Text editing handlers
     const handleFontSizeChange = useCallback((size: number) => {
-        if (selectedElement && selectedElement.kind === "text") {
-            updateElement(selectedElement.id, { fontSize: size })
-        }
+
+        if (!selectedElement) return;
+
+        updateElement(selectedElement.id, { fontSize: size })
     }, [selectedElement, updateElement]);
 
     // Add a keyboard event handler for element deletion
@@ -181,35 +182,35 @@ export default function Editor({ compositionId }: EditorProps) {
     }, [selectedElementIds, deleteSelectedElements]);
 
     const handleFontFamilyChange = useCallback((family: string) => {
-        if (selectedElement && selectedElement.kind === "text") {
+        if (selectedElement && selectedElement.type === "text") {
             updateElement(selectedElement.id, { fontFamily: family })
         }
     }, [selectedElement, updateElement]);
 
     const handleTextAlignChange = useCallback((align: "left" | "center" | "right") => {
-        if (selectedElement && selectedElement.kind === "text") {
+        if (selectedElement && selectedElement.type === "text") {
             updateElement(selectedElement.id, { textAlign: align })
         }
     }, [selectedElement, updateElement]);
 
     const handleLetterSpacingChange = useCallback((spacing: number) => {
-        if (selectedElement && selectedElement.kind === "text") {
+        if (selectedElement && selectedElement.type === "text") {
             updateElement(selectedElement.id, { letterSpacing: spacing })
         }
     }, [selectedElement, updateElement]);
 
     const handleLineHeightChange = useCallback((height: number) => {
-        if (selectedElement && selectedElement.kind === "text") {
+        if (selectedElement && selectedElement.type === "text") {
             updateElement(selectedElement.id, { lineHeight: height })
         }
     }, [selectedElement, updateElement]);
 
     const handleFormatChange = useCallback((format: { bold?: boolean; italic?: boolean; underline?: boolean; strikethrough?: boolean }) => {
-        if (selectedElement && selectedElement.kind === "text") {
-            const updates: Partial<Element> = {};
-            if (format.bold !== undefined) updates.bold = format.bold;
-            if (format.italic !== undefined) updates.italic = format.italic;
-            if (format.underline !== undefined) updates.underline = format.underline;
+        if (selectedElement && selectedElement.type === "text") {
+            const updates: Partial<TextElement> = {};
+            if (format.bold !== undefined) updates.isBold = format.bold;
+            if (format.italic !== undefined) updates.isItalic = format.italic;
+            if (format.underline !== undefined) updates.isUnderline = format.underline;
             if (format.strikethrough !== undefined) updates.isStrikethrough = format.strikethrough;
             updateElement(selectedElement.id, updates);
         }
@@ -217,7 +218,12 @@ export default function Editor({ compositionId }: EditorProps) {
 
     const handlePositionChange = useCallback((position: { x?: number, y?: number }) => {
         if (selectedElement) {
-            updateElement(selectedElement.id, position);
+            updateElement(selectedElement.id, {
+                rect: {
+                    ...selectedElement.rect,
+                    ...position
+                }
+            });
         }
     }, [selectedElement, updateElement]);
 
@@ -271,7 +277,7 @@ export default function Editor({ compositionId }: EditorProps) {
                 );
 
                 // Add the element to the canvas
-                addElement(newTextElement);
+                addElement(newTextElement, "text");
             }
         };
 
@@ -285,18 +291,18 @@ export default function Editor({ compositionId }: EditorProps) {
 
     // Initialize template ID and load template data when component mounts
     useEffect(() => {
-        if (compositionId) {
-            const setCompositionId = useEditorStore.getState().setCompositionId;
-            const loadComposition = useEditorStore.getState().loadComposition;
+        if (designId) {
+            const setDesign = useEditorStore.getState().setDesign;
+            const loadDesign = useEditorStore.getState().loadDesign;
 
-            setCompositionId(compositionId);
+            setDesign(designId);
 
             // Load the composition data
-            loadComposition(compositionId).catch((error) => {
+            loadDesign(designId).catch((error) => {
                 console.error('Error loading composition:', error);
             });
         }
-    }, [compositionId]);
+    }, [designId]);
 
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {
@@ -306,10 +312,10 @@ export default function Editor({ compositionId }: EditorProps) {
                 e.preventDefault(); // Prevent browser's default save action
 
                 // Call the save function
-                const saveComposition = useEditorStore.getState().saveComposition;
-                if (compositionId && saveComposition) {
-                    saveComposition(compositionId).catch((error) => {
-                        console.error('Error saving composition:', error);
+                const saveDesign = useEditorStore.getState().saveDesign;
+                if (designId && saveDesign) {
+                    saveDesign().catch((error) => {
+                        console.error('Error saving design:', error);
                     });
                 }
             }
@@ -321,7 +327,7 @@ export default function Editor({ compositionId }: EditorProps) {
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [compositionId]);
+    }, [designId]);
 
     useEffect(() => {
         const handleOutsideClick = (e: globalThis.MouseEvent) => {
@@ -351,7 +357,7 @@ export default function Editor({ compositionId }: EditorProps) {
 
             // Exit text editing mode for all elements when clicking outside
             elements.forEach(element => {
-                if (element.kind === "text" && element.isEditable) {
+                if (element.type === "text" && element.isEditable) {
                     updateElement(element.id, { isEditable: false });
                 }
             });
@@ -401,9 +407,9 @@ export default function Editor({ compositionId }: EditorProps) {
                         onLock={() => {
                             if (selectedElement) {
                                 // Toggle the locked state
-                                const newLockedState = !selectedElement.locked;
+                                const newLockedState = !selectedElement.isLocked;
                                 console.log(`Setting element ${selectedElement.id} locked: ${newLockedState}`);
-                                updateElement(selectedElement.id, { locked: newLockedState });
+                                updateElement(selectedElement.id, { isLocked: newLockedState });
                             }
                         }}
                         onDuplicate={() => {
@@ -418,22 +424,22 @@ export default function Editor({ compositionId }: EditorProps) {
 
                 {/* ElementPropertyBar moved here */}
                 <header className="absolute top-0 left-0 w-full h-[var(--editor-header-height)] flex items-center justify-center ">
-                        {selectedElement && (
-                            <ElementPropertyBar
-                                selectedElement={selectedElement}
-                                onFontSizeChange={handleFontSizeChange}
-                                onFontFamilyChange={handleFontFamilyChange}
-                                onTextAlignChange={handleTextAlignChange}
-                                onLetterSpacingChange={handleLetterSpacingChange}
-                                onLineHeightChange={handleLineHeightChange}
-                                onFormatChange={handleFormatChange}
-                                onPositionChange={handlePositionChange}
-                                isHovering={false}
-                                elementId={selectedElement?.id || null}
-                                canvasWidth={canvasSize.width}
-                                ref={elementPropertyBarRef}
-                            />
-                        )}
+                    {selectedElement && (
+                        <ElementPropertyBar
+                            selectedElement={selectedElement}
+                            onFontSizeChange={handleFontSizeChange}
+                            onFontFamilyChange={handleFontFamilyChange}
+                            onTextAlignChange={handleTextAlignChange}
+                            onLetterSpacingChange={handleLetterSpacingChange}
+                            onLineHeightChange={handleLineHeightChange}
+                            onFormatChange={handleFormatChange}
+                            onPositionChange={handlePositionChange}
+                            isHovering={false}
+                            elementId={selectedElement?.id || null}
+                            canvasWidth={canvasSize.width}
+                            ref={elementPropertyBarRef}
+                        />
+                    )}
                 </header>
                 <Canvas
                     zoom={zoom}

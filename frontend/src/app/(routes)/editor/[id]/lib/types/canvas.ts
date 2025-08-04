@@ -1,11 +1,22 @@
 // Import base size from shared types
-import { Size, DesignElement, DesignPage, DesignCanvas, DesignElementType } from "@shared/types";
+import { DesignCanvas, DesignElementType, DesignImageElement, DesignPage, DesignShapeElement, DesignTextElement, Size } from "@shared/types";
 
 // Frontend-specific Page type
 export type CanvasSize = Size;
-export type Element = DesignElement & {
+
+export type ElementBase = {
   isNew: boolean;
+  isEditable: boolean; // For text elements that can be edited
+  isLocked: boolean; // Indicates if the element is locked for editing
 }
+
+export type TextElement = ElementBase & DesignTextElement;
+export type ShapeElement = ElementBase & DesignShapeElement;
+export type ImageElement = ElementBase & DesignImageElement;
+
+
+export type Element = TextElement | ShapeElement | ImageElement;
+
 export type Canvas = Omit<DesignCanvas, "elements"> & {
   elements: Element[];
 }
@@ -60,7 +71,7 @@ export interface EditorContextType {
 export interface CanvasContextType {
   // Canvas elements and properties
   elements: Element[] // Elements of the current page
-  selectedElement: Omit<Element, "type"> | null
+  selectedElement: TextElement | null
   selectedElementIds: string[]
   isCanvasSelected: boolean
   isLoaded: boolean // Canvas loading state
@@ -76,7 +87,7 @@ export interface CanvasContextType {
 
   // Element manipulation
   addElement: (element: Omit<Element, "id" | "type">, type: DesignElementType) => void
-  updateElement: (id: string, updates: Partial<Omit<Element, "id" | "type">>) => void
+  updateElement: (id: string, updates: Partial<Omit<TextElement, "id">> | Partial<Omit<ShapeElement, "id">> | Partial<Omit<ImageElement, "id">>) => void
   updateMultipleElements: (updates: Partial<Omit<Element, "id" | "type">> | ((element: Partial<Omit<Element, "id" | "type">>) => Partial<Element>)) => void
   deleteElement: (id: string) => void
   deleteSelectedElements: () => void

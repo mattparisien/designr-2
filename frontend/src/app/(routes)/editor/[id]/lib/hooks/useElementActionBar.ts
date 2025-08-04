@@ -11,7 +11,7 @@ interface ActionBarState {
 const MARGIN = 8;
 
 const useElementActionBar = (
-    element: CanvasElement | null,
+    element: Omit<CanvasElement, "type"> | null,
     actionBarRef: React.RefObject<HTMLElement | null>,
     propertyBarRef: React.RefObject<HTMLElement | null>
 ) => {

@@ -148,12 +148,17 @@ const useCanvasStore = create<CanvasState>((set, get) => {
         letterSpacing?: number;
         lineHeight?: number;
         isStrikethrough?: boolean;
+        isLocked?: boolean; // New property for locked state
+        isBold?: boolean; // For text elements
+        isItalic?: boolean; // For text elements
+        isUnderline?: boolean; // For text elements
       };
 
       const data = elementData as LegacyElementData;
 
       // Generate a unique ID for the new element
       let newElement: Element;
+      
 
       if (type === 'text') {
         newElement = {
@@ -164,17 +169,19 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           fontSize: data.fontSize,
           fontFamily: data.fontFamily,
           textAlign: data.textAlign,
-          bold: data.bold,
-          italic: data.italic,
-          underline: data.underline,
+          isBold: data.isBold || false,
+          isItalic: data.isItalic || false,
+          isUnderline: data.isUnderline || false,
           color: data.color,
           rect: data.rect || {
             x: data.x || 0,
             y: data.y || 0,
             width: data.width || 100,
-            height: data.height || 50
+            height: data.height || 50,
           },
-          isNew: true
+          isNew: data.isNew || true,
+          isLocked: data.isLocked || false,
+          isEditable: data.isEditable || true
         };
       } else if (type === 'shape') {
         newElement = {
@@ -192,7 +199,9 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           backgroundColor: data.backgroundColor,
           borderColor: data.borderColor,
           borderWidth: data.borderWidth,
-          isNew: true
+          isNew: true,
+          isLocked: data.isLocked || false,
+          isEditable: data.isEditable || true
         };
       } else if (type === 'image') {
         newElement = {
@@ -207,7 +216,9 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           },
           src: data.src || '',
           alt: data.alt,
-          isNew: true
+          isNew: data.isNew || true,
+          isLocked: data.isLocked || false,
+          isEditable: data.isEditable || true,
         };
       } else {
         // Default to text if unknown type
@@ -222,7 +233,9 @@ const useCanvasStore = create<CanvasState>((set, get) => {
             height: data.height || 50
           },
           content: data.content || 'Add your text here',
-          isNew: true
+          isNew: true,
+          isLocked: data.isLocked || false,
+          isEditable: data.isEditable || true
         };
       }
 

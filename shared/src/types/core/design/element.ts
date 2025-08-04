@@ -21,9 +21,12 @@ export interface DesignTextElement extends DesignElementBase {
   fontSize?: number;
   fontFamily?: string;
   textAlign?: 'left' | 'center' | 'right';
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
+  letterSpacing?: number;
+  lineHeight?: number;
+  isBold?: boolean;
+  isItalic?: boolean;
+  isUnderline?: boolean;
+  isStrikethrough?: boolean;
   color?: string;
 }
 
