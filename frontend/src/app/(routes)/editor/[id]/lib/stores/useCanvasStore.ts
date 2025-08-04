@@ -287,7 +287,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
       // Create updated elements array
       const updatedElements = currentPage.canvas.elements.map(element =>
-        element.id === id ? { ...element, ...updates } : element
+        element.id === id ? { ...element, ...updates } as Element : element
       );
 
       // Update the page elements
@@ -672,7 +672,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
           // Create updated elements array with reverted element
           const updatedElements = currentPage.canvas.elements.map(element =>
-            element.id === action.id ? { ...element, ...action.before } : element
+            element.id === action.id ? { ...element, ...action.before } as Element : element
           );
 
           // Update the page
@@ -770,7 +770,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
           // Create updated elements array
           const updatedElements = currentPage.canvas.elements.map(element =>
-            element.id === action.id ? { ...element, ...action.after } : element
+            element.id === action.id ? { ...element, ...action.after } as Element : element
           );
 
           // Update the page
