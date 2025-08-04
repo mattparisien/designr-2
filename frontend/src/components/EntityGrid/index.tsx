@@ -12,11 +12,11 @@ import { useInfiniteEntity } from "@/lib/hooks/useInfiniteEntity";
 import { useToast } from "@/lib/hooks/useToast";
 import { EntityConfig } from "@/lib/types/grid";
 import { getRelativeTime } from "@/lib/utils";
-import { upperFirst } from "lodash";
 import { ChevronDown, LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { upperFirst } from "../InteractiveGrid/InteractiveGrid";
 
 type BaseEntity = { _id: string; title?: string; starred?: boolean; thumbnailUrl?: string; type?: string; updatedAt?: string; name?: string };
 

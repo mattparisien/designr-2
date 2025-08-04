@@ -276,6 +276,8 @@ export default function Editor({ designId }: EditorProps) {
                     }
                 );
 
+                console.log('new text element', newTextElement);
+
                 // Add the element to the canvas
                 addElement(newTextElement, "text");
             }

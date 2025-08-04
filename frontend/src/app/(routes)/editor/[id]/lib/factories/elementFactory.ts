@@ -29,31 +29,13 @@
  */
 
 import { nanoid } from 'nanoid';
-import { Element } from '../types/canvas';
-import { DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_LETTER_SPACING, DEFAULT_LINE_HEIGHT, DEFAULT_ELEMENT_DIMENSIONS } from '../constants';
+import { Element, CanvasSize, ImageElement, TextElement } from '../types/canvas';
+import { DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_LETTER_SPACING, DEFAULT_LINE_HEIGHT, DEFAULT_ELEMENT_DIMENSIONS, DEFAULT_ELEMENT_COLORS } from '../constants';
 import { measureTextWidth, measureTextHeight } from '../utils/textMeasurement';
 import type { Template } from '@/lib/types/api';
+import { Rect } from '../types/common';
 
-export interface ElementPosition {
-  x: number;
-  y: number;
-}
 
-export interface CanvasSize {
-  width: number;
-  height: number;
-}
-
-/**
- * Default colors for different element types
- */
-export const DEFAULT_ELEMENT_COLORS = {
-  TEXT_COLOR: "#000000",
-  SHAPE_BACKGROUND: "#3b82f6",
-  SHAPE_BORDER: "#000000", 
-  LINE_COLOR: "#000000",
-  ARROW_COLOR: "#000000",
-} as const;
 
 /**
  * Factory functions for creating different types of canvas elements
@@ -71,66 +53,64 @@ export class ElementFactory {
       textAlign?: "left" | "center" | "right";
       width?: number;
       height?: number;
-      position?: ElementPosition;
+      rect?: Rect;
       letterSpacing?: number;
       lineHeight?: number;
-      bold?: boolean;
-      italic?: boolean;
-      underline?: boolean;
+      isBold?: boolean;
+      isItalic?: boolean;
+      isUnderline?: boolean;
       isStrikethrough?: boolean;
       color?: string;
       isEditable?: boolean;
+      isLocked?: boolean;
     } = {}
-  ): Omit<Element, 'id'> {
+  ): Omit<TextElement, 'id'> {
     const {
       content = "Add your text here",
       fontSize = DEFAULT_FONT_SIZE,
       fontFamily = "Inter",
       textAlign = DEFAULT_TEXT_ALIGN,
-      position,
+      rect,
       letterSpacing = DEFAULT_LETTER_SPACING,
       lineHeight = DEFAULT_LINE_HEIGHT,
-      bold = false,
-      italic = false,
-      underline = false,
+      isBold = false,
+      isItalic = false,
+      isUnderline = false,
       isStrikethrough = false,
       color = DEFAULT_ELEMENT_COLORS.TEXT_COLOR,
-      isEditable = false
+      isEditable = false,
+      isLocked = false
     } = options;
 
     // Calculate text dimensions dynamically based on content and styling
     const textWidth = measureTextWidth(content, {
       fontSize,
       fontFamily,
-      isBold: bold,
-      isItalic: italic,
+      isBold,
+      isItalic,
       letterSpacing
     });
 
     // Add some padding to the width for better visual appearance
     const width = Math.max(textWidth, 100); // Minimum width of 100px
-    
+
     // Calculate height based on the calculated width and line height
     const height = measureTextHeight(content, width, {
       fontSize,
       fontFamily,
-      isBold: bold,
-      isItalic: italic,
+      isBold,
+      isItalic,
       lineHeight
     });
 
     // Calculate centered position if not provided
-    const elementPosition = position || {
-      x: (canvasSize.width - width) / 2,
-      y: (canvasSize.height - height) / 2
+    const elementPosition = {
+      x: rect?.x || (canvasSize.width - width) / 2,
+      y: rect?.y || (canvasSize.height - height) / 2
     };
 
     return {
-      kind: "text" as const,
-      x: elementPosition.x,
-      y: elementPosition.y,
-      width,
-      height,
+      type: "text" as const,
       rect: {
         x: elementPosition.x,
         y: elementPosition.y,
@@ -143,15 +123,14 @@ export class ElementFactory {
       textAlign,
       letterSpacing,
       lineHeight,
-      bold,
-      italic,
-      underline,
+      isBold,
+      isItalic,
+      isUnderline,
       isStrikethrough,
       color,
       isNew: true,
       isEditable,
-      opacity: 1,
-      rotation: 0
+      isLocked,
     };
   }
 
@@ -182,7 +161,7 @@ export class ElementFactory {
     } = options;
 
     const width = canvasSize.width * scale;
-    const height = canvasSize.height * scale; 
+    const height = canvasSize.height * scale;
 
     // Calculate centered position if not provided
     const elementPosition = position || {
@@ -214,7 +193,7 @@ export class ElementFactory {
     options: {
       length?: number;
       thickness?: number;
-      position?: ElementPosition;
+      rect?: Rect;
       backgroundColor?: string;
       opacity?: number;
       rotation?: number;
@@ -223,20 +202,20 @@ export class ElementFactory {
     const {
       length = DEFAULT_ELEMENT_DIMENSIONS.LINE_LENGTH,
       thickness = DEFAULT_ELEMENT_DIMENSIONS.LINE_THICKNESS,
-      position,
+      rect,
       backgroundColor = DEFAULT_ELEMENT_COLORS.LINE_COLOR,
       opacity = 1,
       rotation = 0
     } = options;
 
     // Calculate centered position if not provided
-    const elementPosition = position || {
-      x: (canvasSize.width - length) / 2,
-      y: canvasSize.height / 2
+    const elementPosition = {
+      x: rect?.x || (canvasSize.width - length) / 2,
+      y: rect?.y || (canvasSize.height - thickness) / 2
     };
 
     return {
-      kind: "line" as const,
+      type: "line" as const,
       x: elementPosition.x,
       y: elementPosition.y,
       width: length,
@@ -262,97 +241,52 @@ export class ElementFactory {
     options: {
       maxWidth?: number;
       maxHeight?: number;
-      position?: ElementPosition;
-      opacity?: number;
-      rotation?: number;
+      rect?: Rect;
     } = {}
-  ): Omit<Element, 'id'> {
+  ): Omit<ImageElement, 'id'> {
     const {
       maxWidth = DEFAULT_ELEMENT_DIMENSIONS.IMAGE_MAX_WIDTH,
       maxHeight = DEFAULT_ELEMENT_DIMENSIONS.IMAGE_MAX_HEIGHT,
-      position,
-      opacity = 1,
-      rotation = 0
+      rect,
     } = options;
 
     const { src, alt = "", originalWidth, originalHeight } = imageData;
 
     // Calculate aspect ratio and final dimensions
     const aspectRatio = originalHeight / originalWidth;
-    
+
     let finalWidth = originalWidth;
     let finalHeight = originalHeight;
-    
+
     // Scale down if the image is too large
     if (originalWidth > maxWidth) {
       finalWidth = maxWidth;
       finalHeight = maxWidth * aspectRatio;
     }
-    
+
     if (finalHeight > maxHeight) {
       finalHeight = maxHeight;
       finalWidth = maxHeight / aspectRatio;
     }
 
     // Calculate centered position if not provided
-    const elementPosition = position || {
-      x: (canvasSize.width - finalWidth) / 2,
-      y: (canvasSize.height - finalHeight) / 2
+    const elementPosition = {
+      x: rect?.x || (canvasSize.width - finalWidth) / 2,
+      y: rect?.y || (canvasSize.height - finalHeight) / 2
     };
 
     return {
-      kind: "image" as const,
-      x: elementPosition.x,
-      y: elementPosition.y,
-      width: finalWidth,
-      height: finalHeight,
+      type: "image" as const,
+      rect: {
+        ...elementPosition,
+        width: finalWidth,
+        height: finalHeight
+      },
       src,
       alt,
-      opacity,
-      rotation,
-      isNew: true
-    };
-  }
-
-  /**
-   * Creates a new arrow element (line with arrow styling)
-   */
-  static createArrowElement(
-    canvasSize: CanvasSize,
-    options: {
-      length?: number;
-      thickness?: number;
-      position?: ElementPosition;
-      backgroundColor?: string;
-      opacity?: number;
-      rotation?: number;
-    } = {}
-  ): Omit<Element, 'id'> {
-    const {
-      length = DEFAULT_ELEMENT_DIMENSIONS.ARROW_LENGTH,
-      thickness = DEFAULT_ELEMENT_DIMENSIONS.ARROW_THICKNESS,
-      position,
-      backgroundColor = DEFAULT_ELEMENT_COLORS.ARROW_COLOR,
-      opacity = 1,
-      rotation = 0
-    } = options;
-
-    // Calculate centered position if not provided
-    const elementPosition = position || {
-      x: (canvasSize.width - length) / 2,
-      y: canvasSize.height / 2
-    };
-
-    return {
-      kind: "arrow" as const,
-      x: elementPosition.x,
-      y: elementPosition.y,
-      width: length,
-      height: thickness,
-      backgroundColor,
-      opacity,
-      rotation,
-      isNew: true
+      isNew: true,
+      isEditable: true,
+      isLocked: false,
     };
   }
 
@@ -363,15 +297,6 @@ export class ElementFactory {
     return nanoid();
   }
 
-  /**
-   * Creates a complete element with ID (ready to be added to canvas)
-   */
-  static createCompleteElement(elementData: Omit<Element, 'id'>): Element {
-    return {
-      ...elementData,
-      id: ElementFactory.generateId()
-    };
-  }
 
   /**
    * Creates a new template with default values

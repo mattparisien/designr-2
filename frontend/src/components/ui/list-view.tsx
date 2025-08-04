@@ -2,7 +2,7 @@ import { Template, type Project } from "@/lib/types/api";
 import { getRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { upperFirst } from "lodash";
+import { upperFirst } from "../InteractiveGrid/InteractiveGrid";
 import { MoreHorizontal, Share2, Star, StarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 

@@ -1,4 +1,4 @@
-import { Element } from "../types/canvas";
+import { Element, ShapeElement } from "../types/canvas";
 
 /**
  * Calculates the width of text based on font size and family
@@ -42,7 +42,7 @@ export const measureTextWidth = (text: string, fontSize: number, fontFamily: str
  * @returns A new element with updated font size
  */
 export const scaleElement = (element: Element, scaleFactor: number): Element => {
-  if (element.kind === "text" && element.fontSize) {
+  if (element.type === "text" && element.fontSize) {
     const newFontSize = Math.max(8, Math.round((element.fontSize || 36) * scaleFactor))
     return {
       ...element,
@@ -122,10 +122,10 @@ export const calculateViewportRect = (
 
   // Calculate element position relative to viewport
   // Consider any scroll offset as well
-  const viewportX = canvasRect.left + (element.x * scale);
-  const viewportY = canvasRect.top + (element.y * scale);
-  const viewportWidth = element.width * scale;
-  const viewportHeight = element.height * scale;
+  const viewportX = canvasRect.left + (element.rect.x * scale);
+  const viewportY = canvasRect.top + (element.rect.y * scale);
+  const viewportWidth = element.rect.width * scale;
+  const viewportHeight = element.rect.height * scale;
 
   return {
     x: viewportX,
@@ -150,12 +150,10 @@ export const reorderByIndex = <T>(items: T[], from: number, to: number): T[] => 
 };
 
 
-export const getShapeStyles = (element: Element) => ({
+export const getShapeStyles = (element: ShapeElement) => ({
   backgroundColor: element.backgroundColor || "transparent",
   borderColor: element.borderColor || "transparent",
   borderWidth: element.borderWidth || 0,
-  borderStyle: element.borderStyle || "solid",
-  transform: element.rotation ? `rotate(${element.rotation}deg)` : "none",
 });
 
 export const getLineStyles = (element: Element) => ({

@@ -31,7 +31,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const clearAlignmentGuides = useCanvasStore(state => state.clearAlignmentGuides);
     const setResizeState = useCanvasStore(state => state.setResizeState);
     const setElementManuallyResized = useCanvasStore(state => state.setElementManuallyResized);
-    
+
     // Editor store - get sidebar width for responsive positioning
     const sidebarWidth = useEditorStore(state => state.sidebar.width);
 
@@ -152,7 +152,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
         // Don't start dragging if the element is locked, but allow the mouse event to continue
         // for selection purposes
-        if (element.locked) {
+        if (element.isLocked) {
             return;
         }
 
@@ -207,9 +207,9 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         const editor = useEditorStore.getState();
         const currentPageId = editor.currentPageId;
         const currentPage = editor.pages.find(page => page.id === currentPageId);
-        const allElements = currentPage ? currentPage.elements : [];
-        const canvasWidth = currentPage?.canvasSize?.width || currentPage?.canvas?.width || 800;
-        const canvasHeight = currentPage?.canvasSize?.height || currentPage?.canvas?.height || 600;
+        const allElements = currentPage ? currentPage.canvas.elements : [];
+        const canvasWidth = currentPage?.canvas?.width || 800;
+        const canvasHeight = currentPage?.canvas?.height || 600;
 
         let animationFrameId: number | null = null;
         let lastEvent: MouseEvent | null = null;
@@ -222,8 +222,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             const deltaY = (lastEvent.clientY - dragStart.y) / scale;
 
             // Calculate new position relative to canvas
-            let newX = element.x + deltaX;
-            let newY = element.y + deltaY;
+            let newX = element.rect.x + deltaX;
+            let newY = element.rect.y + deltaY;
 
             // Get snapped position with alignment guides
             const { x: snappedX, y: snappedY, alignments } = snapping.getSnappedPosition(
@@ -245,7 +245,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             setAlignmentGuides(alignments);
 
             // Update element position in canvas store
-            updateElement(element.id, { x: newX, y: newY });
+            updateElement(element.id, { rect: { x: newX, y: newY, width: element.rect.width, height: element.rect.height } });
 
             // Update drag start for next movement
             setDragStart({ x: lastEvent.clientX, y: lastEvent.clientY });
@@ -299,9 +299,9 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         const editor = useEditorStore.getState();
         const currentPageId = editor.currentPageId;
         const currentPage = editor.pages.find(page => page.id === currentPageId);
-        const allElements = currentPage ? currentPage.elements : [];
-        const canvasWidth = currentPage?.canvasSize?.width || currentPage?.canvas?.width || 800;
-        const canvasHeight = currentPage?.canvasSize?.height || currentPage?.canvas?.height || 600;
+        const allElements = currentPage ? currentPage.canvas.elements : [];
+        const canvasWidth = currentPage?.canvas?.width || 800;
+        const canvasHeight = currentPage?.canvas?.height || 600;
 
         let animationFrameId: number | null = null;
         let lastEvent: MouseEvent | null = null;
@@ -349,19 +349,21 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
             // Update element with new dimensions, position and font size
             updateElementWithRect({
-                width: newWidth,
-                height: newHeight,
-                x: newX,
-                y: newY,
-                ...(element.kind === "text" ? { fontSize: newFontSize } : {}),
+                rect: {
+                    width: newWidth,
+                    height: newHeight,
+                    x: newX,
+                    y: newY,
+                },
+                ...(element.type === "text" ? { fontSize: newFontSize } : {})
             });
 
             // If resizing a text element horizontally, measure and update height immediately
-            if (element.kind === "text" && widthChanged) {
+            if (element.type === "text" && widthChanged) {
                 const measuredHeight = measurementHook.measureElementHeight(element);
 
                 if (measuredHeight && measuredHeight !== newHeight) {
-                    updateElementWithRect({ height: measuredHeight });
+                    updateElementWithRect({ rect: { ...element.rect, height: measuredHeight } });
                 }
             }
 
@@ -386,7 +388,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 setJustFinishedResizing(true);
 
                 // Mark text elements as manually resized when resize operation finishes
-                if (element.kind === "text") {
+                if (element.type === "text") {
                     setElementManuallyResized(element.id, true);
                 }
 
@@ -417,13 +419,13 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
     // For text elements, get the actual DOM dimensions to ensure selection border matches
     const getActualDimensions = useCallback(() => {
-        if (element?.kind !== "text") {
-            return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+        if (element?.type !== "text") {
+            return { width: (element?.rect?.width || 0) * scale, height: (element?.rect?.height || 0) * scale };
         }
 
         // During resize operations, always use the stored dimensions to avoid conflicts
         if (isResizing) {
-            return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+            return { width: (element?.rect?.width || 0) * scale, height: (element?.rect?.height || 0) * scale };
         }
 
         // Find the text element in the DOM by looking for the text-element class
@@ -434,19 +436,19 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         }
 
         // Fallback to stored dimensions if DOM element not found
-        return { width: (element?.width || 0) * scale, height: (element?.height || 0) * scale };
+        return { width: (element?.rect?.width || 0) * scale, height: (element?.rect?.height || 0) * scale };
     }, [element, scale, isResizing]);
 
     // Force recalculation of dimensions when text content or editable state changes
     useEffect(() => {
-        if (element?.kind === "text") {
+        if (element?.type === "text") {
             // Small delay to ensure DOM has updated after content/state change
             const timer = setTimeout(() => {
                 // This effect will cause the component to re-render with updated dimensions
             }, 10);
             return () => clearTimeout(timer);
         }
-    }, [element?.kind, element?.content, element?.isEditable, element?.fontSize, element?.fontFamily]);
+    }, [element.fontSize]);
 
 
     //     useEffect(() => {
@@ -458,11 +460,11 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     }
 
     const actualDimensions = getActualDimensions();
-    
+
     // Don't show selection UI when text element is being edited
-    const isTextBeingEdited = element.kind === "text" && element.isEditable;
+    const isTextBeingEdited = element.type === "text" && element.isEditable;
     const shouldShowBorder = (isSelected || isHovering); // Always show border when selected/hovering, even when editing
-    const shouldShowHandles = isSelected && !isDragging && !element.locked && !isTextBeingEdited; // Hide handles when editing
+    const shouldShowHandles = isSelected && !isDragging && !element.isLocked && !isTextBeingEdited; // Hide handles when editing
 
 
     return (
@@ -470,7 +472,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             ref={mergeRefs(elementRef, ref)}
             className={classNames("z-editor-canvas-controls relative", {
                 [styles.borderActive]: shouldShowBorder
-            })} 
+            })}
             data-element-id={element.id}
             style={{
                 position: 'fixed',
@@ -478,19 +480,19 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 left: element.rect.x,
                 width: actualDimensions.width,
                 height: actualDimensions.height,
-                cursor: isTextBeingEdited ? "text" : (isEditMode && !element.locked ? (isDragging ? "grabbing" : "grab") : "default"),
+                cursor: isTextBeingEdited ? "text" : (isEditMode && !element.isLocked ? (isDragging ? "grabbing" : "grab") : "default"),
                 pointerEvents: isTextBeingEdited ? "none" : "auto",
                 transform: 'translate3d(0, 0, 0)',// Force hardware acceleration for smoother rendering
-                zIndex: element.kind === "text" ? 1 : 0, // Ensure text elements are always on top
+                zIndex: element.type === "text" ? 1 : 0, // Ensure text elements are always on top
                 '--canvas-border-radius': '0px', // Smaller radius for elements vs canvas
                 '--canvas-border-width': '2px'
             } as React.CSSProperties}
             onClick={e => {
                 // Don't handle clicks when text is being edited or element is being resized
                 if (isTextBeingEdited || isResizing) return;
-                
+
                 handleClick(e, element, (id: string) => {
-                    if (element.kind === "text") {
+                    if (element.type === "text") {
                         updateElement(id, { isEditable: true })
                         setIsDragActive(false);
                     }
@@ -567,11 +569,11 @@ const Handles = memo(({
 }: HandlesProps) => {
 
     const handleSize = 14; // Size of the resize handles
-    const showTopBottomHandles = element.kind !== "text";
-    const showSideHandles = element.kind === "text" || (element.kind !== "shape" || element.shapeType === "rect");
+    const showTopBottomHandles = element.type !== "text";
+    const showSideHandles = element.type === "text" || (element.type !== "shape" || element.form === "rectangle");
 
     // Use actual dimensions if available (for text elements), otherwise use element dimensions
-    const effectiveHeight = actualDimensions?.height || (element.height * scale);
+    const effectiveHeight = actualDimensions?.height || (element.rect.height * scale);
 
     const isTooSmallForAllHandles = Math.min(handleSize * 2.2, effectiveHeight * 0.6) >= (effectiveHeight - (handleSize * 0.7 * 2));
 

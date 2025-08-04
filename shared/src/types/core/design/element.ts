@@ -1,6 +1,6 @@
 import { Rect, Size } from "./common";
 
-export type DesignElementType = 'text' | 'shape' | 'image';
+export type DesignElementType = 'text' | 'shape' | 'image' | 'line';
 
 export interface DesignElementContent {
   placeholder: string;

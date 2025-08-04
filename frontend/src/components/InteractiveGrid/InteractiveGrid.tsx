@@ -6,9 +6,14 @@ import { SelectionActionBar } from "@/components/SelectionActionBar";
 import { useSelection } from "@/lib/context/selection-context";
 import { useToast } from "@/lib/hooks/useToast";
 import { getRelativeTime } from "@/lib/utils";
-import { upperFirst } from "lodash";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+
+// Simple utility function to replace lodash upperFirst
+export const upperFirst = (str: string) => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
 interface InteractiveGridItem {
   _id: string;
