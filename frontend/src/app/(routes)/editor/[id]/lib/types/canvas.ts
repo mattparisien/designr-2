@@ -71,7 +71,7 @@ export interface EditorContextType {
 export interface CanvasContextType {
   // Canvas elements and properties
   elements: Element[] // Elements of the current page
-  selectedElement: TextElement | null
+  selectedElement: Element | null
   selectedElementIds: string[]
   isCanvasSelected: boolean
   isLoaded: boolean // Canvas loading state
@@ -87,7 +87,7 @@ export interface CanvasContextType {
 
   // Element manipulation
   addElement: (element: Omit<Element, "id" | "type">, type: DesignElementType) => void
-  updateElement: (id: string, updates: Partial<Omit<TextElement, "id">> | Partial<Omit<ShapeElement, "id">> | Partial<Omit<ImageElement, "id">>) => void
+  updateElement: (id: string, updates: Partial<Omit<Element, "id">>) => void
   updateMultipleElements: (updates: Partial<Omit<Element, "id" | "type">> | ((element: Partial<Omit<Element, "id" | "type">>) => Partial<Element>)) => void
   deleteElement: (id: string) => void
   deleteSelectedElements: () => void

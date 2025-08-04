@@ -309,7 +309,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
         // Update selected element if it's the one being updated
         const updatedSelectedElement = state.selectedElement?.id === id
-          ? { ...state.selectedElement, ...updates }
+          ? { ...state.selectedElement, ...updates } as Element
           : state.selectedElement;
 
         return {
@@ -681,7 +681,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           // Update selected element if it's the one being reverted
           if (state.selectedElement?.id === action.id) {
             set({
-              selectedElement: { ...state.selectedElement, ...action.before }
+              selectedElement: { ...state.selectedElement, ...action.before } as Element
             });
           }
           break;
@@ -779,7 +779,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           // Update selected element if it's the one being updated
           if (state.selectedElement?.id === action.id) {
             set({
-              selectedElement: { ...state.selectedElement, ...action.after }
+              selectedElement: { ...state.selectedElement, ...action.after } as Element
             });
           }
           break;
