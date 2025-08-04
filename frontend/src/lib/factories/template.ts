@@ -1,7 +1,8 @@
+import { CreateDesignTemplateRequest } from "@shared/types";
+import { v4 as uuid } from 'uuid';
 import { DESIGN_FORMATS } from "../constants";
-import { CreateTemplatePayload } from "../types/api";
 
-export const createTemplate = (formatKey: string, customTitle?: string): CreateTemplatePayload => {
+export const createTemplate = (formatKey: string, customTitle?: string): CreateDesignTemplateRequest => {
     const format = DESIGN_FORMATS[formatKey as keyof typeof DESIGN_FORMATS];
 
     if (!format) {
@@ -24,20 +25,16 @@ export const createTemplate = (formatKey: string, customTitle?: string): CreateT
         title: customTitle || format.name,
         description: `A ${format.name.toLowerCase()} template`,
         category: getCategoryType(format.category),
-        canvasSize: {
-            width: format.width,
-            height: format.height,
-        },
+        tags: [],
         pages: [
             {
-                name: "Page 1",
-                background: {
-                    type: "color",
-                    value: "#ffffff",
-                },
-                elements: [], // Start with no elements - user will add them
+                id: uuid(),
+                canvas: {
+                    elements: [], // Start with no elements - user will add them
+                    width: format.width,
+                    height: format.height
+                }
             }
         ],
-        isPublic: false,
     };
 };

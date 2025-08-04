@@ -452,7 +452,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             {/* Shape Color with Hue Wheel */}
             <ToolbarButton onClick={handleBackgroundColorButtonClick} title="Shape Color">
               <div className="w-5 h-5 bg-center bg-contain rounded-full border-[0.8px] border-neutral-400" style={{
-                backgroundColor: selectedElement?.backgroundColor || 'var(--color-shape-default)',
+                backgroundColor: (selectedElement?.type === 'shape' ? selectedElement?.backgroundColor : undefined) || 'var(--color-shape-default)',
               }}></div>
             </ToolbarButton>
 
@@ -514,11 +514,11 @@ const TextAlignButton = ({
   const alignments: TextAlignment[] = ["left", "center", "right"];
   const [textAlign, setTextAlign] = useState<"left" | "center" | "right">(initialAlignment);
 
-  const handleTextAlignChange = () => {
+  const handleTextAlignChange = useCallback(() => {
     const alignment: TextAlignment = alignments[alignments.indexOf(textAlign) + 1] || alignments[0];
     setTextAlign(alignment);
     onTextAlignChange(alignment)
-  }
+  }, [textAlign, onTextAlignChange, alignments]);
 
   const Icon = useMemo(() => {
 

@@ -1,8 +1,8 @@
 import { useToast } from '@/lib/hooks/useToast';
-import { templatesAPI } from '../api/index';
-import { type Template } from '@/lib/types/api';
+import { DesignTemplate } from '@shared/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { templatesAPI } from '../api/index';
 
 export function useTemplateQuery() {
   const queryClient = useQueryClient();
@@ -36,7 +36,7 @@ export function useTemplateQuery() {
 
   // Mutation for creating a new template
   const createTemplateMutation = useMutation({
-    mutationFn: (newTemplate: Partial<Template>) => templatesAPI.create(newTemplate),
+    mutationFn: (newTemplate: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">>) => templatesAPI.create(newTemplate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteTemplates'] });
@@ -57,7 +57,7 @@ export function useTemplateQuery() {
 
   // Mutation for updating a project
   const updateTemplateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<Template> }) =>
+    mutationFn: ({ id, data }: { id: string, data: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">> }) =>
       templatesAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });

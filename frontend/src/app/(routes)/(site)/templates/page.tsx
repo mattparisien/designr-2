@@ -68,7 +68,7 @@ export default function TemplatesPage() {
 
 
       // Optionally refetch to ensure UI is updated immediately
-      router.push(`/editor/${template._id}`);
+      router.push(`/editor/${template.id}`);
       refetch();
     } catch (error) {
       console.error('Failed to create template:', error);

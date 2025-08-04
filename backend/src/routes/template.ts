@@ -1,7 +1,7 @@
 import express, { Request, response, Response } from 'express';
 import mongoose from 'mongoose';
 import Template, { TemplateCategory } from '../models/Template';
-import { APIErrorResponse, CreateDesignTemplateRequest, CreateDesignTemplateResponse, UpdateDesignTemplateRequest, UpdateDesignTemplateResponse } from '@shared/types';
+import { APIErrorResponse, CreateDesignTemplateRequest, CreateDesignTemplateResponse, UpdateDesignTemplateRequest, UpdateDesignTemplateResponse, GetDesignTemplateRequest, GetDesignTemplateResponse } from '@shared/types';
 
 const router = express.Router();
 
@@ -24,7 +24,11 @@ router.post('/', async (req: Request<{}, CreateDesignTemplateResponse, CreateDes
       category: template.category,
       tags: template.tags,
       thumbnailUrl: template.thumbnailUrl,
-      pages: template.pages,
+      pages: template.pages.map(page => ({
+        id: page.id,
+        elements: page.canvas.elements,
+        canvas: page.canvas
+      })),
       createdBy: template.createdBy ? template.createdBy.toString() : undefined,
       createdAt: template.createdAt.toISOString(),
       updatedAt: template.updatedAt.toISOString(),
@@ -105,13 +109,27 @@ router.get('/paginated', async (req, res) => {
 });
 
 /* ── Get a single template by ID ─────────────────────────────── */
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request<GetDesignTemplateRequest>, res: Response<GetDesignTemplateResponse | APIErrorResponse>) => {
   try {
     const template = await Template.findById(req.params.id);
-    if (!template) {
+    if (!template?._id) {
       return res.status(404).json({ message: 'Template not found' });
     }
-    res.json(template);
+
+    const responseBody: GetDesignTemplateResponse = {
+      id: template._id.toString(),
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      tags: template.tags,
+      thumbnailUrl: template.thumbnailUrl,
+      pages: template.pages,
+      createdBy: template.createdBy ? template.createdBy.toString() : undefined,
+      createdAt: template.createdAt.toISOString(),
+      updatedAt: template.updatedAt.toISOString(),
+    }
+
+    res.json(responseBody);
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
       console.error(`[GET /templates/${req.params.id}] Error:`, error);

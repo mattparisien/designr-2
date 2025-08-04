@@ -1,6 +1,6 @@
 import { Axios } from 'axios';
 import { APIService } from '../types/api';
-import { DesignTemplate as Template } from '@shared/types';
+import { GetDesignTemplateResponse, DesignTemplate as Template } from '@shared/types';
 import { APIBase } from './base';
 
 // Utility type for API error handling
@@ -54,9 +54,9 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
   }
 
   // Get template by ID
-  async getById(id: string): Promise<Template> {
+  async getById(id: string): Promise<GetDesignTemplateResponse> {
     try {
-      const response = await this.apiClient.get<Template>(`/templates/${id}`);
+      const response = await this.apiClient.get<GetDesignTemplateResponse>(`/templates/${id}`);
       return response.data;
     } catch (error: unknown) {
       this.handleError(error, 'Failed to fetch template');

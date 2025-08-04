@@ -5,8 +5,8 @@ import Editor from "./components/Editor"
 
 export default function EditorPage() {
   const params = useParams()
-  const compositionId = params.id as string
+  const designId = params.id as string
 
-  return <Editor compositionId={compositionId} />
+  return <Editor designId={designId} />
 
 }

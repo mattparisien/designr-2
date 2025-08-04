@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants";
 import { ElementFactory } from "../lib/factories/elementFactory";
 import useElementActionBar from "../lib/hooks/useElementActionBar";
-import useCanvasStore, { useCurrentCanvasSize } from "../lib/stores/useCanvasStore";
+import useCanvasStore, { useCurrentCanvasSize, useCurrentPageElements } from "../lib/stores/useCanvasStore";
 import useEditorStore from "../lib/stores/useEditorStore";
 import { TextElement } from "../lib/types/canvas";
 import BottomBar from "./BottomBar";
@@ -48,7 +48,7 @@ export default function Editor({ designId }: EditorProps) {
     const canvasSize = useCurrentCanvasSize()
     const selectedElementIds = useCanvasStore(state => state.selectedElementIds)
     const selectedElement = useCanvasStore(state => state.selectedElement)
-    const elements = useEditorStore(state => state.pages[currentPageIndex]?.canvas.elements || [])
+    const elements = useCurrentPageElements()
     const updateElement = useCanvasStore(state => state.updateElement)
     const clearSelection = useCanvasStore(state => state.clearSelection)
     const deleteSelectedElements = useCanvasStore(state => state.deleteSelectedElements)
@@ -276,8 +276,6 @@ export default function Editor({ designId }: EditorProps) {
                     }
                 );
 
-                console.log('new text element', newTextElement);
-
                 // Add the element to the canvas
                 addElement(newTextElement, "text");
             }
@@ -305,6 +303,8 @@ export default function Editor({ designId }: EditorProps) {
             });
         }
     }, [designId]);
+    
+
 
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {
