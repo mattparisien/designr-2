@@ -1,6 +1,7 @@
 import { Axios } from "axios";
-import { Project, ProjectsAPIService } from "../types/api";
+import { ProjectsAPIService } from "../types/api";
 import { APIBase } from "./base";
+import { DesignProject as Project } from "@shared/types";
 
 export class ProjectsAPI extends APIBase implements ProjectsAPIService {
     API_URL: string = "/projects";

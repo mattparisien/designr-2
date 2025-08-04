@@ -1,21 +1,41 @@
-import express from 'express';
+import express, { Request, response, Response } from 'express';
 import mongoose from 'mongoose';
 import Template, { TemplateCategory } from '../models/Template';
+import { APIErrorResponse, CreateDesignTemplateRequest, CreateDesignTemplateResponse, UpdateDesignTemplateRequest, UpdateDesignTemplateResponse } from '@shared/types';
 
 const router = express.Router();
 
 /* ── Create a new template ───────────────────────────────────── */
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request<{}, CreateDesignTemplateResponse, CreateDesignTemplateRequest>, res: Response<CreateDesignTemplateResponse>) => {
   try {
-    const templateData = req.body;
+    const templateData: CreateDesignTemplateRequest = req.body;
     const template = new Template(templateData);
     await template.save();
-    res.status(201).json(template);
+
+
+    if (!template._id) {
+      throw new Error("Template ID not found. Template creation failed.");
+    }
+
+    const responseBody: CreateDesignTemplateResponse = {
+      id: template._id.toString(),
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      tags: template.tags,
+      thumbnailUrl: template.thumbnailUrl,
+      pages: template.pages,
+      createdBy: template.createdBy ? template.createdBy.toString() : undefined,
+      createdAt: template.createdAt.toISOString(),
+      updatedAt: template.updatedAt.toISOString(),
+    }
+
+    res.status(201).json(responseBody);
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
       console.error('[POST /templates] Error:', error);
     }
-    res.status(500).json({ message: 'Failed to create template', error });
+    res.status(500).json(undefined);
   }
 });
 
@@ -48,7 +68,7 @@ router.get('/paginated', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    
+
     const filters: any = {};
     const validCategories = ['presentation', 'social', 'print', 'custom'];
     if (typeof req.query.category === 'string' && validCategories.includes(req.query.category)) {
@@ -59,7 +79,7 @@ router.get('/paginated', async (req, res) => {
     }
 
     const skip = (page - 1) * limit;
-    
+
     const [templates, totalTemplates] = await Promise.all([
       Template.find(filters)
         .sort({ createdAt: -1 })
@@ -109,9 +129,9 @@ router.delete('/bulk', async (req, res) => {
     }
 
     const result = await Template.deleteMany({ _id: { $in: ids } });
-    res.json({ 
+    res.json({
       message: `${result.deletedCount} templates deleted`,
-      deletedCount: result.deletedCount 
+      deletedCount: result.deletedCount
     });
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
@@ -122,17 +142,42 @@ router.delete('/bulk', async (req, res) => {
 });
 
 /* ── Update a template ───────────────────────────────────────── */
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesignTemplateResponse>, res: Response<UpdateDesignTemplateResponse | APIErrorResponse>) => {
   try {
+
+    if (!req.params.id) {
+      return res.status(400).json({ message: 'Template ID is required' });
+    } else if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid template ID' });
+    }
+
     const updatedTemplate = await Template.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
+
+
     if (!updatedTemplate) {
       return res.status(404).json({ message: 'Template not found' });
+    } else if (!updatedTemplate._id) {
+      return res.status(500).json({ message: 'Template ID not found. Update failed.' });
     }
-    res.json(updatedTemplate);
+
+    const responseBody: UpdateDesignTemplateResponse = {
+      id: updatedTemplate._id.toString(),
+      title: updatedTemplate.title,
+      description: updatedTemplate.description,
+      category: updatedTemplate.category,
+      tags: updatedTemplate.tags,
+      thumbnailUrl: updatedTemplate.thumbnailUrl,
+      pages: updatedTemplate.pages,
+      createdBy: updatedTemplate.createdBy ? updatedTemplate.createdBy.toString() : undefined,
+      createdAt: updatedTemplate.createdAt.toISOString(),
+      updatedAt: updatedTemplate.updatedAt.toISOString(),
+    }
+
+    res.json(responseBody);
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
       console.error(`[PUT /templates/${req.params.id}] Error:`, error);
@@ -166,9 +211,9 @@ router.post('/delete-multiple', async (req, res) => {
     }
 
     const result = await Template.deleteMany({ _id: { $in: ids } });
-    res.json({ 
+    res.json({
       message: `${result.deletedCount} templates deleted`,
-      deletedCount: result.deletedCount 
+      deletedCount: result.deletedCount
     });
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {

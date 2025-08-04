@@ -5,7 +5,7 @@ import { CanvasContextType, Element, HistoryAction, CanvasSize } from '../types/
 import { reorderByIndex } from '../utils/canvas';
 import useEditorStore from './useEditorStore';
 
-export interface CanvasState extends Omit<CanvasContextType, 'elements' | 'canvasSize'> {
+export interface CanvasState extends CanvasContextType {
   historyIndex: number;
   history: HistoryAction[];
   duplicateElement: (id: string) => void;
@@ -55,6 +55,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
   return {
     // Elements selection state
+    elements: [],
     selectedElement: null,
     selectedElementIds: [],
     isCanvasSelected: false,
@@ -108,7 +109,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
     },
 
     // Add new element to the canvas
-    addElement: (elementData) => {
+    addElement: (elementData, type) => {
       const editor = useEditorStore.getState();
       const currentPageId = editor.currentPageId;
       const currentPage = getCurrentPage();
@@ -117,12 +118,13 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
       // Generate a unique ID for the new element
       const newElement: Element = {
+        id: nanoid(),
+        type,
         ...elementData,
-        id: nanoid()
       };
 
       // Add element to current page
-      const updatedElements = [...currentPage.elements, newElement];
+      const updatedElements = [...currentPage.canvas.elements, newElement];
 
       // Update page elements in the editor store
       editor.updatePageElements(currentPageId, updatedElements);
@@ -160,7 +162,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Find the element to update
-      const elementToUpdate = currentPage.elements.find(el => el.id === id);
+      const elementToUpdate = currentPage.canvas.elements.find(el => el.id === id);
 
       if (!elementToUpdate) return;
 
@@ -168,7 +170,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const before = { ...elementToUpdate };
 
       // Create updated elements array
-      const updatedElements = currentPage.elements.map(element =>
+      const updatedElements = currentPage.canvas.elements.map(element =>
         element.id === id ? { ...element, ...updates } : element
       );
 
@@ -215,7 +217,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage || selectedIds.length === 0) return;
 
       // Store previous states for history
-      const updatedElements = currentPage.elements.map(element => {
+      const updatedElements = currentPage.canvas.elements.map(element => {
         if (selectedIds.includes(element.id)) {
           const updatedProps = typeof updates === 'function'
             ? updates(element)
@@ -256,12 +258,12 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Find the element to delete for history
-      const elementToDelete = currentPage.elements.find(el => el.id === id);
+      const elementToDelete = currentPage.canvas.elements.find(el => el.id === id);
 
       if (!elementToDelete) return;
 
       // Filter out the element to delete
-      const updatedElements = currentPage.elements.filter(element => element.id !== id);
+      const updatedElements = currentPage.canvas.elements.filter(element => element.id !== id);
 
       // Update the page elements
       editor.updatePageElements(currentPageId, updatedElements);
@@ -330,7 +332,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
         return;
       }
 
-      const elementToSelect = currentPage.elements.find(el => el.id === id);
+      const elementToSelect = currentPage.canvas.elements.find(el => el.id === id);
 
       if (!elementToSelect) return;
 
@@ -430,8 +432,11 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
       // Store the previous size for history
       const before: CanvasSize = currentPage.canvas
-        ? { name: 'Custom', width: currentPage.canvas.width, height: currentPage.canvas.height }
-        : (currentPage.canvasSize || DEFAULT_CANVAS_SIZE);
+        ? { width: currentPage.canvas.width, height: currentPage.canvas.height }
+        : ({
+          width: DEFAULT_CANVAS_SIZE.width,
+          height: DEFAULT_CANVAS_SIZE.height
+        });
 
       // Update the page canvas size
       editor.updatePageCanvasSize(currentPageId, size);
@@ -467,7 +472,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Find the element
-      const element = currentPage.elements.find(el => el.id === id);
+      const element = currentPage.canvas.elements.find(el => el.id === id);
 
       if (!element || !element.isNew) return;
 
@@ -477,14 +482,31 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
     // Helper to scale an element's position and size
     scaleElement: (element, scaleFactor) => {
-      return {
+
+      const sharedProperties = {
         ...element,
-        x: element.x * scaleFactor,
-        y: element.y * scaleFactor,
-        width: element.width * scaleFactor,
-        height: element.height * scaleFactor,
-        fontSize: element.fontSize ? element.fontSize * scaleFactor : undefined
-      };
+        rect: {
+          x: element.rect.x * scaleFactor,
+          y: element.rect.y * scaleFactor,
+          width: element.rect.width * scaleFactor,
+          height: element.rect.height * scaleFactor
+        }
+      }
+
+      if (element.type == "text" && element.fontSize) {
+        const textProperties = {
+          ...sharedProperties,
+          fontSize: element.fontSize * scaleFactor,
+        }
+
+        return textProperties;
+
+      } else if (element.type == "image") {
+        // For images, we just scale the rect
+        return sharedProperties;
+      }
+
+      return sharedProperties;
     },
 
     // Undo the last action
@@ -505,7 +527,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Remove the added element
-          const updatedElements = currentPage.elements.filter(el => el.id !== action.element.id);
+          const updatedElements = currentPage.canvas.elements.filter(el => el.id !== action.element.id);
 
           // Update the page
           editor.updatePageElements(action.pageId, updatedElements);
@@ -528,12 +550,12 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Find the element to revert
-          const elementToUpdate = currentPage.elements.find(el => el.id === action.id);
+          const elementToUpdate = currentPage.canvas.elements.find(el => el.id === action.id);
 
           if (!elementToUpdate) break;
 
           // Create updated elements array with reverted element
-          const updatedElements = currentPage.elements.map(element =>
+          const updatedElements = currentPage.canvas.elements.map(element =>
             element.id === action.id ? { ...element, ...action.before } : element
           );
 
@@ -556,7 +578,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Add the deleted element back
-          const updatedElements = [...currentPage.elements, action.element];
+          const updatedElements = [...currentPage.canvas.elements, action.element];
 
           // Update the page
           editor.updatePageElements(action.pageId, updatedElements);
@@ -578,7 +600,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           const currentPage = editor.pages.find(page => page.id === action.pageId);
           if (!currentPage) break;
 
-          const reordered = reorderByIndex(currentPage.elements, action.toIndex, action.fromIndex);
+          const reordered = reorderByIndex(currentPage.canvas.elements, action.toIndex, action.fromIndex);
           editor.updatePageElements(action.pageId, reordered);
           break;
         }
@@ -612,7 +634,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Add the element back
-          const updatedElements = [...currentPage.elements, action.element];
+          const updatedElements = [...currentPage.canvas.elements, action.element];
 
           // Update the page
           editor.updatePageElements(action.pageId, updatedElements);
@@ -626,12 +648,12 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Find the element to update
-          const elementToUpdate = currentPage.elements.find(el => el.id === action.id);
+          const elementToUpdate = currentPage.canvas.elements.find(el => el.id === action.id);
 
           if (!elementToUpdate) break;
 
           // Create updated elements array
-          const updatedElements = currentPage.elements.map(element =>
+          const updatedElements = currentPage.canvas.elements.map(element =>
             element.id === action.id ? { ...element, ...action.after } : element
           );
 
@@ -654,7 +676,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           if (!currentPage) break;
 
           // Remove the element
-          const updatedElements = currentPage.elements.filter(el => el.id !== action.element.id);
+          const updatedElements = currentPage.canvas.elements.filter(el => el.id !== action.element.id);
 
           // Update the page
           editor.updatePageElements(action.pageId, updatedElements);
@@ -685,7 +707,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           const currentPage = editor.pages.find(page => page.id === action.pageId);
           if (!currentPage) break;
 
-          const reordered = reorderByIndex(currentPage.elements, action.fromIndex, action.toIndex);
+          const reordered = reorderByIndex(currentPage.canvas.elements, action.fromIndex, action.toIndex);
           editor.updatePageElements(action.pageId, reordered);
           break;
         }
@@ -749,7 +771,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Find the element to duplicate
-      const elementToDuplicate = currentPage.elements.find(el => el.id === id);
+      const elementToDuplicate = currentPage.canvas.elements.find(el => el.id === id);
 
       if (!elementToDuplicate) return;
 
@@ -757,12 +779,15 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const newElement: Element = {
         ...elementToDuplicate,
         id: nanoid(),
-        x: elementToDuplicate.x + 20, // Offset the copied element by 20px
-        y: elementToDuplicate.y + 20
+        rect: {
+          ...elementToDuplicate.rect,
+          x: elementToDuplicate.rect.x + 10, // Offset by 10px to avoid overlap
+          y: elementToDuplicate.rect.y + 10 // Offset by 10px to avoid overlap
+        }
       };
 
       // Add the duplicate to the canvas
-      const updatedElements = [...currentPage.elements, newElement];
+      const updatedElements = [...currentPage.canvas.elements, newElement];
 
       // Update the page elements
       editor.updatePageElements(currentPageId, updatedElements);
@@ -818,7 +843,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPage = getCurrentPage();
       if (!currentPageId || !currentPage) return;
 
-      const elements = [...currentPage.elements];
+      const elements = [...currentPage.canvas.elements];
       const index = elements.findIndex(el => el.id === elementId);
 
       if (index === -1 || index === elements.length - 1) return; // Not found or already at front
@@ -849,7 +874,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPage = getCurrentPage();
       if (!currentPageId || !currentPage) return;
 
-      const elements = [...currentPage.elements];
+      const elements = [...currentPage.canvas.elements];
       const index = elements.findIndex(el => el.id === elementId);
 
       if (index === -1 || index === 0) return; // Not found or already at back
@@ -880,7 +905,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPage = getCurrentPage();
       if (!currentPageId || !currentPage) return;
 
-      const elements = [...currentPage.elements];
+      const elements = [...currentPage.canvas.elements];
       const index = elements.findIndex(el => el.id === elementId);
 
       if (index === -1 || index === elements.length - 1) return; // Not found or already at front
@@ -911,7 +936,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPage = getCurrentPage();
       if (!currentPageId || !currentPage) return;
 
-      const elements = [...currentPage.elements];
+      const elements = [...currentPage.canvas.elements];
       const index = elements.findIndex(el => el.id === elementId);
 
       if (index === -1 || index === 0) return; // Not found or already at back
@@ -947,8 +972,8 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Update all selected text elements
-      const elements = currentPage.elements.map(element => {
-        if (selectedElementIds.includes(element.id) && element.kind === 'text') {
+      const elements = currentPage.canvas.elements.map(element => {
+        if (selectedElementIds.includes(element.id) && element.type === 'text') {
           return { ...element, color };
         }
         return element;
@@ -968,8 +993,8 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       if (!currentPageId || !currentPage) return;
 
       // Update all selected elements that support background color
-      const elements = currentPage.elements.map(element => {
-        if (selectedElementIds.includes(element.id) && (element.kind === 'shape' || element.kind === 'text')) {
+      const elements = currentPage.canvas.elements.map(element => {
+        if (selectedElementIds.includes(element.id) && element.type !== "text") {
           return { ...element, backgroundColor: color };
         }
         return element;
@@ -1025,7 +1050,7 @@ export const useCurrentPageElements = () => {
     return state.pages.find(page => page.id === state.currentPageId);
   });
 
-  return currentPage?.elements || [];
+  return currentPage?.canvas.elements || [];
 };
 
 // Create a selector to get the current page canvas size

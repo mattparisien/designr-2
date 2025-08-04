@@ -1,4 +1,20 @@
-import { type Page, type Element, type CanvasSize } from "@/lib/types/api";
+// Import base size from shared types
+import { Size, DesignElement, DesignPage, DesignCanvas, DesignElementType } from "@shared/types";
+import { Rect } from "./common";
+
+// Frontend-specific Page type
+export type CanvasSize = Size;
+export type Element = DesignElement & {
+  rect: Rect;
+  isNew: boolean;
+}
+export type Canvas = Omit<DesignCanvas, "elements"> & {
+  elements: Element[];
+}
+
+export type Page = Omit<DesignPage, "canvas"> & {
+  canvas: Canvas;
+};
 
 // Define the types of actions that can be performed
 export type HistoryAction =
@@ -37,7 +53,7 @@ export interface EditorContextType {
   duplicateCurrentPage: () => void
 
   // Page content updates (called by CanvasContext)
-  updatePageElements: (pageId: string, elements: Element[]) => void
+  updatePageElements: (pageId: string, elements: Partial<Omit<Element, "id" | "type">[]>) => void
   updatePageCanvasSize: (pageId: string, canvasSize: CanvasSize) => void
   updatePageBackground: (pageId: string, background: { type: 'color' | 'image' | 'gradient', value?: string }) => void
 }
@@ -46,10 +62,9 @@ export interface EditorContextType {
 export interface CanvasContextType {
   // Canvas elements and properties
   elements: Element[] // Elements of the current page
-  selectedElement: Element | null
+  selectedElement: Omit<Element, "type"> | null
   selectedElementIds: string[]
   isCanvasSelected: boolean
-  canvasSize: CanvasSize
   isLoaded: boolean // Canvas loading state
   elementActionBar: {
     isActive: boolean,
@@ -62,9 +77,9 @@ export interface CanvasContextType {
 
 
   // Element manipulation
-  addElement: (element: Omit<Element, "id">) => void
-  updateElement: (id: string, updates: Partial<Element>) => void
-  updateMultipleElements: (updates: Partial<Element> | ((element: Element) => Partial<Element>)) => void
+  addElement: (element: Omit<Element, "id" | "type">, type: DesignElementType) => void
+  updateElement: (id: string, updates: Partial<Omit<Element, "id" | "type">>) => void
+  updateMultipleElements: (updates: Partial<Omit<Element, "id" | "type">> | ((element: Partial<Omit<Element, "id" | "type">>) => Partial<Element>)) => void
   deleteElement: (id: string) => void
   deleteSelectedElements: () => void
   selectElement: (id: string | null, addToSelection?: boolean) => void

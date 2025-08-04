@@ -1,1 +1,2 @@
-export * from "./design";
+export * from "./core/design";
+export * from "./dto";

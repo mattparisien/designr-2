@@ -1,7 +1,7 @@
 import { Axios } from "axios";
 import { type Brand } from "../brands";
-import { type Project } from "./project";
 import { type Template } from "./template";
+import { type DesignProject as Project } from "@shared/types";
 
 
 /**

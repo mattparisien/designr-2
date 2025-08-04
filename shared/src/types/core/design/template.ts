@@ -9,5 +9,4 @@ export interface DesignTemplate extends Design {
     tags: string[];
     thumbnailUrl?: string;
     pages: DesignPage[];
-    isPublic: boolean;
 }

@@ -1,5 +1,6 @@
 import { Axios } from 'axios';
-import { APIService, Template, TemplatePreset } from '../types/api';
+import { APIService } from '../types/api';
+import { DesignTemplate as Template } from '@shared/types';
 import { APIBase } from './base';
 
 // Utility type for API error handling
@@ -10,7 +11,7 @@ interface APIError {
   message: string;
 }
 
-// Return type for template usage
+// Return type for template usages
 interface TemplateUsageResult {
   projectId: string;
   message: string;
@@ -92,15 +93,7 @@ export class TemplatesAPI extends APIBase implements APIService<Template> {
     }
   }
 
-  // Get template presets
-  async getPresets(): Promise<TemplatePreset[]> {
-    try {
-      const response = await this.apiClient.get<TemplatePreset[]>('/templates/presets');
-      return response.data;
-    } catch (error: unknown) {
-      this.handleError(error, 'Failed to fetch template presets');
-    }
-  }
+
 
   // Create new template
   async create(data: Partial<Template>): Promise<Template> {

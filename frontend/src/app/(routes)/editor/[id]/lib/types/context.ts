@@ -1,13 +1,14 @@
-import { CanvasElement, CanvasSize, CanvasPage } from "./canvas";
+import { Element, Page } from "./canvas";
+import { CanvasSize } from "@shared/types";
 
 // Define the types of actions that can be performed
 export type HistoryAction =
-  | { type: "ADD_ELEMENT"; element: CanvasElement; pageId: string }
-  | { type: "UPDATE_ELEMENT"; id: string; before: Partial<CanvasElement>; after: Partial<CanvasElement>; pageId: string }
-  | { type: "DELETE_ELEMENT"; element: CanvasElement; pageId: string }
+  | { type: "ADD_ELEMENT"; element: Element; pageId: string }
+  | { type: "UPDATE_ELEMENT"; id: string; before: Partial<Element>; after: Partial<Element>; pageId: string }
+  | { type: "DELETE_ELEMENT"; element: Element; pageId: string }
   | { type: "CHANGE_CANVAS_SIZE"; before: CanvasSize; after: CanvasSize; pageId: string }
-  | { type: "ADD_PAGE"; page: CanvasPage }
-  | { type: "DELETE_PAGE"; page: CanvasPage }
+  | { type: "ADD_PAGE"; page: Page }
+  | { type: "DELETE_PAGE"; page: Page }
   | { type: "REORDER_PAGES"; before: string[]; after: string[] }
   | { type: "REORDER_ELEMENT"; pageId: string; elementId: string; fromIndex: number; toIndex: number }; // Added for element reordering
 
@@ -24,9 +25,9 @@ export interface EditorContextType {
   toggleEditMode: () => void
 
   // Page management
-  pages: CanvasPage[]
+  pages: Page[]
   currentPageId: string | null
-  currentPage: CanvasPage | null
+  currentPage: Page | null
   currentPageIndex: number
   addPage: () => void
   deletePage: (id: string) => void
@@ -36,7 +37,7 @@ export interface EditorContextType {
   duplicateCurrentPage: () => void
 
   // Page content updates (called by CanvasContext)
-  updatePageElements: (pageId: string, elements: CanvasElement[]) => void
+  updatePageElements: (pageId: string, elements: Element[]) => void
   updatePageCanvasSize: (pageId: string, canvasSize: CanvasSize) => void
   updatePageBackground: (pageId: string, background: { type: 'color' | 'image' | 'gradient', value?: string }) => void
 }
@@ -44,8 +45,8 @@ export interface EditorContextType {
 // Canvas context handles the canvas-specific operations for the current page
 export interface CanvasContextType {
   // Canvas elements and properties
-  elements: CanvasElement[] // Elements of the current page
-  selectedElement: CanvasElement | null
+  elements: Element[] // Elements of the current page
+  selectedElement: Element | null
   selectedElementIds: string[]
   isCanvasSelected: boolean
   canvasSize: CanvasSize
@@ -61,9 +62,9 @@ export interface CanvasContextType {
 
 
   // Element manipulation
-  addElement: (element: Omit<CanvasElement, "id">) => void
-  updateElement: (id: string, updates: Partial<CanvasElement>) => void
-  updateMultipleElements: (updates: Partial<CanvasElement> | ((element: CanvasElement) => Partial<CanvasElement>)) => void
+  addElement: (element: Omit<Element, "id">) => void
+  updateElement: (id: string, updates: Partial<Element>) => void
+  updateMultipleElements: (updates: Partial<Element> | ((element: Element) => Partial<Element>)) => void
   deleteElement: (id: string) => void
   deleteSelectedElements: () => void
   selectElement: (id: string | null, addToSelection?: boolean) => void
@@ -73,7 +74,7 @@ export interface CanvasContextType {
   clearSelection: () => void
   changeCanvasSize: (size: CanvasSize) => void
   clearNewElementFlag: (id: string) => void
-  scaleElement: (element: CanvasElement, scaleFactor: number) => CanvasElement
+  scaleElement: (element: Element, scaleFactor: number) => Element
   fitCanvasToView: (container: HTMLDivElement, canvas: HTMLDivElement) => number
   toggleCanvasSelection: () => void
 

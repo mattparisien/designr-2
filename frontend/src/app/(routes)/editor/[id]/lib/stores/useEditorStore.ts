@@ -1,18 +1,24 @@
 // import { projectsAPI } from "@/lib/api";
-import { create } from "zustand";
+import { DesignProject as Project, DesignTemplate as Template, UpdateDesignTemplateRequest } from "@shared/types";
+import { nanoid } from "nanoid";
 import React from "react";
+import { create } from "zustand";
 import { DEFAULT_CANVAS_SIZE } from "../constants";
-import { type CanvasSize, type Element, type Page, type Project, type Template } from "@/lib/types/api";
-import { EditorContextType } from "@/lib/types/canvas";
+import { CanvasSize, EditorContextType, Element, Page } from "../types/canvas";
+import { ProjectsAPI } from "@/lib/api/projects";
+import { TemplatesAPI } from "@/lib/api/templates";
 
 
 // Define the store state interface
 export interface EditorState extends Omit<EditorContextType, "currentPage"> {
-  compositionId: string | null;
+  designId: string | null;
+  roleId: "project" | "template" | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
-  loadComposition: (compositionId: string) => Promise<void>;
-  saveComposition: (compositionId: string) => Promise<void>;
-  setCompositionId: (compositionId: string) => void;
+  loadDesign: (designId: string) => Promise<void>;
+  loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template", design: Project | Template }>;
+  getAPIClient: () => Promise<ProjectsAPI | TemplatesAPI | undefined>;
+  saveDesign: () => Promise<void>;
+  setDesign: (designId: string) => void;
 
   sidebar: {
     width: number | null;
@@ -37,13 +43,12 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
 
 // Create the editor store
 const useEditorStore = create<EditorState>((set, get) => ({
-  // Document metadata
+  designId: null,
+  roleId: null,
   designName: "Untitled Design",
   isDesignSaved: true,
   isSaving: false,
-  designId: null,
   templateId: null,
-  compositionId: null,
   sidebar: {
     width: null,
     isOpen: false,
@@ -58,7 +63,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
     {
       id: `page-${Date.now()}`,
       name: 'Page 1',
-      canvas: { width: DEFAULT_CANVAS_SIZE.width, height: DEFAULT_CANVAS_SIZE.height },
+      canvas: { width: DEFAULT_CANVAS_SIZE.width, height: DEFAULT_CANVAS_SIZE.height, elements: [] },
       background: { type: 'color', value: '#ffffff' },
       elements: [],
       canvasSize: DEFAULT_CANVAS_SIZE
@@ -78,12 +83,21 @@ const useEditorStore = create<EditorState>((set, get) => ({
   renameDesign: (name: string) => set({ designName: name, isDesignSaved: false }),
   addPage: () => {
     const state = get();
-    const currentPageCanvasSize = state.pages.find(page => page.id === state.currentPageId)?.canvasSize || DEFAULT_CANVAS_SIZE;
+
+    const currentPage = state.pages.find(page => page.id === state.currentPageId); state.pages.find(page => page.id === state.currentPageId);
+    if (!currentPage) {
+      console.error('Current page not found');
+      return;
+    }
+
+    const canvasSize = {
+      width: currentPage.canvas.width || DEFAULT_CANVAS_SIZE.width,
+      height: currentPage.canvas.height || DEFAULT_CANVAS_SIZE.height
+    }
+
     const newPage: Page = {
-      name: `Page ${state.pages.length + 1}`,
-      size: { width: currentPageCanvasSize.width, height: currentPageCanvasSize.height },
-      background: { type: 'color', value: '#ffffff' },
-      elements: [],
+      id: nanoid(),
+      canvas: { width: canvasSize.width, height: canvasSize.height, elements: [] },
     };
 
     set(state => ({
@@ -163,19 +177,10 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
     if (currentPage) {
       // Create deep copy of elements
-      const duplicatedElements = JSON.parse(JSON.stringify(currentPage.elements));
 
       const newPage: Page = {
-        id: `page-${Date.now()}`,
-        name: `${currentPage.name || 'Page'} Copy`,
+        id: nanoid(),
         canvas: { ...currentPage.canvas },
-        background: currentPage.background ? { ...currentPage.background } : { type: 'color', value: '#ffffff' },
-        elements: duplicatedElements,
-        canvasSize: currentPage.canvasSize ? { ...currentPage.canvasSize } : {
-          name: 'Custom',
-          width: currentPage.canvas.width,
-          height: currentPage.canvas.height
-        }
       };
 
       // Insert after current page
@@ -209,8 +214,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
         page.id === pageId
           ? {
             ...page,
-            canvas: { width: canvasSize.width, height: canvasSize.height },
-            canvasSize // Keep for backward compatibility
+            canvas: { ...page.canvas, width: canvasSize.width, height: canvasSize.height },
           }
           : page
       ),
@@ -227,117 +231,103 @@ const useEditorStore = create<EditorState>((set, get) => ({
       isDesignSaved: false
     }));
   },
-  // saveDesign: async () => {
-  //   const state = get();
-
-  //   try {
-  //     // Set saving indicator to true
-  //     set({ isSaving: true });
-
-  //     // Use the saved design ID or get it from URL
-  //     let idToUse = state.designId;
-
-  //     if (!idToUse && typeof window !== 'undefined') {
-  //       const urlParams = new URLSearchParams(window.location.search);
-  //       idToUse = urlParams.get('id');
-  //     }
-
-  //     if (!idToUse) {
-  //       console.error('No design ID found to save');
-  //       set({ isSaving: false });
-  //       return;
-  //     }
-
-  //     // Capture canvas screenshot for thumbnail
-  //     const thumbnailImage = await get().captureCanvasScreenshot();
-
-  //     // Prepare the data to be saved
-  //     const designData = {
-  //       title: state.designName,
-  //       layout: {
-  //         pages: state.pages.map(convertFrontendPageToAPI)
-  //       },
-  //       updatedAt: new Date().toISOString(),
-  //       thumbnail: thumbnailImage // Add the thumbnail data
-  //     };
-
-  //     console.log('Saving design:', state.designName, 'with ID:', idToUse);
-
-  //     // Call the API to update the design
-  //     //   await projectsAPI.update(idToUse, designData);
-
-  //     console.log('Design saved successfully:', state.designName);
-  //     set({
-  //       isDesignSaved: true,
-  //       designId: idToUse
-  //     });
-  //   } catch (error) {
-  //     console.error('Error saving design:', error);
-  //     // You might want to show a toast notification here
-  //   } finally {
-  //     // Set saving indicator back to false
-  //     set({ isSaving: false });
-  //   }
-  // },
-  setCompositionId: (compositionId: string) => {
-    set({ compositionId });
+  setDesign: (designId: string) => {
+    set({ designId });
   },
-  loadComposition: async (compositionId: string) => {
+  getAPIClient: async () => {
+    const role: "project" | "template" | null = get().roleId;
+    if (!role) {
+      throw new Error('Role is not set. Please load a design first.');
+    }
+
+    if (role === "project") {
+      const { projectsAPI } = await import('@/lib/api/index');
+      return projectsAPI;
+    }
+    if (role === "template") {
+      const { templatesAPI } = await import('@/lib/api/index');
+      return templatesAPI;
+    }
+
+  },
+  loadDesignFromAPI: async (designId: string) => {
+
+    let role: "project" | "template" | null = null;
+
+    let design: Project | Template | null = null;
+
+    // Import the API client
+    const { projectsAPI, templatesAPI } = await import('@/lib/api/index');
+
+    // Get the composition data
+    role = "template";
+    design = await templatesAPI.getById(designId) as Template;
+
+
+    if (!design) {
+      console.warn('Template not found. Searching for project...');
+    } else {
+      set({
+        designName: design.title || get().designName,
+        pages: design.pages,
+      })
+    }
+
+    role = "project";
+    design = await projectsAPI.getById(designId) as Project;
+
+    if (!design) {
+      throw new Error('Project not found');
+    }
+
+
+    return {
+      role,
+      design
+    }
+  },
+  loadDesign: async (designId: string) => {
 
     try {
-
-      let composition: Project | Template;
-      let role: "project" | "template" | null = null;
-
       // Set loading indicator
       set({ isSaving: true });
 
-      // Import the API client
-      const { projectsAPI, templatesAPI } = await import('@/lib/api/index');
+      const {
+        design,
+        role
+      } = await get().loadDesignFromAPI(designId);
 
-      // Get the composition data
-      role = "template";
-      composition = await templatesAPI.getById(compositionId);
-
-
-
-      if (!composition) {
-        console.warn('Template not found. Searching for project...');
-      } else {
-        set({
-          designName: composition.title || get().designName,
-          pages: composition.pages,
-        })
-      }
-
-      role = "project";
-      composition = await projectsAPI.getById(compositionId);
-
-      if (!composition) {
+      if (!design) {
         throw new Error('Project not found');
       }
 
+      set({
+        designName: design.title || 'Untitled Design',
+        pages: design.pages,
+        currentPageId: design.pages[0]?.id || '',
+        currentPageIndex: 0,
+        isDesignSaved: true,
+        designId: design.id,
+        roleId: role
+      });
 
-
-      // set({
-      //   designName: composition.title || 'Untitled Composition',
-      //   pages: frontendPages,
-      //   currentPageId: frontendPages[0]?.id || '',
-      //   currentPageIndex: 0,
-      //   isDesignSaved: true,
-      //   compositionId: compositionId
-      // });
+      console.log('Design loaded successfully');
+    } catch (error) {
+      console.error('Error loading design:', error);
 
       console.log('Composition loaded successfully');
-    } catch (error) {
-      console.error('Error loading composition:', error);
-      throw error;
     } finally {
       set({ isSaving: false });
     }
   },
-  saveComposition: async (compositionId: string) => {
+  saveDesign: async () => {
     const state = get();
+
+    const designId = state.designId;
+
+    if (!designId) {
+      throw new Error('Design ID is required to save the design. Please call loadDesign first.');
+    }
 
     try {
       // Set saving indicator to true
@@ -346,32 +336,23 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Capture canvas screenshot for thumbnail
       const thumbnailImage = await get().captureCanvasScreenshot();
 
-      // Prepare the composition data from the current editor state
-      const layoutData: APILayout = {
-        pages: state.pages.map(convertFrontendPageToAPI),
-        // Add metadata for better composition handling
-        canvasSize: state.pages[0]?.canvasSize || DEFAULT_CANVAS_SIZE
-      };
-
-
       // Import the API client
-      const { compositionAPI } = await import('@/lib/api/index');
+      const client = await get().getAPIClient();
 
-      console.log('About to save composition with data:', layoutData);
+      if (!client) {
+        throw new Error('API client is not available.');
+      }
 
-      // Call the API to update the composition
-      // Using multiple properties to ensure compatibility
-      const updateData = {
-        name: state.designName,
-        title: state.designName, // Make sure title is also set (required in backend)
-        compositionData: layoutData, // Primary property expected by backend model
-        data: layoutData, // Also send as data for backward compatibility
-        updatedAt: new Date().toISOString(),
-        thumbnailUrl: thumbnailImage // Include the thumbnail image
+    
+      const updateData : UpdateDesignTemplateRequest = {
+        title: state.designName, 
+        thumbnailUrl: thumbnailImage,
+        pages: state.pages,
+        
       };
 
       console.log('Update payload:', updateData);
-      await compositionAPI.update(compositionId, updateData);
+      await client.update(designId, updateData);
 
       // If thumbnail capture was successful, log it
       if (thumbnailImage) {
@@ -381,7 +362,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       console.log('Composition saved successfully:', state.designName);
       set({
         isDesignSaved: true,
-        compositionId: compositionId
+        designId
       });
     } catch (error) {
       console.error('Error saving composition:', error);
@@ -453,21 +434,9 @@ const useEditorStore = create<EditorState>((set, get) => ({
       // Extract HTML content from the capture element
       const html = captureElement.innerHTML;
 
-      // Get computed styles
-      const computedStyles = window.getComputedStyle(captureElement);
-      const css = Array.from(document.styleSheets)
-        .map(styleSheet => {
-          try {
-            return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('\n');
-          } catch (e) {
-            return '';
-          }
-        })
-        .join('\n');
 
       // Get canvas styles
       const canvasStyles = {
-        backgroundColor: currentPage.background?.value || '#ffffff',
         fontFamily: 'Inter, sans-serif',
         color: '#000000'
       };
@@ -488,7 +457,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
         },
         body: JSON.stringify({
           html,
-          css,
           canvasStyles,
           elementInfo,
           width: currentPage.canvas.width,
@@ -527,7 +495,6 @@ const useEditorStore = create<EditorState>((set, get) => ({
       return undefined;
     }
   },
-
 }));
 
 // Add a currentPage selector
