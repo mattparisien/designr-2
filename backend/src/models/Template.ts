@@ -1,46 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { DesignElementType, DesignTemplateCategory, DesignElement, DesignPage, DesignTemplate } from '@shared/types';
 
-export type ElementType = 'text' | 'image' | 'shape' | 'video';
+export type ElementType = DesignElementType;
 export type BackgroundType = 'color' | 'image' | 'gradient';
-export type TemplateCategory = 'presentation' | 'social' | 'print' | 'custom';
+export type TemplateCategory = DesignTemplateCategory;
 
-export interface Element {
-  type: ElementType;
-  placeholder?: string;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  style?: {
-    fontFamily?: string;
-    fontSize?: number;
-    color?: string;
-    [key: string]: any;
-  };
-}
 
-export interface Page {
-  name: string;
-  background?: {
-    type: BackgroundType;
-    value?: string;
-  };
-  elements: Element[];
-}
-
-export interface TemplateDocument extends Document {
+export interface TemplateDocument extends Document, Omit<DesignTemplate, "id" | "createdAt" | "updatedAt" | "createdBy"> {
   title: string;
   description?: string;
   category: TemplateCategory;
   tags: string[]
   thumbnailUrl?: string;
-  canvasSize: { width: number; height: number };
-  pages: Page[];
+  pages: DesignPage[];
   isPublic: boolean;
   createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const ElementSchema = new Schema<Element>({
+const ElementSchema = new Schema<DesignElement>({
   type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
   placeholder: String,
   position: {
@@ -50,17 +29,13 @@ const ElementSchema = new Schema<Element>({
   size: {
     width: { type: Number, required: true },
     height: { type: Number, required: true },
-  },
-  style: { type: Schema.Types.Mixed },
+  }
 });
 
-const PageSchema = new Schema<Page>({
-  name: { type: String, required: true },
-  background: {
-    type: { type: String, enum: ['color', 'image', 'gradient'] },
-    value: String,
-  },
-  elements: { type: [ElementSchema], default: [] },
+const PageSchema = new Schema<DesignPage>({
+  canvas: {
+    elements: { type: [ElementSchema], default: [] },
+  }
 });
 
 const TemplateSchema = new Schema<TemplateDocument>(
@@ -74,10 +49,6 @@ const TemplateSchema = new Schema<TemplateDocument>(
     },
     tags: { type: [String], default: [], required: true },
     thumbnailUrl: String,
-    canvasSize: {
-      width: { type: Number, required: true },
-      height: { type: Number, required: true },
-    },
     pages: { type: [PageSchema], default: [] },
     isPublic: { type: Boolean, default: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },

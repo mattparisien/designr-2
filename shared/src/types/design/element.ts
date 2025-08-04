@@ -1,7 +1,12 @@
 import { Position, Size } from "./common";
 
 export type DesignElementType = 'text' | 'image' | 'shape' | 'video';
-export type DesignTemplateCategory = 'presentation' | 'social' | 'print' | 'custom';
+
+export interface DesignElementContent {
+  placeholder: string;
+  type: DesignElementType;
+  value: string;
+}
 
 interface DesignElementBase {
   type: DesignElementType;

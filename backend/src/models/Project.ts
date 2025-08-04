@@ -1,36 +1,23 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { DesignElementType, DesignElement, DesignPage, DesignProject } from "@shared/types";
 
-export type ElementType = 'text' | 'image' | 'video';
 
-export interface ElementContent {
-  placeholder: string;
-  type: ElementType;
-  value: string;
-}
-
-export interface PageContent {
-  templatePageIndex: number;
-  elements: ElementContent[];
-}
-
-export interface ProjectDocument extends Document {
+export interface ProjectDocument extends Document, Omit<DesignProject, "id" | "createdAt" | "updatedAt" | "createdBy" | "templateId"> {
   title: string;
   description?: string;
   templateId: mongoose.Types.ObjectId;
-  ownerId?: mongoose.Types.ObjectId;
-  pages: PageContent[];
+  pages: DesignPage[];
   createdAt: Date;
   updatedAt: Date;
+  createdBy?: mongoose.Types.ObjectId;
 }
 
-const ElementContentSchema = new Schema<ElementContent>({
+const ElementContentSchema = new Schema<DesignElement>({
   placeholder: { type: String, required: true },
-  type: { type: String, enum: ['text', 'image', 'video'], required: true },
-  value: { type: String, required: true },
+  type: { type: String, enum: ['text', 'image', 'shape', 'video'], required: true },
 });
 
-const PageContentSchema = new Schema<PageContent>({
-  templatePageIndex: { type: Number, required: true },
+const PageContentSchema = new Schema<DesignPage>({
   elements: { type: [ElementContentSchema], default: [] },
 });
 

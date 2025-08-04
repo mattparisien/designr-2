@@ -15,7 +15,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/types": ["../shared/dist/types"],
+      "@shared/types/*": ["../shared/dist/types/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

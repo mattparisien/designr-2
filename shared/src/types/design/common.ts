@@ -1,6 +1,5 @@
 export type DesignBackgroundType = 'color' | 'image' | 'gradient';
 
-
 // Common position interface
 export interface Position {
     x: number;
