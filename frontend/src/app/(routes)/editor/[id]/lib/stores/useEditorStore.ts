@@ -51,7 +51,8 @@ const useEditorStore = create<EditorState>()(
     designName: "Untitled Design",
     isDesignSaved: true,
     isSaving: false,
-    templateId: null,
+    currentPageId: null,
+    currentPageIndex: 0,
     sidebar: {
       width: null,
       isOpen: false,
@@ -72,7 +73,6 @@ const useEditorStore = create<EditorState>()(
         canvasSize: DEFAULT_CANVAS_SIZE
       }
     ],
-    currentPageId: `page-${Date.now()}`,
 
 
     // Sidebar panel state
@@ -309,6 +309,8 @@ const useEditorStore = create<EditorState>()(
         if (!design) {
           throw new Error('Project not found');
         }
+
+        console.log('design', design)
 
         
 
