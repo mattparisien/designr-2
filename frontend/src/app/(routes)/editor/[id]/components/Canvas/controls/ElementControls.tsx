@@ -68,18 +68,20 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         const canvasRef = { current: document.querySelector('.canvas-container') as HTMLDivElement };
         if (!canvasRef.current || !element || !element.rect) return;
 
-        const newRect = calculateViewportRect(element, canvasRef, scale);
+        // const newRect = calculateViewportRect(element, canvasRef, scale);
 
-        // Only update if the rect has actually changed
-        if (
-            !element.rect ||
-            Math.abs(element.rect.x - newRect.x) > 1 ||
-            Math.abs(element.rect.y - newRect.y) > 1 ||
-            Math.abs(element.rect.width - newRect.width) > 1 ||
-            Math.abs(element.rect.height - newRect.height) > 1
-        ) {
-            updateElement(element.id, { rect: newRect });
-        }
+        // console.log(newRect, 'new rect ');
+
+        // // Only update if the rect has actually changed
+        // if (
+        //     !element.rect ||
+        //     Math.abs(element.rect.x - newRect.x) > 1 ||
+        //     Math.abs(element.rect.y - newRect.y) > 1 ||
+        //     Math.abs(element.rect.width - newRect.width) > 1 ||
+        //     Math.abs(element.rect.height - newRect.height) > 1
+        // ) {
+        //     updateElement(element.id, { rect: newRect });
+        // }
     }, [element, scale, updateElement]);
 
     // Update element rect on window resize, scale change, or element position change

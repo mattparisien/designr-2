@@ -32,10 +32,10 @@ export const TextElement = ({
   // Clear the isNew flag after initial render to allow future auto-fitting
   useEffect(() => {
     if (element.isNew) {
-      // Clear the flag after a short delay to allow the element to render with its initial dimensions
+      // Clear the flag after a longer delay to ensure element has fully rendered with correct dimensions
       const timer = setTimeout(() => {
         updateElement(element.id, { isNew: false });
-      }, 100);
+      }, 500); // Increased from 100ms to 500ms
       
       return () => clearTimeout(timer);
     }

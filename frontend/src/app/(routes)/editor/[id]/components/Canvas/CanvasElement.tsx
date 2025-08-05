@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import { Element as EditorCanvasElement } from "../../lib/types/canvas";
-import { calculateViewportRect } from "../../lib/utils/canvas";
 import { useCallback, useEffect, useRef } from "react";
 import { useTextMeasurement } from "../../lib/hooks";
 import ElementRenderer from "./renderers/ElementRenderer";
@@ -27,8 +26,8 @@ interface CanvasElementProps {
 export function CanvasElement({
   element,
   isSelected,
-  scale,
-  canvasRef,
+  scale: _scale, // Unused but kept for interface compatibility
+  canvasRef: _canvasRef, // Unused but kept for interface compatibility
   onHover,
   isEditMode,
   allElements = [],
@@ -104,11 +103,13 @@ export function CanvasElement({
   }, [element.type, fontSize, fontFamily]);
 
 
-  const prevMeasuredHeight = useRef<number | null>(null);
+  const prevMeasuredHeight = useRef<number | null>(null); // Currently unused but may be needed later
   const hasMeasured = useRef<boolean>(false);
 
   useEffect(() => {
-    if (element.type !== "text" || hasMeasured.current) return;
+    // Skip height measurement for new elements that already have proper dimensions from ElementFactory
+    if (element.type !== "text" || hasMeasured.current || (element.isNew && element.rect.height > 20)) return;
+    
     const measuredHeight = measureElementHeight(element);
 
     updateElement(element.id, {
@@ -118,20 +119,19 @@ export function CanvasElement({
       }
     });
     hasMeasured.current = true; // Mark as measured to prevent re-runs
-  }, [
-    element.id,
-    element.type,
-    element.content,
-    element.fontSize,
-    element.rect.height,
-    measureElementHeight,
-    updateElement
-  ]);
+  }, [element, measureElementHeight, updateElement]);
 
   // Use ref to track previous rect values to prevent infinite updates
-  const prevRectRef = useRef(element.rect);
+  const prevRectRef = useRef(element.rect); // Currently unused but may be needed later
 
+  // NOTE: Disabled viewport rect calculation as it was incorrectly applying viewport coordinates
+  // back to element rect, which corrupted the dimensions. The calculateViewportRect function
+  // returns browser viewport coordinates, not canvas coordinates.
+  /*
   useEffect(() => {
+    // Skip viewport rect calculation for new elements that already have proper dimensions from ElementFactory
+    if (element.isNew && element.rect.width > 50) return;
+    
     const newRect = calculateViewportRect(element, canvasRef, scale);
     const prevRect = prevRectRef.current;
 
@@ -155,6 +155,7 @@ export function CanvasElement({
     updateElement
     // Note: element.rect dependencies removed to prevent infinite loop
   ]);
+  */
 
 
 
