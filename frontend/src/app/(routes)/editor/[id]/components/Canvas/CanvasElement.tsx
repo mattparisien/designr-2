@@ -96,7 +96,7 @@ export function CanvasElement({
   const fontSize = element.type === "text" ? element.fontSize : null;
   const fontFamily = element.type === "text" ? element.fontFamily : null;
 
-  
+
   useEffect(() => {
     if (element.type === "text") {
       setTextEditorKey((k) => k + 1);
@@ -105,23 +105,19 @@ export function CanvasElement({
 
 
   const prevMeasuredHeight = useRef<number | null>(null);
+  const hasMeasured = useRef<boolean>(false);
 
   useEffect(() => {
-    if (element.type !== "text" || !element.content || !element.fontSize) return;
+    if (element.type !== "text" || hasMeasured.current) return;
     const measuredHeight = measureElementHeight(element);
-    if (
-      measuredHeight &&
-      measuredHeight !== element.rect.height &&
-      prevMeasuredHeight.current !== measuredHeight
-    ) {
-      prevMeasuredHeight.current = measuredHeight;
-      updateElement(element.id, {
-        rect: {
-          ...element.rect,
-          height: measuredHeight
-        }
-      });
-    }
+
+    updateElement(element.id, {
+      rect: {
+        ...element.rect,
+        height: measuredHeight
+      }
+    });
+    hasMeasured.current = true; // Mark as measured to prevent re-runs
   }, [
     element.id,
     element.type,
@@ -132,25 +128,32 @@ export function CanvasElement({
     updateElement
   ]);
 
+  // Use ref to track previous rect values to prevent infinite updates
+  const prevRectRef = useRef(element.rect);
+
   useEffect(() => {
     const newRect = calculateViewportRect(element, canvasRef, scale);
-    if (
-      element.rect.x !== newRect.x ||
-      element.rect.y !== newRect.y ||
-      element.rect.width !== newRect.width ||
-      element.rect.height !== newRect.height
-    ) {
+    const prevRect = prevRectRef.current;
+
+    // Only update if there's a meaningful change (avoid floating point precision issues)
+    const threshold = 0.5;
+    const hasChanged =
+      Math.abs(prevRect.x - newRect.x) > threshold ||
+      Math.abs(prevRect.y - newRect.y) > threshold ||
+      Math.abs(prevRect.width - newRect.width) > threshold ||
+      Math.abs(prevRect.height - newRect.height) > threshold;
+
+    if (hasChanged) {
+      prevRectRef.current = newRect;
       updateElement(element.id, { rect: newRect });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     element.id,
-    element.rect.x,
-    element.rect.y,
-    element.rect.width,
-    element.rect.height,
     scale,
     canvasRef,
     updateElement
+    // Note: element.rect dependencies removed to prevent infinite loop
   ]);
 
 

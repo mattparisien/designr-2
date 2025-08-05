@@ -43,6 +43,8 @@ export interface CanvasState extends CanvasContextType {
   clearManuallyResizedFlag: (elementId: string) => void;
   // Helper function to check if element is selected
   isElementSelected: (elementId: string) => boolean;
+  // Debounce map for clearNewElementFlag
+  _clearNewElementFlagTimeouts: Record<string, NodeJS.Timeout>;
 }
 
 // Create the canvas store
@@ -81,6 +83,8 @@ const useCanvasStore = create<CanvasState>((set, get) => {
     lastResizeTime: 0,
     // Manual resize tracking
     manuallyResizedElements: {},
+    // Timeout tracking for debouncing clearNewElementFlag
+    _clearNewElementFlagTimeouts: {},
 
     // Alignment guides methods
     setAlignmentGuides: (alignments) => {
@@ -588,19 +592,58 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
     // Clear the "isNew" flag after an element is placed
     clearNewElementFlag: (id) => {
-      const editor = useEditorStore.getState();
-      const currentPageId = editor.currentPageId;
-      const currentPage = getCurrentPage();
+      const state = get();
+      
+      // Clear existing timeout for this element to debounce rapid calls
+      if (state._clearNewElementFlagTimeouts[id]) {
+        clearTimeout(state._clearNewElementFlagTimeouts[id]);
+      }
+      
+      // Set a new timeout to debounce the operation
+      const timeout = setTimeout(() => {
+        const editor = useEditorStore.getState();
+        const currentPageId = editor.currentPageId;
+        const currentPage = getCurrentPage();
 
-      if (!currentPageId || !currentPage) return;
+        if (!currentPageId || !currentPage) return;
 
-      // Find the element
-      const element = currentPage.canvas.elements.find(el => el.id === id);
+        // Find the element
+        const element = currentPage.canvas.elements.find(el => el.id === id);
 
-      if (!element || !element.isNew) return;
+        if (!element || !element.isNew) return;
 
-      // Update the element to remove the isNew flag
-      get().updateElement(id, { isNew: false });
+        // Directly update elements array without triggering full updateElement cycle
+        const updatedElements = currentPage.canvas.elements.map(el =>
+          el.id === id ? { ...el, isNew: false } : el
+        );
+
+        // Update page elements directly without history tracking for this minor change
+        editor.updatePageElements(currentPageId, updatedElements);
+
+        // Update selected element if it's the one being updated (without triggering re-renders)
+        set(state => {
+          const updatedSelectedElement = state.selectedElement?.id === id
+            ? { ...state.selectedElement, isNew: false }
+            : state.selectedElement;
+
+          // Clean up the timeout
+          const { [id]: _removed, ...remainingTimeouts } = state._clearNewElementFlagTimeouts;
+          void _removed; // Suppress unused variable warning
+
+          return {
+            selectedElement: updatedSelectedElement,
+            _clearNewElementFlagTimeouts: remainingTimeouts
+          };
+        });
+      }, 50); // Small delay to debounce rapid calls
+      
+      // Store the timeout
+      set(state => ({
+        _clearNewElementFlagTimeouts: {
+          ...state._clearNewElementFlagTimeouts,
+          [id]: timeout
+        }
+      }));
     },
 
     // Helper to scale an element's position and size

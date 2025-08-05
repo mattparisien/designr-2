@@ -227,37 +227,37 @@ export default function Editor({ designId }: EditorProps) {
     }, [selectedElement, updateElement]);
 
 
-/*********************************************************************
- * SIDE EFFECTS
- * ******************************************************************/
+    /*********************************************************************
+     * SIDE EFFECTS
+     * ******************************************************************/
 
 
-/*
-
-    useEffect(() => {
-        // Add non-passive wheel event listener to prevent the error
-        const handleWheel = (e: WheelEvent) => {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                const zoomDelta = e.deltaY * 0.25;
-                const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom - zoomDelta)));
-                setZoom(next);
-            }
-        };
-
-        // Get the element where the wheel event should be captured
-        const editorElement = editorContainerRef.current;
-        if (editorElement) {
-            editorElement.addEventListener('wheel', handleWheel, { passive: false });
-        }
-
-        return () => {
+    /*
+    
+        useEffect(() => {
+            // Add non-passive wheel event listener to prevent the error
+            const handleWheel = (e: WheelEvent) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const zoomDelta = e.deltaY * 0.25;
+                    const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom - zoomDelta)));
+                    setZoom(next);
+                }
+            };
+    
+            // Get the element where the wheel event should be captured
+            const editorElement = editorContainerRef.current;
             if (editorElement) {
-                editorElement.removeEventListener('wheel', handleWheel);
+                editorElement.addEventListener('wheel', handleWheel, { passive: false });
             }
-        };
-    }, [zoom]);
-*/
+    
+            return () => {
+                if (editorElement) {
+                    editorElement.removeEventListener('wheel', handleWheel);
+                }
+            };
+        }, [zoom]);
+    */
     // Add keyboard shortcut for creating text elements with 'T' key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -303,7 +303,7 @@ export default function Editor({ designId }: EditorProps) {
             initDesign(designId);
         }
     }, [designId]);
-/*
+
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -379,8 +379,8 @@ export default function Editor({ designId }: EditorProps) {
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
     }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
-    */
-    
+
+
     return (
         <div
             className="flex flex-1 overflow-hidden flex-col relative h-full"

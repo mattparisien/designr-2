@@ -22,7 +22,6 @@ export const TextElement = ({
   handleHeightChange,
   isResizing = false,
 }: TextElementProps) => {
-  console.log('element', element);
   // Get resize state from canvas store for additional safety
   const storeIsResizing = useCanvasStore(state => state.isResizing);
   const activeResizeElement = useCanvasStore(state => state.activeResizeElement);
@@ -30,16 +29,63 @@ export const TextElement = ({
   const isElementManuallyResized = useCanvasStore(state => state.isElementManuallyResized);
   const clearManuallyResizedFlag = useCanvasStore(state => state.clearManuallyResizedFlag);
 
+  // Clear the isNew flag after initial render to allow future auto-fitting
+  useEffect(() => {
+    if (element.isNew) {
+      // Clear the flag after a short delay to allow the element to render with its initial dimensions
+      const timer = setTimeout(() => {
+        updateElement(element.id, { isNew: false });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [element.isNew, element.id, updateElement]);
+
   const autoFitElement = useCallback((content: string) => {
+    // Ensure we have valid content
+    if (!content || content.trim() === '') {
+      return;
+    }
+
+    // Skip auto-fitting for new elements that already have proper dimensions from ElementFactory
+    if (element.isNew && element.rect.width > 50) {
+      return;
+    }
+
+    // Ensure we have valid element properties with fallbacks
+    const fontSize = element.fontSize || 16;
+    const fontFamily = element.fontFamily || 'Inter';
+    const letterSpacing = element.letterSpacing || 0;
+    const fontWeight = element.isBold ? 'bold' : 'normal';
+    const fontStyle = element.isItalic ? 'italic' : 'normal';
+
     // Calculate what the auto-fit width would be
     const calculatedAutoWidth = calculateTextWidth(
       content,
-      element.fontSize || 16,
-      element.fontFamily || 'Arial',
-      element.letterSpacing || 0,
-      element.isBold ? 'bold' : 'normal',
-      element.isItalic ? 'italic' : 'normal'
+      fontSize,
+      fontFamily,
+      letterSpacing,
+      fontWeight,
+      fontStyle
     );
+
+
+    // Add minimum width safeguard
+    const minWidth = Math.max(calculatedAutoWidth, fontSize * 3, 60); // At least 3x font size or 60px
+
+    console.log('DEBUG: Text width calculation details:', {
+      content: content.substring(0, 20),
+      fullContent: content,
+      fontSize,
+      fontFamily,
+      letterSpacing,
+      fontWeight,
+      fontStyle,
+      calculatedAutoWidth,
+      minWidth,
+      currentWidth: element.rect.width,
+      elementObject: element
+    });
 
     // Check if this element is currently being resized
     const isThisElementResizing = (isResizing || storeIsResizing) &&
@@ -61,9 +107,10 @@ export const TextElement = ({
       !isManuallyResized;
 
     if (shouldAutoFit) {
-      // Calculate new position to keep center fixed when width changes
-      const widthChange = calculatedAutoWidth - element.rect.width;
-      const newX = element.rect.x - widthChange / 2;
+      // Get current rect at execution time to avoid dependency
+      const currentRect = element.rect;
+      const widthChange = minWidth - currentRect.width;
+      const newX = currentRect.x - widthChange / 2;
 
       // Clear the manually resized flag since we're auto-fitting now
       clearManuallyResizedFlag(element.id);
@@ -72,8 +119,8 @@ export const TextElement = ({
       updateElement(element.id, {
         content,
         rect: {
-          ...element.rect,
-          width: calculatedAutoWidth,
+          ...currentRect,
+          width: minWidth,
           x: newX,
         }
       });
@@ -83,14 +130,13 @@ export const TextElement = ({
     }
     // When not editing, just update content - let text wrap within existing bounds
     // updateElement(element.id, { content });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     element.fontSize,
     element.fontFamily,
     element.letterSpacing,
     element.isBold,
     element.isItalic,
-    element.rect.width,
-    element.rect.x,
     element.id,
     isResizing,
     storeIsResizing,
@@ -99,6 +145,7 @@ export const TextElement = ({
     isElementManuallyResized,
     clearManuallyResizedFlag,
     updateElement
+    // Note: element.rect is intentionally omitted to prevent infinite re-render loop
   ]);
 
   const handleContentChange = (content: string) => {

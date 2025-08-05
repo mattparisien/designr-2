@@ -9,11 +9,16 @@ export const calculateTextWidth = (
     fontWeight: string = DEFAULT_FONT_WEIGHT,
     fontStyle: string = DEFAULT_FONT_STYLE
 ): number => {
+    console.log('DEBUG calculateTextWidth called with:', { content, fontSize, fontFamily, letterSpacing, fontWeight, fontStyle });
+    
     // Create a temporary canvas element to measure text
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
 
-    if (!context) return content.length * fontSize * 0.6; // Fallback calculation
+    if (!context) {
+        console.log('DEBUG: No canvas context, using fallback');
+        return content.length * fontSize * 0.6; // Fallback calculation
+    }
 
     // Set high DPI for better accuracy
     const dpr = window.devicePixelRatio || 1;
@@ -24,6 +29,8 @@ export const calculateTextWidth = (
     // Set comprehensive font properties including weight and style
     context.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
     context.textBaseline = 'top';
+
+    console.log('DEBUG: Canvas font set to:', context.font);
 
     // Split content by lines and measure the widest line
     const lines = content.split('\n');
@@ -58,6 +65,15 @@ export const calculateTextWidth = (
     // Add small padding to prevent text clipping and ensure minimum width
     const padding = fontSize * 0.1; // 10% of font size as padding
     const calculatedWidth = Math.max(maxWidth + padding, fontSize * 2); // Minimum 2x font size
+
+    console.log('DEBUG calculateTextWidth result:', { 
+        maxWidth, 
+        padding, 
+        calculatedWidth,
+        finalResult: Math.round(calculatedWidth),
+        lines: lines.length,
+        firstLine: lines[0]
+    });
 
     // Cleanup
     canvas.remove();
