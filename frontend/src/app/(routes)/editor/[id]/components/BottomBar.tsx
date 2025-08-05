@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants"
 import { Maximize, Minus, Plus } from "lucide-react"
+import { Page } from "../lib/types/canvas"
 
 interface BottomBarProps {
     zoom: number
     setZoom: (zoom: number) => void
     currentPageIndex: number
-    pages: any[]
+    pages: Page[]
     handleZoomIn: () => void
     handleZoomOut: () => void
     toggleFullscreen: () => void

@@ -1,4 +1,4 @@
-import { Element, ShapeElement } from "../types/canvas";
+import { Element, LineElement, ShapeElement } from "../types/canvas";
 
 /**
  * Calculates the width of text based on font size and family
@@ -156,12 +156,12 @@ export const getShapeStyles = (element: ShapeElement) => ({
   borderWidth: element.borderWidth || 0,
 });
 
-export const getLineStyles = (element: Element) => ({
+export const getLineStyles = (element: LineElement) => ({
   height: "0px",
-  borderTopColor: element.borderColor || "#000000",
-  borderTopWidth: element.borderWidth || 2,
-  borderTopStyle: element.borderStyle || "solid",
-  transform: element.rotation ? `rotate(${element.rotation}deg)` : "none",
+  // borderTopColor: element.borderColor || "#000000",
+  // borderTopWidth: element.borderWidth || 2,
+  // borderTopStyle: element.borderStyle || "solid",
+  // transform: element.rotation ? `rotate(${element.rotation}deg)` : "none",
 });
 
 export const getArrowHeadStyles = (element: Element) => ({

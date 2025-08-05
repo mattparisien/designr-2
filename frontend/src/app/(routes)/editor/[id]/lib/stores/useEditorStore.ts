@@ -21,7 +21,6 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template", design: Project | Template }>;
   getAPIClient: () => Promise<ProjectsAPI | TemplatesAPI | undefined>;
   saveDesign: () => Promise<void>;
-  setDesign: (designId: string) => void;
 
   sidebar: {
     width: number | null;
@@ -235,9 +234,6 @@ const useEditorStore = create<EditorState>()(
         isDesignSaved: false
       }));
     },
-    setDesign: (designId: string) => {
-      set({ designId });
-    },
     getAPIClient: async () => {
       const role: "project" | "template" | null = get().roleId;
       if (!role) {
@@ -261,11 +257,12 @@ const useEditorStore = create<EditorState>()(
         return;
       }
 
-      const setDesign = get().setDesign;
       const loadDesign = get().loadDesign;
       // Load the composition data
       loadDesign(designId).then(() => {
-        setDesign(designId);
+        set({
+          designId,
+        })
       }).catch((error) => {
         console.error('Failed to load design in initDesign:', error);
       });

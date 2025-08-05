@@ -374,6 +374,8 @@ export default function Editor({ designId }: EditorProps) {
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
     }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
+    
+    
     return (
         <div
             className="flex flex-1 overflow-hidden flex-col relative h-full"
