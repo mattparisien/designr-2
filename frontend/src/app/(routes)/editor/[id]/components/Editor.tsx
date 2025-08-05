@@ -152,7 +152,6 @@ export default function Editor({ designId }: EditorProps) {
     const handleFontSizeChange = useCallback((size: number) => {
 
         if (!selectedElement) return;
-
         updateElement(selectedElement.id, { fontSize: size })
     }, [selectedElement, updateElement]);
 

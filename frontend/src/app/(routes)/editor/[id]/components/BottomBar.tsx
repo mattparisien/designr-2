@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider"
 import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants"
 import { Maximize, Minus, Plus } from "lucide-react"
 import { Page } from "../lib/types/canvas"
+import { useEffect } from "react"
 
 interface BottomBarProps {
     zoom: number
@@ -26,7 +27,14 @@ export default function BottomBar({
     toggleFullscreen,
     isFullscreen
 }: BottomBarProps) {
+
+    useEffect(() => {
+        console.log("BottomBar mounted with pages:", pages);
+    }, [pages, ])
+
     return (
+
+
         <div className="h-[var(--editor-bottomBar-height)] flex items-center justify-between px-4 shadow-sm z-editor-popover bottom-bar" data-bottom-bar>
             <div></div>
 

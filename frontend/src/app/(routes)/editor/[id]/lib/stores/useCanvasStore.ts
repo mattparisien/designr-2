@@ -159,7 +159,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
 
       // Generate a unique ID for the new element
       let newElement: Element;
-      
+
 
       if (type === 'text') {
         newElement = {
@@ -247,31 +247,37 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       editor.updatePageElements(currentPageId, updatedElements);
 
       // Add to history
-      const historyAction: HistoryAction = {
-        type: 'ADD_ELEMENT',
-        element: newElement,
-        pageId: currentPageId
-      };
+      // const historyAction: HistoryAction = {
+      //   type: 'ADD_ELEMENT',
+      //   element: newElement,
+      //   pageId: currentPageId
+      // };
 
       // Update history in canvas store
-      set(state => {
-        const newHistory = state.history.slice(0, state.historyIndex + 1);
-        newHistory.push(historyAction);
+      set({
+        selectedElement: newElement,
+        selectedElementIds: [newElement.id],
+        isCanvasSelected: false,
+      })
+      // set(state => {
+      //   // const newHistory = state.history.slice(0, state.historyIndex + 1);
+      //   // newHistory.push(historyAction);
 
-        return {
-          selectedElement: newElement,
-          selectedElementIds: [newElement.id],
-          isCanvasSelected: false,
-          historyIndex: state.historyIndex + 1,
-          history: newHistory,
-          canUndo: true,
-          canRedo: false
-        };
-      });
+      //   return {
+      //     selectedElement: newElement,
+      //     selectedElementIds: [newElement.id],
+      //     isCanvasSelected: false,
+      //     // historyIndex: state.historyIndex + 1,
+      //     // history: newHistory,
+      //     // canUndo: true,
+      //     // canRedo: false
+      //   };
+      // });
     },
 
     // Update an existing element
     updateElement: (id, updates) => {
+
       const editor = useEditorStore.getState();
       const currentPageId = editor.currentPageId;
       const currentPage = getCurrentPage();

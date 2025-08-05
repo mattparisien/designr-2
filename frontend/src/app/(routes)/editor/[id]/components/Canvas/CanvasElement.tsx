@@ -62,7 +62,7 @@ export function CanvasElement({
 
   const handleDrag = useCallback((alignments: { horizontal: number[], vertical: number[] }) => {
     if (onDrag) {
-      onDrag(element, element.x, element.y, alignments);
+      onDrag(element, element.rect.x, element.rect.y, alignments);
     }
   }, [element, onDrag]);
 
@@ -72,52 +72,51 @@ export function CanvasElement({
     }
   }, [onDragEnd]);
 
-  // Helper function to update element with viewport rect
-  const updateElementWithRect = useCallback((updates: Partial<EditorCanvasElement>) => {
-    const newRect = calculateViewportRect(
-      { ...element, ...updates },
-      canvasRef,
-      scale
-    );
-
-    updateElement(element.id, {
-      ...updates,
-      rect: newRect
-    });
-  }, [element, canvasRef, scale, updateElement]);
-
   // Handle text height change
   const handleHeightChange = useCallback((newHeight: number) => {
-    if (element.kind === "text") {
-      updateElementWithRect({ height: newHeight });
+    if (element.type === "text") {
+      updateElement(element.id, { 
+        rect: {
+          ...element.rect,
+          height: newHeight
+        }
+      });
     }
-  }, [element, updateElementWithRect]);
+  }, [element, updateElement]);
 
   // Handle text alignment change
   const handleTextAlignChange = useCallback((align: "left" | "center" | "right" | "justify") => {
-    if (element.kind !== "text") return;
+    if (element.type !== "text") return;
     // Filter out 'justify' since our Element type doesn't support it yet
     if (align === "justify") return;
     updateElement(element.id, { textAlign: align as "left" | "center" | "right" });
   }, [element, updateElement]);
 
   // Only remount TextEditor when absolutely necessary (font family changes, etc.)
+  const fontSize = element.type === "text" ? element.fontSize : null;
+  const fontFamily = element.type === "text" ? element.fontFamily : null;
+  
   useEffect(() => {
-    if (element.kind === "text") {
+    if (element.type === "text") {
       setTextEditorKey((k) => k + 1);
     }
-  }, [element.fontSize, element.fontFamily, element.kind]);
+  }, [element.type, fontSize, fontFamily]);
 
   // Update height when fontSize changes
   useEffect(() => {
-    if (element.kind === "text" && element.content && element.fontSize) {
+    if (element.type === "text" && element.content && element.fontSize) {
       const measuredHeight = measureElementHeight(element);
 
-      if (measuredHeight && measuredHeight !== element.height) {
-        updateElementWithRect({ height: measuredHeight });
+      if (measuredHeight && measuredHeight !== element.rect.height) {
+        updateElement(element.id, {
+          rect: {
+            ...element.rect,
+            height: measuredHeight
+          }
+        });
       }
     }
-  }, [element, updateElementWithRect, measureElementHeight]);
+  }, [element, updateElement, measureElementHeight]);
 
   // Update viewport rect when canvas position/scale changes
   useEffect(() => {
@@ -148,27 +147,27 @@ export function CanvasElement({
         hideElementActionBar();
       }
     }
-  }, [element.id, element.x, element.y, element.width, isSelected, isEditMode, showElementActionBar, hideElementActionBar]);
+  }, [element.id, element.rect, isSelected, isEditMode, showElementActionBar, hideElementActionBar]);
 
   return (
     <>
       {/* Hidden measurer for text height calculation */}
-      {element.kind === 'text' && renderMeasurer()}
+      {element.type === 'text' && renderMeasurer()}
 
       {/* Main element container */}
       <div
         ref={elementRef}
         className={"absolute"}
         style={{
-          left: element.x,
-          top: element.y,
-          width: element.width,
-          height: element.height,
-          cursor: isEditMode ? (element.locked ? "default" : "grab") : "default",
+          left: element.rect.x,
+          top: element.rect.y,
+          width: element.rect.width,
+          height: element.rect.height,
+          cursor: isEditMode ? (element.isLocked ? "default" : "grab") : "default",
           transform: "none",
           borderRadius: "2px",
           // Fixed stacking order based only on element type
-          zIndex: element.kind === "text" ? 1 : 0,
+          zIndex: element.type === "text" ? 1 : 0,
         }}
         onMouseEnter={() => onHover?.(element.id)}
         onMouseLeave={() => onHover?.(null)}
