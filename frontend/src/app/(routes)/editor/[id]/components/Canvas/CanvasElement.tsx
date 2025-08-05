@@ -108,6 +108,9 @@ export function CanvasElement({
   useEffect(() => {
     // Skip height measurement for new elements that already have proper dimensions from ElementFactory
     if (element.type !== "text" || hasMeasured.current || (element.isNew && element.rect.height > 20)) return;
+    
+    // Skip height measurement during or immediately after resize to prevent flashing
+    if (isResizing || (activeResizeElement === element.id)) return;
 
     const measuredHeight = measureElementHeight(element);
 
@@ -118,7 +121,7 @@ export function CanvasElement({
       }
     });
     hasMeasured.current = true; // Mark as measured to prevent re-runs
-  }, [element, measureElementHeight, updateElement]);
+  }, [element, measureElementHeight, updateElement, isResizing, activeResizeElement]);
 
   // Use ref to track previous rect values to prevent infinite updates
   const prevRectRef = useRef(element.rect); // Currently unused but may be needed later

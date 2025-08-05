@@ -309,9 +309,6 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
 
         // Helper function to update element with proper canvas coordinates
         const updateElementWithRect = (updates: Partial<Element>) => {
-            console.log('DEBUG: updateElementWithRect called with:', updates);
-            console.log('DEBUG: Current element rect:', element.rect);
-            
             // Directly update element with canvas coordinates - no viewport conversion needed
             updateElement(element.id, updates);
         };
@@ -352,6 +349,9 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 ...(element.type === "text" ? { fontSize: newFontSize } : {})
             });
 
+            // Disabled immediate height measurement during resize to prevent flashing
+            // Height will be remeasured after resize completes through other measurement effects
+            /*
             // If resizing a text element horizontally, measure and update height immediately
             if (element.type === "text" && widthChanged) {
                 const measuredHeight = measurementHook.measureElementHeight(element);
@@ -360,6 +360,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                     updateElementWithRect({ rect: { ...element.rect, height: measuredHeight } });
                 }
             }
+            */
 
             lastEvent = null;
         };
@@ -449,21 +450,12 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     const getViewportPosition = useCallback(() => {
         const canvasContainer = document.querySelector('.canvas-container') as HTMLDivElement;
         if (!canvasContainer) {
-            console.log('DEBUG: No canvas container found, using element rect directly');
             return { x: element.rect.x, y: element.rect.y };
         }
         
         const canvasRect = canvasContainer.getBoundingClientRect();
         const viewportX = canvasRect.left + (element.rect.x * scale);
         const viewportY = canvasRect.top + (element.rect.y * scale);
-        
-        console.log('DEBUG: Viewport position calculation:', {
-            canvasRect: { left: canvasRect.left, top: canvasRect.top },
-            elementRect: element.rect,
-            scale,
-            viewportX,
-            viewportY
-        });
         
         return { x: viewportX, y: viewportY };
     }, [element.rect, scale]);

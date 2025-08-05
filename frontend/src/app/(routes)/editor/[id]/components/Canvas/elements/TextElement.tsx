@@ -101,8 +101,8 @@ export const TextElement = ({
     const isThisElementResizing = (isResizing || storeIsResizing) &&
       (activeResizeElement === element.id || activeResizeElement === null);
 
-    // Check if this element was recently resized (within last 2 seconds)
-    const wasRecentlyResized = Date.now() - lastResizeTime < 2000;
+    // Check if this element was recently resized (within last 3 seconds to prevent flash)
+    const wasRecentlyResized = Date.now() - lastResizeTime < 3000; // Increased from 2 seconds to 3 seconds
 
     // If current width is significantly larger than what auto-fit would calculate,
     // assume it was manually resized and don't auto-fit
@@ -171,8 +171,11 @@ export const TextElement = ({
     const isCurrentlyResizing = (isResizing || storeIsResizing) &&
       (activeResizeElement === element.id || activeResizeElement === null);
     
-    if (isCurrentlyResizing) {
-      console.log('DEBUG: Skipping auto-fit during resize for element:', element.id);
+    // Also skip if recently resized to prevent flash
+    const wasRecentlyResized = Date.now() - lastResizeTime < 3000;
+    
+    if (isCurrentlyResizing || wasRecentlyResized) {
+      console.log('DEBUG: Skipping auto-fit during/after resize for element:', element.id, { isCurrentlyResizing, wasRecentlyResized });
       return;
     }
 
@@ -184,7 +187,7 @@ export const TextElement = ({
       autoFitElement(currentContent);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [element.fontFamily, element.fontSize, element.isBold, element.isItalic, element.letterSpacing, autoFitElement, isResizing, storeIsResizing, activeResizeElement]);
+  }, [element.fontFamily, element.fontSize, element.isBold, element.isItalic, element.letterSpacing, autoFitElement, isResizing, storeIsResizing, activeResizeElement, lastResizeTime]);
 
   return (
     <div className="h-full text-element">
