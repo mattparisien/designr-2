@@ -111,17 +111,17 @@ export function useTextMeasurement() {
    * Measures height for a specific canvas element
    */
   const measureElementHeight = useCallback((element: CanvasElement): number => {
-    if (element.kind !== 'text' || !element.content) return element.height;
+    if (element.type !== 'text' || !element.content) return element.rect.height;
 
     return measureTextHeight(
       element.content,
-      element.width,
+      element.rect.width,
       {
         fontSize: element.fontSize,
         fontFamily: element.fontFamily,
-        isBold: element.bold,
-        isItalic: element.italic,
-        isUnderlined: element.underline,
+        isBold: element.isBold,
+        isItalic: element.isItalic,
+        isUnderlined: element.isUnderline,
         isStrikethrough: element.isStrikethrough,
         textAlign: element.textAlign,
         lineHeight: element.lineHeight

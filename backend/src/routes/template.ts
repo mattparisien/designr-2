@@ -125,8 +125,7 @@ router.get('/:id', async (req: Request<GetDesignTemplateRequest>, res: Response<
       thumbnailUrl: template.thumbnailUrl,
       pages: template.pages.map(page => ({
         id: page.id,
-        elements: page.canvas.elements,
-        canvas: page.canvas
+        canvas: page.canvas,
       })),
       createdBy: template.createdBy ? template.createdBy.toString() : undefined,
       createdAt: template.createdAt.toISOString(),

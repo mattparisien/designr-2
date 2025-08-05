@@ -66,12 +66,12 @@ export function useCanvasElementResize() {
 
       // Store the current dimensions and position when starting resize
       originalState.current = {
-        width: element.width,
-        height: element.height,
-        x: element.x,
-        y: element.y,
-        aspectRatio: element.width / element.height,
-        fontSize: element.fontSize,
+        width: element.rect.width,
+        height: element.rect.height,
+        x: element.rect.x,
+        y: element.rect.y,
+        aspectRatio: element.rect.width / element.rect.height,
+        fontSize: element.type === "text" ? element.fontSize : undefined,
       };
 
       // If this is a new element and callback is provided, call it
@@ -119,7 +119,7 @@ export function useCanvasElementResize() {
         x: origX,
         y: origY,
         aspectRatio,
-        fontSize: origFontSize = element.fontSize || 36,
+        fontSize: origFontSize = element.type === "text" ? (element.fontSize || 36) : 36,
       } = originalState.current;
 
       // Determine resize behavior based on element type and key modifiers
@@ -127,10 +127,10 @@ export function useCanvasElementResize() {
       // Rectangle shapes can resize freely, but should maintain aspect ratio when Shift is pressed
       // Circles and triangles should maintain aspect ratio by default
       // Images should maintain aspect ratio when Shift is pressed
-      const shouldMaintainAspectRatio = element.kind === "text" || 
-        (element.kind === "shape" && element.shapeType === "rect" && isShiftKeyPressed) ||
-        (element.kind === "shape" && element.shapeType !== "rect") ||
-        (element.kind === "image" && isShiftKeyPressed);
+      const shouldMaintainAspectRatio = element.type === "text" || 
+        (element.type === "shape" && element.form === "rectangle" && isShiftKeyPressed) ||
+        (element.type === "shape" && element.form !== "rectangle") ||
+        (element.type === "image" && isShiftKeyPressed);
 
       // Calculate the total delta from the initial mouse position
       // This approach provides smoother resizing by avoiding accumulated errors
@@ -289,7 +289,7 @@ export function useCanvasElementResize() {
         }
 
         // Scale the font size proportionally for text elements when using corner handles
-        if (element.kind === "text" && element.fontSize) {
+        if (element.type === "text" && element.fontSize) {
           // Always use width scaling for text elements to keep font size consistent with width changes
           const scaleFactor = newWidth / origWidth;
           newFontSize = Math.max(8, Math.round(origFontSize * scaleFactor));
@@ -298,7 +298,7 @@ export function useCanvasElementResize() {
         // Handle edge resizing (non-uniform scaling)
         if (resizeDirection.includes("e")) {
           newWidth = Math.max(50, origWidth + deltaX);
-          if (isAltKeyPressed || element.kind === "text") {
+          if (isAltKeyPressed || element.type === "text") {
             // Center scaling: shift position by half the width change
             const widthChange = newWidth - origWidth;
             newX = origX - widthChange / 2;
@@ -308,7 +308,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("w")) {
           newWidth = Math.max(50, origWidth - deltaX);
-          if (isAltKeyPressed || element.kind === "text") {
+          if (isAltKeyPressed || element.type === "text") {
             // Center scaling: shift position by half the width change
             const widthChange = newWidth - origWidth;
             newX = origX - widthChange / 2;
@@ -320,7 +320,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("s")) {
           newHeight = Math.max(20, origHeight + deltaY);
-          if (isAltKeyPressed || element.kind === "text") {
+          if (isAltKeyPressed || element.type === "text") {
             // Center scaling: shift position by half the height change
             const heightChange = newHeight - origHeight;
             newY = origY - heightChange / 2;
@@ -329,7 +329,7 @@ export function useCanvasElementResize() {
 
         if (resizeDirection.includes("n")) {
           newHeight = Math.max(20, origHeight - deltaY);
-          if (isAltKeyPressed || element.kind === "text") {
+          if (isAltKeyPressed || element.type === "text") {
             // Center scaling: shift position by half the height change
             const heightChange = newHeight - origHeight;
             newY = origY - heightChange / 2;

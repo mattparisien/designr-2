@@ -20,7 +20,7 @@ const useElementActionBar = (
         placement: 'top'
     });
     const lastScaleRef = useRef<number>(1);
-    const lastElementPosRef = useRef({ x: element?.x || 0, y: element?.y || 0 });
+    const lastElementPosRef = useRef({ x: element?.rect.x || 0, y: element?.rect.y || 0 });
 
     const checkCollision = useCallback((rect1: DOMRect, rect2: DOMRect): boolean => {
         return !(rect1.right < rect2.left ||
@@ -140,10 +140,10 @@ const useElementActionBar = (
 
             // Calculate element's position on screen
             const elementRect = new DOMRect(
-                canvasRect.left + (element.x * scale),
-                canvasRect.top + (element.y * scale),
-                element.width * scale,
-                element.height * scale
+                canvasRect.left + (element.rect.x * scale),
+                canvasRect.top + (element.rect.y * scale),
+                element.rect.width * scale,
+                element.rect.height * scale
             );
 
             // Get property bar position if it exists
@@ -155,7 +155,7 @@ const useElementActionBar = (
             const newState = calculateBestPosition(elementRect, propertyBarRect);
             setState(newState);
 
-            lastElementPosRef.current = { x: element.x, y: element.y };
+            lastElementPosRef.current = { x: element.rect.x, y: element.rect.y };
         }
     }, [element, calculateBestPosition, propertyBarRef]);
 
@@ -163,7 +163,7 @@ const useElementActionBar = (
         if (!element) return;
 
         if (
-            (lastElementPosRef.current.x !== element.x || lastElementPosRef.current.y !== element.y)
+            (lastElementPosRef.current.x !== element.rect.x || lastElementPosRef.current.y !== element.rect.y)
         ) {
             updatePosition();
         }

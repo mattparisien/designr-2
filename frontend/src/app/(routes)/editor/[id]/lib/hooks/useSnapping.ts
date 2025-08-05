@@ -56,10 +56,10 @@ export function useSnapping() {
     }
 
     // Element bounds
-    const elementRight = currentX + element.width;
-    const elementBottom = currentY + element.height;
-    const elementCenterX = currentX + element.width / 2;
-    const elementCenterY = currentY + element.height / 2;
+    const elementRight = currentX + element.rect.width;
+    const elementBottom = currentY + element.rect.height;
+    const elementCenterX = currentX + element.rect.width / 2;
+    const elementCenterY = currentY + element.rect.height / 2;
 
     // Initialize snapped position and guides
     let snappedX = currentX;
@@ -75,13 +75,13 @@ export function useSnapping() {
 
     // Check alignment with canvas center (horizontal)
     if (Math.abs(elementCenterX - canvasCenterX) < SNAP_THRESHOLD) {
-      snappedX = canvasCenterX - element.width / 2;
+      snappedX = canvasCenterX - element.rect.width / 2;
       verticalGuides.push(canvasCenterX);
     }
 
     // Check alignment with canvas center (vertical)
     if (Math.abs(elementCenterY - canvasCenterY) < SNAP_THRESHOLD) {
-      snappedY = canvasCenterY - element.height / 2;
+      snappedY = canvasCenterY - element.rect.height / 2;
       horizontalGuides.push(canvasCenterY);
     }
 
@@ -96,7 +96,7 @@ export function useSnapping() {
 
     // Right edge
     if (Math.abs(elementRight - canvasWidth) < SNAP_THRESHOLD) {
-      snappedX = canvasWidth - element.width;
+      snappedX = canvasWidth - element.rect.width;
       verticalGuides.push(canvasWidth);
     }
 
@@ -108,7 +108,7 @@ export function useSnapping() {
 
     // Bottom edge
     if (Math.abs(elementBottom - canvasHeight) < SNAP_THRESHOLD) {
-      snappedY = canvasHeight - element.height;
+      snappedY = canvasHeight - element.rect.height;
       horizontalGuides.push(canvasHeight);
     }
 
@@ -120,30 +120,30 @@ export function useSnapping() {
       if (otherElement.id === element.id) return;
 
       // Calculate other element's bounds
-      const otherRight = otherElement.x + otherElement.width;
-      const otherBottom = otherElement.y + otherElement.height;
-      const otherCenterX = otherElement.x + otherElement.width / 2;
-      const otherCenterY = otherElement.y + otherElement.height / 2;
+      const otherRight = otherElement.rect.x + otherElement.rect.width;
+      const otherBottom = otherElement.rect.y + otherElement.rect.height;
+      const otherCenterX = otherElement.rect.x + otherElement.rect.width / 2;
+      const otherCenterY = otherElement.rect.y + otherElement.rect.height / 2;
 
       // ------------------------
       // Horizontal alignments (top, center, bottom)
       // ------------------------
       
       // Top edges alignment
-      if (Math.abs(currentY - otherElement.y) < SNAP_THRESHOLD) {
-        snappedY = otherElement.y;
-        horizontalGuides.push(otherElement.y);
+      if (Math.abs(currentY - otherElement.rect.y) < SNAP_THRESHOLD) {
+        snappedY = otherElement.rect.y;
+        horizontalGuides.push(otherElement.rect.y);
       }
 
       // Center alignment (vertical)
       if (Math.abs(elementCenterY - otherCenterY) < SNAP_THRESHOLD) {
-        snappedY = otherCenterY - element.height / 2;
+        snappedY = otherCenterY - element.rect.height / 2;
         horizontalGuides.push(otherCenterY);
       }
 
       // Bottom edges alignment
       if (Math.abs(elementBottom - otherBottom) < SNAP_THRESHOLD) {
-        snappedY = otherBottom - element.height;
+        snappedY = otherBottom - element.rect.height;
         horizontalGuides.push(otherBottom);
       }
 
@@ -152,20 +152,20 @@ export function useSnapping() {
       // ------------------------
       
       // Left edges alignment
-      if (Math.abs(currentX - otherElement.x) < SNAP_THRESHOLD) {
-        snappedX = otherElement.x;
-        verticalGuides.push(otherElement.x);
+      if (Math.abs(currentX - otherElement.rect.x) < SNAP_THRESHOLD) {
+        snappedX = otherElement.rect.x;
+        verticalGuides.push(otherElement.rect.x);
       }
 
       // Center alignment (horizontal)
       if (Math.abs(elementCenterX - otherCenterX) < SNAP_THRESHOLD) {
-        snappedX = otherCenterX - element.width / 2;
+        snappedX = otherCenterX - element.rect.width / 2;
         verticalGuides.push(otherCenterX);
       }
 
       // Right edges alignment
       if (Math.abs(elementRight - otherRight) < SNAP_THRESHOLD) {
-        snappedX = otherRight - element.width;
+        snappedX = otherRight - element.rect.width;
         verticalGuides.push(otherRight);
       }
     });
@@ -296,12 +296,12 @@ export function useSnapping() {
       if (otherElement.id === element.id) return;
 
       // Calculate other element's bounds
-      const otherLeft = otherElement.x;
-      const otherRight = otherElement.x + otherElement.width;
-      const otherTop = otherElement.y;
-      const otherBottom = otherElement.y + otherElement.height;
-      const otherCenterX = otherElement.x + otherElement.width / 2;
-      const otherCenterY = otherElement.y + otherElement.height / 2;
+      const otherLeft = otherElement.rect.x;
+      const otherRight = otherElement.rect.x + otherElement.rect.width;
+      const otherTop = otherElement.rect.y;
+      const otherBottom = otherElement.rect.y + otherElement.rect.height;
+      const otherCenterX = otherElement.rect.x + otherElement.rect.width / 2;
+      const otherCenterY = otherElement.rect.y + otherElement.rect.height / 2;
 
       // Right edge snapping
       if (resizeDirection.includes('e') && Math.abs(newRight - otherLeft) < SNAP_THRESHOLD) {

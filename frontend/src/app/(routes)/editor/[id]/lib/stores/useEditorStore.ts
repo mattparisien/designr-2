@@ -17,6 +17,7 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   roleId: "project" | "template" | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
   loadDesign: (designId: string) => Promise<void>;
+  initDesign: (designId: string) => void;
   loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template", design: Project | Template }>;
   getAPIClient: () => Promise<ProjectsAPI | TemplatesAPI | undefined>;
   saveDesign: () => Promise<void>;
@@ -253,6 +254,23 @@ const useEditorStore = create<EditorState>()(
       }
 
     },
+    initDesign: (designId: string) => {
+
+      if (!designId) {
+        console.error('No design ID provided to initDesign');
+        return;
+      }
+
+      const setDesign = get().setDesign;
+      const loadDesign = get().loadDesign;
+      // Load the composition data
+      loadDesign(designId).then(() => {
+        setDesign(designId);
+      }).catch((error) => {
+        console.error('Failed to load design in initDesign:', error);
+      });
+
+    },
     loadDesignFromAPI: async (designId: string) => {
 
       let role: "project" | "template" | null = null;
@@ -312,7 +330,7 @@ const useEditorStore = create<EditorState>()(
 
         console.log('design', design)
 
-        
+
 
         set({
           designName: design.title || 'Untitled Design',
@@ -320,7 +338,7 @@ const useEditorStore = create<EditorState>()(
           currentPageId: design.pages[0]?.id || '',
           isDesignSaved: true,
           designId: design.id,
-          
+
           roleId: role
         });
 

@@ -292,18 +292,11 @@ export default function Editor({ designId }: EditorProps) {
     // Initialize template ID and load template data when component mounts
     useEffect(() => {
         if (designId) {
-            const setDesign = useEditorStore.getState().setDesign;
-            const loadDesign = useEditorStore.getState().loadDesign;
-
-            setDesign(designId);
-
-            // Load the composition data
-            loadDesign(designId).catch((error) => {
-                console.error('Error loading composition:', error);
-            });
+            const initDesign = useEditorStore.getState().initDesign;
+            initDesign(designId);
         }
     }, [designId]);
-    
+
 
 
     // Add keyboard shortcut for saving template with Cmd+S
