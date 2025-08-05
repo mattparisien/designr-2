@@ -39,7 +39,7 @@ const ElementRenderer = memo(({
     isResizing = false,
 }: ElementRendererProps) => {
     // Use a simple switch to route to the appropriate component
-    switch (element.kind) {
+    switch (element.type) {
         case "text":
             return (
                 <TextElement
@@ -56,8 +56,8 @@ const ElementRenderer = memo(({
             return <ImageElement element={element} />;
         case "shape":
             // Handle different shape types
-            switch (element.shapeType) {
-                case "rect":
+            switch (element.form) {
+                case "rectangle":
                     return <RectangleElement element={element} />;
                 case "circle":
                     return <CircleElement element={element} />;

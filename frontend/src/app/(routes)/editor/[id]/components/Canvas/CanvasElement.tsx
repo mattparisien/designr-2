@@ -49,7 +49,7 @@ export function CanvasElement({
   // Element ref and text editor key for rerendering
   const elementRef = useRef<HTMLDivElement>(null);
   const [textEditorKey, setTextEditorKey] = useState(0);
-  
+
   // Initialize text measurement hook
   const { measureElementHeight, renderMeasurer } = useTextMeasurement();
 
@@ -75,7 +75,7 @@ export function CanvasElement({
   // Handle text height change
   const handleHeightChange = useCallback((newHeight: number) => {
     if (element.type === "text") {
-      updateElement(element.id, { 
+      updateElement(element.id, {
         rect: {
           ...element.rect,
           height: newHeight
@@ -95,42 +95,64 @@ export function CanvasElement({
   // Only remount TextEditor when absolutely necessary (font family changes, etc.)
   const fontSize = element.type === "text" ? element.fontSize : null;
   const fontFamily = element.type === "text" ? element.fontFamily : null;
-  
+
   useEffect(() => {
     if (element.type === "text") {
       setTextEditorKey((k) => k + 1);
     }
   }, [element.type, fontSize, fontFamily]);
 
-  // Update height when fontSize changes
+
+  const prevMeasuredHeight = useRef<number | null>(null);
+
   useEffect(() => {
-    if (element.type === "text" && element.content && element.fontSize) {
-      const measuredHeight = measureElementHeight(element);
-
-      if (measuredHeight && measuredHeight !== element.rect.height) {
-        updateElement(element.id, {
-          rect: {
-            ...element.rect,
-            height: measuredHeight
-          }
-        });
-      }
+    if (element.type !== "text" || !element.content || !element.fontSize) return;
+    const measuredHeight = measureElementHeight(element);
+    if (
+      measuredHeight &&
+      measuredHeight !== element.rect.height &&
+      prevMeasuredHeight.current !== measuredHeight
+    ) {
+      prevMeasuredHeight.current = measuredHeight;
+      updateElement(element.id, {
+        rect: {
+          ...element.rect,
+          height: measuredHeight
+        }
+      });
     }
-  }, [element, updateElement, measureElementHeight]);
+  }, [
+    element.id,
+    element.type,
+    element.content,
+    element.fontSize,
+    element.rect.height,
+    measureElementHeight,
+    updateElement
+  ]);
 
-  // Update viewport rect when canvas position/scale changes
-  useEffect(() => {
-    const newRect = calculateViewportRect(element, canvasRef, scale);
+  // useEffect(() => {
+  //   const newRect = calculateViewportRect(element, canvasRef, scale);
+  //   if (
+  //     element.rect.x !== newRect.x ||
+  //     element.rect.y !== newRect.y ||
+  //     element.rect.width !== newRect.width ||
+  //     element.rect.height !== newRect.height
+  //   ) {
+  //     updateElement(element.id, { rect: newRect });
+  //   }
+  // }, [
+  //   element.id,
+  //   element.rect.x,
+  //   element.rect.y,
+  //   element.rect.width,
+  //   element.rect.height,
+  //   scale,
+  //   canvasRef,
+  //   updateElement
+  // ]);
 
-    // Only update if rect has actually changed to avoid unnecessary re-renders
-    if (!element.rect ||
-      element.rect.x !== newRect.x ||
-      element.rect.y !== newRect.y ||
-      element.rect.width !== newRect.width ||
-      element.rect.height !== newRect.height) {
-      updateElement(element.id, { rect: newRect });
-    }
-  }, [element, scale, canvasRef, updateElement]);
+
 
   // Show element action bar when this element is selected
   useEffect(() => {
