@@ -27,11 +27,6 @@ export default function BottomBar({
     toggleFullscreen,
     isFullscreen
 }: BottomBarProps) {
-
-    useEffect(() => {
-        console.log("BottomBar mounted with pages:", pages);
-    }, [pages, ])
-
     return (
 
 

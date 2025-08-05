@@ -325,7 +325,6 @@ const useEditorStore = create<EditorState>()(
           throw new Error('Project not found');
         }
 
-        console.log('design', design)
 
 
 

@@ -440,15 +440,15 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     }, [element, scale, isResizing]);
 
     // Force recalculation of dimensions when text content or editable state changes
-    // useEffect(() => {
-    //     if (element?.type === "text") {
-    //         // Small delay to ensure DOM has updated after content/state change
-    //         const timer = setTimeout(() => {
-    //             // This effect will cause the component to re-render with updated dimensions
-    //         }, 10);
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [element.fontSize]);
+    useEffect(() => {
+        if (element?.type === "text") {
+            // Small delay to ensure DOM has updated after content/state change
+            const timer = setTimeout(() => {
+                // This effect will cause the component to re-render with updated dimensions
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [element.fontSize]);
 
 
     //     useEffect(() => {

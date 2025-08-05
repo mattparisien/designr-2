@@ -114,7 +114,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPageId = editor.currentPageId;
       const currentPage = getCurrentPage();
 
-
+      
       if (!currentPageId || !currentPage) return;
 
       // Create a helper to extract properties from elementData

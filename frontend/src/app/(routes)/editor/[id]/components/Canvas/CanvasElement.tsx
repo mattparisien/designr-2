@@ -96,6 +96,7 @@ export function CanvasElement({
   const fontSize = element.type === "text" ? element.fontSize : null;
   const fontFamily = element.type === "text" ? element.fontFamily : null;
 
+  
   useEffect(() => {
     if (element.type === "text") {
       setTextEditorKey((k) => k + 1);
@@ -131,26 +132,26 @@ export function CanvasElement({
     updateElement
   ]);
 
-  // useEffect(() => {
-  //   const newRect = calculateViewportRect(element, canvasRef, scale);
-  //   if (
-  //     element.rect.x !== newRect.x ||
-  //     element.rect.y !== newRect.y ||
-  //     element.rect.width !== newRect.width ||
-  //     element.rect.height !== newRect.height
-  //   ) {
-  //     updateElement(element.id, { rect: newRect });
-  //   }
-  // }, [
-  //   element.id,
-  //   element.rect.x,
-  //   element.rect.y,
-  //   element.rect.width,
-  //   element.rect.height,
-  //   scale,
-  //   canvasRef,
-  //   updateElement
-  // ]);
+  useEffect(() => {
+    const newRect = calculateViewportRect(element, canvasRef, scale);
+    if (
+      element.rect.x !== newRect.x ||
+      element.rect.y !== newRect.y ||
+      element.rect.width !== newRect.width ||
+      element.rect.height !== newRect.height
+    ) {
+      updateElement(element.id, { rect: newRect });
+    }
+  }, [
+    element.id,
+    element.rect.x,
+    element.rect.y,
+    element.rect.width,
+    element.rect.height,
+    scale,
+    canvasRef,
+    updateElement
+  ]);
 
 
 

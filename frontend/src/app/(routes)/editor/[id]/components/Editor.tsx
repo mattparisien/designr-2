@@ -226,6 +226,14 @@ export default function Editor({ designId }: EditorProps) {
         }
     }, [selectedElement, updateElement]);
 
+
+/*********************************************************************
+ * SIDE EFFECTS
+ * ******************************************************************/
+
+
+/*
+
     useEffect(() => {
         // Add non-passive wheel event listener to prevent the error
         const handleWheel = (e: WheelEvent) => {
@@ -249,7 +257,7 @@ export default function Editor({ designId }: EditorProps) {
             }
         };
     }, [zoom]);
-
+*/
     // Add keyboard shortcut for creating text elements with 'T' key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -295,9 +303,7 @@ export default function Editor({ designId }: EditorProps) {
             initDesign(designId);
         }
     }, [designId]);
-
-
-
+/*
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -373,7 +379,7 @@ export default function Editor({ designId }: EditorProps) {
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
     }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
-    
+    */
     
     return (
         <div
