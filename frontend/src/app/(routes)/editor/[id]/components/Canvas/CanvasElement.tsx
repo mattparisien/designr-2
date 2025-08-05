@@ -1,11 +1,9 @@
 "use client"
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTextMeasurement } from "../../lib/hooks";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import { Element as EditorCanvasElement } from "../../lib/types/canvas";
-import { calculateViewportRect } from "../../lib/utils/canvas";
-import { useCallback, useEffect, useRef } from "react";
-import { useTextMeasurement } from "../../lib/hooks";
 import ElementRenderer from "./renderers/ElementRenderer";
 
 interface CanvasElementProps {
@@ -110,7 +108,7 @@ export function CanvasElement({
   useEffect(() => {
     // Skip height measurement for new elements that already have proper dimensions from ElementFactory
     if (element.type !== "text" || hasMeasured.current || (element.isNew && element.rect.height > 20)) return;
-    
+
     const measuredHeight = measureElementHeight(element);
 
     updateElement(element.id, {

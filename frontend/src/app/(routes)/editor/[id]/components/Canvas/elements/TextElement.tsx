@@ -49,6 +49,16 @@ export const TextElement = ({
 
     // Skip auto-fitting for new elements that already have proper dimensions from ElementFactory
     if (element.isNew && element.rect.width > 50) {
+      console.log('DEBUG: Skipping auto-fit for new element with good dimensions:', element.rect);
+      return;
+    }
+
+    // Skip auto-fitting during any resize operations to prevent interference
+    const isCurrentlyResizing = (isResizing || storeIsResizing) &&
+      (activeResizeElement === element.id || activeResizeElement === null);
+    
+    if (isCurrentlyResizing) {
+      console.log('DEBUG: Skipping auto-fit during resize for element:', element.id);
       return;
     }
 
@@ -138,6 +148,8 @@ export const TextElement = ({
     element.isBold,
     element.isItalic,
     element.id,
+    element.isNew,
+    element.rect.width,
     isResizing,
     storeIsResizing,
     activeResizeElement,
@@ -155,6 +167,15 @@ export const TextElement = ({
 
   // Auto-fit when font properties change (but not content, since that's handled in handleContentChange)
   useEffect(() => {
+    // Skip auto-fitting during resize operations to prevent interference
+    const isCurrentlyResizing = (isResizing || storeIsResizing) &&
+      (activeResizeElement === element.id || activeResizeElement === null);
+    
+    if (isCurrentlyResizing) {
+      console.log('DEBUG: Skipping auto-fit during resize for element:', element.id);
+      return;
+    }
+
     // Use a function to get current content to avoid adding it as dependency
     const getCurrentContent = () => element.content;
     const currentContent = getCurrentContent();
@@ -163,7 +184,7 @@ export const TextElement = ({
       autoFitElement(currentContent);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [element.fontFamily, element.fontSize, element.isBold, element.isItalic, element.letterSpacing, autoFitElement]);
+  }, [element.fontFamily, element.fontSize, element.isBold, element.isItalic, element.letterSpacing, autoFitElement, isResizing, storeIsResizing, activeResizeElement]);
 
   return (
     <div className="h-full text-element">

@@ -2,7 +2,6 @@ import { useCanvasElementInteraction, useCanvasElementResize, useSnapping, useTe
 import useCanvasStore from "../../../lib/stores/useCanvasStore";
 import useEditorStore from "../../../lib/stores/useEditorStore";
 import { Element } from "../../../lib/types/canvas";
-import { calculateViewportRect } from "../../../lib/utils/canvas";
 import { mergeRefs } from "@/lib/utils";
 import classNames from "classnames";
 import { forwardRef, memo, useCallback, useEffect, useRef } from "react";
@@ -308,20 +307,13 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         let animationFrameId: number | null = null;
         let lastEvent: MouseEvent | null = null;
 
-        // Helper function to update element with rect calculation
+        // Helper function to update element with proper canvas coordinates
         const updateElementWithRect = (updates: Partial<Element>) => {
-            const canvasContainer = document.querySelector('.canvas-container') as HTMLDivElement;
-            const canvasRef = { current: canvasContainer };
-            const newRect = calculateViewportRect(
-                { ...element, ...updates },
-                canvasRef,
-                scale
-            );
-
-            updateElement(element.id, {
-                ...updates,
-                rect: newRect
-            });
+            console.log('DEBUG: updateElementWithRect called with:', updates);
+            console.log('DEBUG: Current element rect:', element.rect);
+            
+            // Directly update element with canvas coordinates - no viewport conversion needed
+            updateElement(element.id, updates);
         };
 
         const processResize = () => {
@@ -450,12 +442,14 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             }, 10);
             return () => clearTimeout(timer);
         }
-    }, [element.fontSize]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [element?.type, element.type === "text" && element.fontSize]);
 
     // Calculate viewport position for proper ElementControls positioning
     const getViewportPosition = useCallback(() => {
         const canvasContainer = document.querySelector('.canvas-container') as HTMLDivElement;
         if (!canvasContainer) {
+            console.log('DEBUG: No canvas container found, using element rect directly');
             return { x: element.rect.x, y: element.rect.y };
         }
         
@@ -463,8 +457,16 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         const viewportX = canvasRect.left + (element.rect.x * scale);
         const viewportY = canvasRect.top + (element.rect.y * scale);
         
+        console.log('DEBUG: Viewport position calculation:', {
+            canvasRect: { left: canvasRect.left, top: canvasRect.top },
+            elementRect: element.rect,
+            scale,
+            viewportX,
+            viewportY
+        });
+        
         return { x: viewportX, y: viewportY };
-    }, [element.rect.x, element.rect.y, scale]);
+    }, [element.rect, scale]);
 
     //     useEffect(() => {
     //     console.log('is selected:', isSelected, 'isHovering:', isHovering, 'shouldShowBorder:', shouldShowBorder);
