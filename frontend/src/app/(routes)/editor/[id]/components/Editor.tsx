@@ -232,32 +232,30 @@ export default function Editor({ designId }: EditorProps) {
      * ******************************************************************/
 
 
-    /*
-    
-        useEffect(() => {
-            // Add non-passive wheel event listener to prevent the error
-            const handleWheel = (e: WheelEvent) => {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    const zoomDelta = e.deltaY * 0.25;
-                    const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom - zoomDelta)));
-                    setZoom(next);
-                }
-            };
-    
-            // Get the element where the wheel event should be captured
-            const editorElement = editorContainerRef.current;
-            if (editorElement) {
-                editorElement.addEventListener('wheel', handleWheel, { passive: false });
+
+    useEffect(() => {
+        // Add non-passive wheel event listener to prevent the error
+        const handleWheel = (e: WheelEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                const zoomDelta = e.deltaY * 0.25;
+                const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom - zoomDelta)));
+                setZoom(next);
             }
-    
-            return () => {
-                if (editorElement) {
-                    editorElement.removeEventListener('wheel', handleWheel);
-                }
-            };
-        }, [zoom]);
-    */
+        };
+
+        // Get the element where the wheel event should be captured
+        const editorElement = editorContainerRef.current;
+        if (editorElement) {
+            editorElement.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
+        return () => {
+            if (editorElement) {
+                editorElement.removeEventListener('wheel', handleWheel);
+            }
+        };
+    }, [zoom]);
     // Add keyboard shortcut for creating text elements with 'T' key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -383,7 +381,7 @@ export default function Editor({ designId }: EditorProps) {
 
     return (
         <div
-            className="flex flex-1 overflow-hidden flex-col relative h-full"
+            className="flex flex-1 overflow-hidden flex-col relative h-full select-none"
             ref={editorContainerRef}
             style={{
                 backgroundColor: "var(--bg-primary)"
