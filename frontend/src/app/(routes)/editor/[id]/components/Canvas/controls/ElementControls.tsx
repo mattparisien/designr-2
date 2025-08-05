@@ -452,6 +452,19 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         }
     }, [element.fontSize]);
 
+    // Calculate viewport position for proper ElementControls positioning
+    const getViewportPosition = useCallback(() => {
+        const canvasContainer = document.querySelector('.canvas-container') as HTMLDivElement;
+        if (!canvasContainer) {
+            return { x: element.rect.x, y: element.rect.y };
+        }
+        
+        const canvasRect = canvasContainer.getBoundingClientRect();
+        const viewportX = canvasRect.left + (element.rect.x * scale);
+        const viewportY = canvasRect.top + (element.rect.y * scale);
+        
+        return { x: viewportX, y: viewportY };
+    }, [element.rect.x, element.rect.y, scale]);
 
     //     useEffect(() => {
     //     console.log('is selected:', isSelected, 'isHovering:', isHovering, 'shouldShowBorder:', shouldShowBorder);
@@ -462,6 +475,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
     }
 
     const actualDimensions = getActualDimensions();
+    const viewportPosition = getViewportPosition();
 
     // Don't show selection UI when text element is being edited
     const isTextBeingEdited = element.type === "text" && element.isEditable;
@@ -478,8 +492,8 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             data-element-id={element.id}
             style={{
                 position: 'fixed',
-                top: element.rect.y,
-                left: element.rect.x,
+                top: viewportPosition.y,
+                left: viewportPosition.x,
                 width: actualDimensions.width,
                 height: actualDimensions.height,
                 cursor: isTextBeingEdited ? "text" : (isEditMode && !element.isLocked ? (isDragging ? "grabbing" : "grab") : "default"),
