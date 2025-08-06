@@ -61,7 +61,7 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
     
     const families = new Set<string>();
     elements.forEach(element => {
-      if (element.kind === 'text' && element.fontFamily) {
+      if (element.type === 'text' && element.fontFamily) {
         families.add(element.fontFamily);
       }
     });
@@ -231,8 +231,8 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
         // Update positions of all selected elements
         updateMultipleElements((prev: CanvasElementType) => {
           return {
-            x: prev.x + deltaX,
-            y: prev.y + deltaY
+            x: prev.rect.x + deltaX,
+            y: prev.rect.y + deltaY
           };
         });
 
@@ -271,8 +271,8 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
   const sortedElements = useMemo(() => {
     return [...elements].sort((a, b) => {
       // Text elements should always be on top
-      if (a.kind === "text" && b.kind !== "text") return 1;
-      if (a.kind !== "text" && b.kind === "text") return -1;
+      if (a.type === "text" && b.type !== "text") return 1;
+      if (a.type !== "text" && b.type === "text") return -1;
       return 0;
     });
   }, [elements]);
@@ -283,10 +283,7 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
     setIsHoveringChild(false)
   }, [])
 
-  // Get background color from current page
-  const canvasBackgroundColor = currentPage?.background?.type === 'color'
-    ? currentPage.background.value
-    : '#ffffff'; // Default to white
+
 
   return (
     <div
@@ -320,7 +317,6 @@ const CanvasComponent: ForwardRefRenderFunction<HTMLDivElement, CanvasProps> = (
           flexShrink: 0, // Add flex-shrink to prevent squeezing by flex parents
           cursor: isEditMode ? "default" : "default",
           zIndex: 'var(--editor-canvas-z)',
-          backgroundColor: canvasBackgroundColor
         }}
         onClick={handleCanvasClick}
       >

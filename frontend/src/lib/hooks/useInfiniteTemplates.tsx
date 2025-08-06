@@ -1,12 +1,12 @@
 "use client";
 
 import { templatesAPI } from "@/lib/api/index";
-import { Template } from "@/lib/types/api";
+import { DesignTemplate } from "@shared/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface TemplatesPageData {
-  templates: Template[],
+  templates: DesignTemplate[],
   totalTemplates: number;
   totalPages: number;
   currentPage: number;

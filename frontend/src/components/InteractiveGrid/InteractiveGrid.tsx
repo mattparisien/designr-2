@@ -16,7 +16,7 @@ export const upperFirst = (str: string) => {
 };
 
 interface InteractiveGridItem {
-  _id: string;
+  id: string;
   image?: { src: string; alt: string };
   title?: string;
   name?: string;
@@ -55,6 +55,7 @@ export function InteractiveGrid({
   isLoading = false,
   isInitialLoading = false,
 }: InteractiveGridProps) {
+  console.log(items);
   const router = useRouter();
   const { toast } = useToast();
   const { selectedIds, clearSelection } = useSelection();
@@ -108,15 +109,15 @@ export function InteractiveGrid({
 
   const renderGridItem = useCallback((item: InteractiveGridItem) => {
     return <InteractiveCard
-      key={item._id}
-      id={item._id}
+      key={item.id}
+      id={item.id}
       image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? item.name ?? "Thumbnail" } : undefined}
       title={item.name ?? item.title ?? "Untitled"}
       disableClick={false}
       subtitleLeft={upperFirst(item.type ?? "")}
       subtitleRight={`Last updated ${getRelativeTime(item.updatedAt ?? "")}`}
-      onClick={() => handleOpen(item._id)}
-      onTitleChange={(newTitle) => handleTitleChange(item._id, newTitle)}
+      onClick={() => handleOpen(item.id)}
+      onTitleChange={(newTitle) => handleTitleChange(item.id, newTitle)}
     />
   }, [handleOpen, handleTitleChange]);
 

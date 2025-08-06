@@ -257,12 +257,9 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       //   pageId: currentPageId
       // };
 
-      // Update history in canvas store
-      set({
-        selectedElement: newElement,
-        selectedElementIds: [newElement.id],
-        isCanvasSelected: false,
-      })
+      // Don't auto-select elements when they're added
+      // The element will be selected only when user explicitly clicks on it
+      // This prevents the ElementActionBar from showing by default
       // set(state => {
       //   // const newHistory = state.history.slice(0, state.historyIndex + 1);
       //   // newHistory.push(historyAction);

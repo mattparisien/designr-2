@@ -38,4 +38,16 @@ const TemplateSchema = new Schema<TemplateDocument>(
   { timestamps: true }
 );
 
+TemplateSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_doc, ret) => {
+    // Mutate only what's necessary
+    if (ret._id) ret.id = ret._id.toString();
+    delete ret._id;
+    // Don't replace or deeply clone 'ret'
+    return ret;
+  }
+});
+
 export default mongoose.model<TemplateDocument>('Template', TemplateSchema);

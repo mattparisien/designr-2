@@ -27,7 +27,14 @@ interface SocialMediaFormat {
 
 export default function TemplatesPage() {
 
-  const { templates, refetch } = useInfiniteTemplates({
+  const { 
+    templates, 
+    refetch, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading 
+  } = useInfiniteTemplates({
     limit: 20
   });
 
@@ -41,7 +48,7 @@ export default function TemplatesPage() {
 
   const gridItems = useMemo(() => {
     return templates?.map(template => ({
-      _id: template._id,
+      id: template.id,
       title: template.title,
       image: { src: "", alt: template.title },
       updatedAt: template.updatedAt,
@@ -74,6 +81,10 @@ export default function TemplatesPage() {
       console.error('Failed to create template:', error);
     }
   }, [createTemplate, refetch, router,]);
+
+  const handleFetchNextPage = useCallback(async () => {
+    await fetchNextPage();
+  }, [fetchNextPage]);
 
   // CRUD handlers for InteractiveGrid
   const handleDeleteItems = useCallback(async (ids: string[]) => {
@@ -110,6 +121,10 @@ export default function TemplatesPage() {
           items={gridItems}
           onDeleteItems={handleDeleteItems}
           onUpdateItem={handleUpdateItem}
+          isLoading={isFetchingNextPage}
+          isInitialLoading={isLoading}
+          hasMore={hasNextPage}
+          onFetchNextPage={handleFetchNextPage}
         />
       </Section>
     </SelectionProvider>

@@ -1,6 +1,7 @@
 import { CreateDesignTemplateRequest } from "@shared/types";
 import { v4 as uuid } from 'uuid';
 import { DESIGN_FORMATS } from "../constants";
+import { DEFAULT_CANVAS_SIZE } from "@/app/(routes)/editor/[id]/lib/constants";
 
 export const createTemplate = (formatKey: string, customTitle?: string): CreateDesignTemplateRequest => {
     const format = DESIGN_FORMATS[formatKey as keyof typeof DESIGN_FORMATS];
@@ -31,8 +32,8 @@ export const createTemplate = (formatKey: string, customTitle?: string): CreateD
                 id: uuid(),
                 canvas: {
                     elements: [], // Start with no elements - user will add them
-                    width: format.width,
-                    height: format.height
+                    width: format.width || DEFAULT_CANVAS_SIZE.width,
+                    height: format.height || DEFAULT_CANVAS_SIZE.height
                 }
             }
         ],

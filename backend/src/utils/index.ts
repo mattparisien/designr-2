@@ -1,4 +1,6 @@
 export * from "./agent"
+export * from "./type";
+export * from "./api";
 
 export const toNumber = (v: unknown, fallback = 0) =>
   typeof v === 'number' ? v : Number.parseFloat(String(v)) || fallback;

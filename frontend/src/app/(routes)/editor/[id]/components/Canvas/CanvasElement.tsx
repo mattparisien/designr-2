@@ -102,7 +102,6 @@ export function CanvasElement({
   }, [element.type, fontSize, fontFamily]);
 
 
-  const prevMeasuredHeight = useRef<number | null>(null); // Currently unused but may be needed later
   const hasMeasured = useRef<boolean>(false);
 
   useEffect(() => {
@@ -122,43 +121,6 @@ export function CanvasElement({
     });
     hasMeasured.current = true; // Mark as measured to prevent re-runs
   }, [element, measureElementHeight, updateElement, isResizing, activeResizeElement]);
-
-  // Use ref to track previous rect values to prevent infinite updates
-  const prevRectRef = useRef(element.rect); // Currently unused but may be needed later
-
-  // NOTE: Disabled viewport rect calculation as it was incorrectly applying viewport coordinates
-  // back to element rect, which corrupted the dimensions. The calculateViewportRect function
-  // returns browser viewport coordinates, not canvas coordinates.
-  /*
-  useEffect(() => {
-    // Skip viewport rect calculation for new elements that already have proper dimensions from ElementFactory
-    if (element.isNew && element.rect.width > 50) return;
-    
-    const newRect = calculateViewportRect(element, canvasRef, scale);
-    const prevRect = prevRectRef.current;
-
-    // Only update if there's a meaningful change (avoid floating point precision issues)
-    const threshold = 0.5;
-    const hasChanged =
-      Math.abs(prevRect.x - newRect.x) > threshold ||
-      Math.abs(prevRect.y - newRect.y) > threshold ||
-      Math.abs(prevRect.width - newRect.width) > threshold ||
-      Math.abs(prevRect.height - newRect.height) > threshold;
-
-    if (hasChanged) {
-      prevRectRef.current = newRect;
-      updateElement(element.id, { rect: newRect });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    element.id,
-    scale,
-    canvasRef,
-    updateElement
-    // Note: element.rect dependencies removed to prevent infinite loop
-  ]);
-  */
-
 
 
   // Show element action bar when this element is selected

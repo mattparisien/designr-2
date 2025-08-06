@@ -325,7 +325,7 @@ const useEditorStore = create<EditorState>()(
           throw new Error('Project not found');
         }
 
-
+        
 
 
         set({
@@ -334,7 +334,6 @@ const useEditorStore = create<EditorState>()(
           currentPageId: design.pages[0]?.id || '',
           isDesignSaved: true,
           designId: design.id,
-
           roleId: role
         });
 
@@ -349,6 +348,8 @@ const useEditorStore = create<EditorState>()(
     },
     saveDesign: async () => {
       const state = get();
+
+      console.log('the state:', state);
 
       const designId = state.designId;
 
@@ -375,8 +376,9 @@ const useEditorStore = create<EditorState>()(
           title: state.designName,
           thumbnailUrl: thumbnailImage,
           pages: state.pages,
-
         };
+
+        console.log('updateData:', updateData);
 
         console.log('Update payload:', updateData);
         await client.update(designId, updateData);
@@ -386,7 +388,7 @@ const useEditorStore = create<EditorState>()(
           console.log('Thumbnail captured successfully for composition');
         }
 
-        console.log('Composition saved successfully:', state.designName);
+        console.log('Design saved successfully:', state.designName);
         set({
           isDesignSaved: true,
           designId
