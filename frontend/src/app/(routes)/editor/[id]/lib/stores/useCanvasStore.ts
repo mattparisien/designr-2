@@ -448,7 +448,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
         set({
           selectedElement: null,
           selectedElementIds: [],
-          isCanvasSelected: true
+          isCanvasSelected: false
         });
         return;
       }
@@ -507,7 +507,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
         set({
           selectedElement: null,
           selectedElementIds: [],
-          isCanvasSelected: true
+          isCanvasSelected: false
         });
         return;
       }
@@ -539,7 +539,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       set({
         selectedElement: null,
         selectedElementIds: [],
-        isCanvasSelected: true
+        isCanvasSelected: false
       });
     },
 
