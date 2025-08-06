@@ -2,6 +2,7 @@ import { APIErrorResponse, CreateDesignTemplateRequest, CreateDesignTemplateResp
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Template from '../models/Template';
+import { generateDescriptionAndTags } from '../utils/ai';
 
 const router = express.Router();
 
@@ -12,10 +13,22 @@ router.post('/', async (req: Request<{}, CreateDesignTemplateResponse, CreateDes
     const template = new Template(templateData);
     await template.save();
 
-
     if (!template._id) {
       throw new Error("Template ID not found. Template creation failed.");
     }
+
+    // // Generate AI description and tags based on template content
+    // try {
+    //   const aiResult = await generateDescriptionAndTags(template);
+    //   template.description = aiResult.description;
+    //   template.tags = aiResult.tags;
+    //   await template.save();
+    // } catch (aiError) {
+    //   // Log AI error but don't fail the creation
+    //   if (process.env.NODE_ENV !== 'test') {
+    //     console.error('[POST /templates] AI generation error:', aiError);
+    //   }
+    // }
 
     const responseBody: CreateDesignTemplateResponse = {
       id: template._id.toString(),
@@ -178,11 +191,24 @@ router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesign
       { new: true, runValidators: true }
     );
 
-
     if (!updatedTemplate) {
       return res.status(404).json({ message: 'Template not found' });
     } else if (!updatedTemplate._id) {
       return res.status(500).json({ message: 'Template ID not found. Update failed.' });
+    }
+
+    // Generate AI description and tags based on template content
+    try {
+      const aiResult = await generateDescriptionAndTags(updatedTemplate);
+      updatedTemplate.description = aiResult.description;
+      updatedTemplate.tags = aiResult.tags;
+      console.log('AI-generated description and tags:', updatedTemplate);
+      await updatedTemplate.save();
+    } catch (aiError) {
+      // Log AI error but don't fail the update
+      if (process.env.NODE_ENV !== 'test') {
+        console.error(`[PUT /templates/${req.params.id}] AI generation error:`, aiError);
+      }
     }
 
     const responseBody: UpdateDesignTemplateResponse = {
