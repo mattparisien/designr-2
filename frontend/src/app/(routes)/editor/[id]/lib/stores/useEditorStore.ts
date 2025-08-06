@@ -349,8 +349,6 @@ const useEditorStore = create<EditorState>()(
     saveDesign: async () => {
       const state = get();
 
-      console.log('the state:', state);
-
       const designId = state.designId;
 
       if (!designId) {
@@ -378,9 +376,7 @@ const useEditorStore = create<EditorState>()(
           pages: state.pages,
         };
 
-        console.log('updateData:', updateData);
 
-        console.log('Update payload:', updateData);
         await client.update(designId, updateData);
 
         // If thumbnail capture was successful, log it
@@ -508,13 +504,6 @@ const useEditorStore = create<EditorState>()(
 
         // Convert base64 image to data URL
         const dataURL = `data:image/png;base64,${result.imageData}`;
-
-        // Open the captured image in a new tab
-        const newTab = window.open();
-        if (newTab) {
-          newTab.document.write(`<img src="${dataURL}" style="max-width: 100%; height: auto;" />`);
-          newTab.document.title = "Canvas Screenshot";
-        }
 
         console.log('Screenshot captured successfully using Puppeteer');
         return dataURL;

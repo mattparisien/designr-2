@@ -2,10 +2,15 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import Font from '../models/Font';
 
 const router = express.Router();
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configure multer for font file uploads
 const storage = multer.diskStorage({

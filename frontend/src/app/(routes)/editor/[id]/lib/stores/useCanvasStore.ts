@@ -118,7 +118,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       const currentPageId = editor.currentPageId;
       const currentPage = getCurrentPage();
 
-      
+
       if (!currentPageId || !currentPage) return;
 
       // Create a helper to extract properties from elementData
@@ -250,16 +250,13 @@ const useCanvasStore = create<CanvasState>((set, get) => {
       // Update page elements in the editor store
       editor.updatePageElements(currentPageId, updatedElements);
 
-      // Add to history
-      // const historyAction: HistoryAction = {
-      //   type: 'ADD_ELEMENT',
-      //   element: newElement,
-      //   pageId: currentPageId
-      // };
 
-      // Don't auto-select elements when they're added
-      // The element will be selected only when user explicitly clicks on it
-      // This prevents the ElementActionBar from showing by default
+      // Update history in canvas store
+      set({
+        selectedElement: newElement,
+        selectedElementIds: [newElement.id],
+        isCanvasSelected: false,
+      })
       // set(state => {
       //   // const newHistory = state.history.slice(0, state.historyIndex + 1);
       //   // newHistory.push(historyAction);
@@ -590,12 +587,12 @@ const useCanvasStore = create<CanvasState>((set, get) => {
     // Clear the "isNew" flag after an element is placed
     clearNewElementFlag: (id) => {
       const state = get();
-      
+
       // Clear existing timeout for this element to debounce rapid calls
       if (state._clearNewElementFlagTimeouts[id]) {
         clearTimeout(state._clearNewElementFlagTimeouts[id]);
       }
-      
+
       // Set a new timeout to debounce the operation
       const timeout = setTimeout(() => {
         const editor = useEditorStore.getState();
@@ -633,7 +630,7 @@ const useCanvasStore = create<CanvasState>((set, get) => {
           };
         });
       }, 50); // Small delay to debounce rapid calls
-      
+
       // Store the timeout
       set(state => ({
         _clearNewElementFlagTimeouts: {
