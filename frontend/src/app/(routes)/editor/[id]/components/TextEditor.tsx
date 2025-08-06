@@ -204,7 +204,7 @@ export function TextEditor({
     
     const newHeight = editorRef.current.scrollHeight;
     onHeightChange(newHeight);
-  }, [fontSize, fontFamily, textAlign, isBold, isItalic, isUnderlined, isStrikethrough, textColor, isEditable, onHeightChange]);
+  }, [fontSize, fontFamily, lineHeight, letterSpacing, textAlign, isBold, isItalic, isUnderlined, isStrikethrough, textColor, isEditable, onHeightChange]);
 
   /* ----------------------------------------------------------------
      Common style object shared by read-only and edit states

@@ -389,7 +389,7 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
             <Divider />
 
             {/* Letter Spacing Control */}
-            <Popover>
+            {/* <Popover>
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
                   <ToolbarIcon icon={Settings} />
@@ -411,10 +411,10 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                   />
                 </div>
               </PopoverContent>
-            </Popover>
+            </Popover> */}
 
             {/* Line Height Control */}
-            <Popover>
+            {/* <Popover>
               <PopoverTrigger asChild>
                 <ToolbarButton className="px-3 py-1.5 text-gray-700 hover:bg-gray-50 hover:text-brand-blue transition text-sm font-medium flex items-center gap-2">
                   <ToolbarIcon icon={AlignJustify} />
@@ -436,9 +436,9 @@ const ElementPropertyBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elem
                   />
                 </div>
               </PopoverContent>
-            </Popover>
+            </Popover> */}
 
-            <Divider />
+            {/* <Divider /> */}
 
             {/* Text Alignment */}
             <TextAlignButton onTextAlignChange={onTextAlignChange} />
