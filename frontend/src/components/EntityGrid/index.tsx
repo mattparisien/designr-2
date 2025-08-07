@@ -290,15 +290,6 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable 
                 isDesignSelected={(id) => selectedIds.includes(id)}
               />
             )}
-
-            {items.length === 0 && !isLoading && (
-              <div>There are no items in this collection</div>
-              // <EmptyState
-              //   noun={cfg.nounSingular ?? "item"}
-              //   onCreate={() => handleCreate("custom")}
-              //   isCreating={isCreating}
-              // />
-            )}
           </>
         )}
       </Section >
