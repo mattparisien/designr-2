@@ -178,16 +178,19 @@ router.delete('/bulk', async (req, res) => {
 /* ── Update a template ───────────────────────────────────────── */
 router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesignTemplateResponse>, res: Response<UpdateDesignTemplateResponse | APIErrorResponse>) => {
   try {
-
     if (!req.params.id) {
       return res.status(400).json({ message: 'Template ID is required' });
     } else if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: 'Invalid template ID' });
     }
 
+    // Strip out any client-provided description / tags (they will be AI generated)
+    // Keep the rest of the updatable fields.
+    const { description: _ignoredDescription, tags: _ignoredTags, ...updatePayload } = req.body as any;
+
     const updatedTemplate = await Template.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updatePayload,
       { new: true, runValidators: true }
     );
 
@@ -197,18 +200,19 @@ router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesign
       return res.status(500).json({ message: 'Template ID not found. Update failed.' });
     }
 
-    // Generate AI description and tags based on template content
+    // Always regenerate description & tags from full template context
     try {
       const aiResult = await generateDescriptionAndTags(updatedTemplate);
       updatedTemplate.description = aiResult.description;
       updatedTemplate.tags = aiResult.tags;
-      console.log('AI-generated description and tags:', updatedTemplate);
       await updatedTemplate.save();
     } catch (aiError) {
-      // Log AI error but don't fail the update
       if (process.env.NODE_ENV !== 'test') {
         console.error(`[PUT /templates/${req.params.id}] AI generation error:`, aiError);
       }
+      // Fallback: ensure fields exist
+      if (!updatedTemplate.description) updatedTemplate.description = '';
+      if (!Array.isArray(updatedTemplate.tags)) updatedTemplate.tags = [] as any;
     }
 
     const responseBody: UpdateDesignTemplateResponse = {
@@ -222,14 +226,15 @@ router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesign
       createdBy: updatedTemplate.createdBy ? updatedTemplate.createdBy.toString() : undefined,
       createdAt: updatedTemplate.createdAt.toISOString(),
       updatedAt: updatedTemplate.updatedAt.toISOString(),
-    }
+    };
+    console.log('the response body is', responseBody);
 
-    res.json(responseBody);
+    return res.json(responseBody);
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
       console.error(`[PUT /templates/${req.params.id}] Error:`, error);
     }
-    res.status(500).json({ message: 'Failed to update template' });
+    return res.status(500).json({ message: 'Failed to update template' });
   }
 });
 

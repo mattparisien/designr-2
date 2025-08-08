@@ -259,39 +259,33 @@ export default function Editor({ designId }: EditorProps) {
     // Add keyboard shortcut for creating text elements with 'T' key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Check if the target is an input or textarea or contentEditable
             const target = e.target as HTMLElement;
             if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
                 return;
             }
-
-            // Create text element when 'T' key is pressed
+            const addElement = useCanvasStore.getState().addElement;
+            // Text element (T)
             if (e.key === 't' || e.key === 'T') {
                 e.preventDefault();
-
-                // Get addElement from store
-                const addElement = useCanvasStore.getState().addElement;
-
-                // Create a new text element using the factory
                 const newTextElement = ElementFactory.createTextElement(
                     { width: canvasSize.width, height: canvasSize.height },
-                    {
-                        content: "Add your text here",
-                        isEditable: true
-                    }
+                    { content: "Add your text here", isEditable: true }
                 );
-
-                // Add the element to the canvas
                 addElement(newTextElement, "text");
+                return;
+            }
+            // Rectangle shape (R)
+            if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault();
+                const rectElement = ElementFactory.createShapeElement(
+                    { width: canvasSize.width, height: canvasSize.height },
+                    'rect',);
+                addElement(rectElement, 'shape');
+                return;
             }
         };
-
-        // Add event listener to document
         document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [canvasSize.width, canvasSize.height]);
 
     // Initialize template ID and load template data when component mounts

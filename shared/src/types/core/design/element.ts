@@ -12,6 +12,7 @@ interface DesignElementBase {
   id: string;
   type: DesignElementType;
   placeholder?: string;
+  stackingOrder?: number;
   rect: Rect;
 }
 

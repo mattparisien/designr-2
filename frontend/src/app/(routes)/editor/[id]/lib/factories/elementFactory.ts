@@ -148,7 +148,9 @@ export class ElementFactory {
       borderColor?: string;
       opacity?: number;
       rotation?: number;
-    } = {}
+    } = {
+
+    }
   ): Omit<Element, 'id'> {
     const {
       scale = DEFAULT_ELEMENT_DIMENSIONS.SHAPE_SCALE,

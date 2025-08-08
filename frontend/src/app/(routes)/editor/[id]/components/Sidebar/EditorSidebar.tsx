@@ -1,11 +1,16 @@
 import { apiClient } from "@/lib/api";
 import { Asset } from "@/lib/types/api";
 import { NavigationItem } from "@/lib/types/navigation";
-import { Camera, Download, LayoutPanelTop, Palette, Shapes, Type } from "lucide-react";
+import { Camera, Download, LayoutPanelTop, Palette, Shapes, Type, Circle, Square, Triangle, Minus } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ElementFactory } from "../../lib/factories/elementFactory";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
+import { Sidebar } from "@/components/ui";
+import { EDITOR_NAVIGATION } from "../../lib/constants/navigation";
+import EditorSidebarPanel, { type EditorSidebarPanelSection } from "./EditorSidebarPanel";
+import { DesignPanelContent } from "./DesignPanelContent";
+import { ExportPanelContent } from "./ExportPanelContent";
 
 
 const sections = [
@@ -154,24 +159,6 @@ const EditorSidebar = () => {
         addElement(imageElement, "image");
     }, [addElement, pages, currentPageId]);
 
-    const activeItem = useMemo(() => {
-        return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
-    }, [sidebar.activeItemId]);
-
-    const getSidebarWidth = (): number => {
-        const sidebarWidth = sidebarWrapper.current?.getBoundingClientRect().width || 0;
-        return sidebarWidth;
-    }
-
-    const handleItemClick = useCallback((item: NavigationItem) => {
-        if (item.id === activeItem?.id) {
-            closeSidebar();
-        } else {
-            openSidebar(item.id);
-        }
-
-    }, [activeItem, openSidebar, closeSidebar])
-
     // Helper function to add a shape to the canvas
     const addShape = useCallback((shapeType: "rect" | "circle" | "triangle") => {
         const currentPage = pages.find(page => page.id === currentPageId);
@@ -207,248 +194,144 @@ const EditorSidebar = () => {
         addElement(lineElement, "line");
     }, [addElement, pages, currentPageId]);
 
-    useLayoutEffect(() => {
-        if (sidebarWrapper.current) {
-            const width = getSidebarWidth();
-            setSidebarWidth(width);
+    const activeItem = useMemo(() => {
+        return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
+    }, [sidebar.activeItemId]);
+
+    // Build dynamic panel sections based on active item
+    const panelSections = useMemo<EditorSidebarPanelSection[]>(() => {
+        const sectionsOut: EditorSidebarPanelSection[] = [];
+
+        // Text color panel
+        if (sidebarPanel.isOpen && sidebarPanel.activeItemId === 'text-color' && selectedElement?.type === 'text') {
+            // Gather document colors from current page text & shape elements
+            const currentPage = pages.find(p => p.id === currentPageId);
+            const docColorSet = new Set<string>();
+            currentPage?.canvas?.elements?.forEach(el => {
+                if (el.type === 'text' && el.color) {
+                    docColorSet.add(el.color);
+                } else if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) {
+                    docColorSet.add(el.backgroundColor);
+                } else if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) {
+                    docColorSet.add(el.backgroundColor);
+                }
+            });
+            const documentColors = Array.from(docColorSet).slice(0, 30);
+
+            const DEFAULT_TEXT_COLORS = ['#000000','#FFFFFF','#1F2937','#4B5563','#9CA3AF','#EF4444','#F59E0B','#10B981','#3B82F6','#2563EB','#6366F1','#8B5CF6','#EC4899','#D946EF','#F472B6','#0EA5E9','#14B8A6','#22C55E','#65A30D','#CA8A04'];
+
+            const makeColorItem = (color: string, idPrefix: string) => ({
+                id: `${idPrefix}-${color}`,
+                title: color,
+                icon: (() => <div className="w-8 h-8 rounded-full border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>, // satisfy type expecting an icon component
+                onClick: () => {
+                    if (selectedElement?.type === 'text') {
+                        updateElement(selectedElement.id, { color });
+                    }
+                }
+            });
+
+            if (documentColors.length) {
+                sectionsOut.push({
+                    id: 'text-color-doc',
+                    title: 'Document Colors',
+                    items: documentColors.map(c => makeColorItem(c, 'doc'))
+                });
+            }
+            sectionsOut.push({
+                id: 'text-color-defaults',
+                title: 'Default Colors',
+                items: DEFAULT_TEXT_COLORS.map(c => makeColorItem(c, 'def'))
+            });
         }
-    }, [isSidebarOpen, setSidebarWidth]);
 
-    // Extract document colors from current page elements
-    // const getDocumentColors = useCallback(() => {
-    //     const currentPage = pages.find(page => page.id === currentPageId);
-    //     if (!currentPage?.canvas.elements) return [];
+        // Shape/background color panel
+        if (sidebarPanel.isOpen && sidebarPanel.activeItemId === 'background-color' && selectedElement && (selectedElement.type === 'shape' || selectedElement.type === 'line')) {
+            const currentPage = pages.find(p => p.id === currentPageId);
+            const docColorSet = new Set<string>();
+            currentPage?.canvas?.elements?.forEach(el => {
+                if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
+                if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
+                if (el.type === 'text' && el.color) docColorSet.add(el.color); // include text colors for convenience
+            });
+            const documentColors = Array.from(docColorSet).slice(0, 30);
+            const DEFAULT_SHAPE_COLORS = ['#3B82F6','#2563EB','#1D4ED8','#000000','#FFFFFF','#F87171','#EF4444','#DC2626','#F59E0B','#D97706','#10B981','#059669','#14B8A6','#06B6D4','#0EA5E9','#6366F1','#8B5CF6','#EC4899','#D946EF','#F472B6','#475569','#64748B','#94A3B8','#CBD5E1'];
 
-    //     const colorsSet = new Set<string>();
+            const makeShapeColorItem = (color: string, idPrefix: string) => ({
+                id: `${idPrefix}-${color}`,
+                title: color,
+                icon: (() => <div className="w-8 h-8 rounded-md border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>,
+                onClick: () => {
+                    if (selectedElement.type === 'shape') {
+                        updateElement(selectedElement.id, { backgroundColor: color });
+                    } else if (selectedElement.type === 'line') {
+                        updateElement(selectedElement.id, { backgroundColor: color });
+                    }
+                }
+            });
+            if (documentColors.length) {
+                sectionsOut.push({ id: 'shape-color-doc', title: 'Document Colors', items: documentColors.map(c => makeShapeColorItem(c,'doc')) });
+            }
+            sectionsOut.push({ id: 'shape-color-defaults', title: 'Default Colors', items: DEFAULT_SHAPE_COLORS.map(c => makeShapeColorItem(c,'def')) });
+        }
 
-    //     currentPage.canvas.elements.forEach(element => {
-    //         // Extract colors based on element type
-    //         if (element.type === "shape" && element.backgroundColor) {
-    //             colorsSet.add(element.backgroundColor);
-    //         }
-    //         if (element.type === "text" && element.color) {
-    //             colorsSet.add(element.color);
-    //         }
-    //         if (element.type === "line" && element.backgroundColor) {
-    //             colorsSet.add(element.backgroundColor);
-    //         }
-    //     });
+        // Existing active item driven sections
+        if (activeItem) {
+            switch (activeItem.id) {
+                case "shape":
+                    sectionsOut.push({
+                        id: "shapes",
+                        title: "Shapes",
+                        items: [
+                            { id: "circle", title: "Circle", icon: Circle, fill: true, onClick: () => addShape("circle") },
+                            { id: "square", title: "Square", icon: Square, fill: true, onClick: () => addShape("rect") },
+                            { id: "triangle", title: "Triangle", icon: Triangle, fill: true, onClick: () => addShape("triangle") },
+                            { id: "line", title: "Line", icon: Minus, onClick: () => addLine() },
+                        ]
+                    });
+                    break;
+                case "assets":
+                    sectionsOut.push({
+                        id: "assets",
+                        title: "Assets",
+                        layout: 'masonry',
+                        loading: loadingAssets,
+                        emptyMessage: "No images found",
+                        items: [],
+                        onFilesDrop: uploadAssets,
+                        masonryItems: assets
+                            .filter(asset => (asset.type === 'image' || asset.mimeType.startsWith('image/')) && asset.metadata?.width && asset.metadata?.height)
+                            .map(asset => ({
+                                id: asset._id,
+                                src: asset.thumbnail || asset.url,
+                                alt: asset.name,
+                                width: asset.metadata!.width!,
+                                height: asset.metadata!.height!,
+                                onClick: () => addImageAsset(asset)
+                            }))
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
 
-    //     return Array.from(colorsSet);
-    // }, [pages, currentPageId]);
+        return sectionsOut;
+    }, [activeItem, sidebarPanel.isOpen, sidebarPanel.activeItemId, selectedElement, pages, currentPageId, addShape, addLine, assets, loadingAssets, uploadAssets, addImageAsset, updateElement]);
 
-    // const handleSwatchClick = useCallback((color: string) => {
-    //     if (selectedElement) {
-    //         if (sidebarPanel.activeItemId === "background-color" && selectedElement.type === "shape") {
-    //             // Update shape background color
-    //             updateElement(selectedElement.id, { backgroundColor: color });
-    //         } else if (sidebarPanel.activeItemId === "text-color" && selectedElement.type === "text") {
-    //             // Update text color
-    //             updateElement(selectedElement.id, { color: color });
-    //         }
-    //     }
-    // }, [selectedElement, sidebarPanel.activeItemId, updateElement]);
+    const getSidebarWidth = (): number => {
+        const sidebarWidth = sidebarWrapper.current?.getBoundingClientRect().width || 0;
+        return sidebarWidth;
+    }
 
-    // const panelSections = useMemo(() => {
-    //     // If sidebar panel is open for colors, show color picker - this takes priority
-    //     if (sidebarPanel.isOpen && (sidebarPanel.activeItemId === "background-color" || sidebarPanel.activeItemId === "text-color")) {
-    //         const documentColors = getDocumentColors();
+    const handleItemClick = useCallback((item: NavigationItem) => {
+        if (item.id === activeItem?.id) {
+            closeSidebar();
+        } else {
+            openSidebar(item.id);
+        }
 
-    //         const sections = [];
-
-    //         // Add Document Colors section first (if there are colors in the document)
-    //         if (documentColors.length > 0) {
-    //             sections.push({
-    //                 id: "document-colors",
-    //                 title: "Document Colors",
-    //                 items: [
-    //                     // Add custom color picker as first item for document colors too
-    //                     // {
-    //                     //     id: "doc-custom-color-picker",
-    //                     //     title: "Custom Color",
-    //                     //     icon: ((props: React.HTMLAttributes<HTMLElement>) => (
-    //                     //         <Popover>
-    //                     //             <PopoverTrigger asChild>
-    //                     //                 <div
-    //                     //                     {...props}
-    //                     //                     className={`w-6 h-6 rounded-full border-2 border-dashed border-gray-400 cursor-pointer hover:border-gray-600 transition-colors flex items-center justify-center ${props.className || ''}`}
-    //                     //                 >
-    //                     //                     <Palette className="w-6 h-6 text-gray-400" />
-    //                     //                 </div>
-    //                     //             </PopoverTrigger>
-    //                     //             <PopoverContent className="w-auto p-0" align="start">
-    //                     //                 <ColorPicker
-    //                     //                     color={selectedElement ? (
-    //                     //                         isBackgroundColor && selectedElement.type === "shape" 
-    //                     //                             ? selectedElement.backgroundColor || "#000000"
-    //                     //                             : !isBackgroundColor && selectedElement.type === "text"
-    //                     //                             ? selectedElement.color || "#000000"
-    //                     //                             : "#000000"
-    //                     //                     ) : "#000000"}
-    //                     //                     onChange={(color) => {
-    //                     //                         if (selectedElement) {
-    //                     //                             if (isBackgroundColor && selectedElement.type === "shape") {
-    //                     //                                 updateElement(selectedElement.id, { backgroundColor: color });
-    //                     //                             } else if (!isBackgroundColor && selectedElement.type === "text") {
-    //                     //                                 updateElement(selectedElement.id, { color: color });
-    //                     //                             }
-    //                     //                         }
-    //                     //                     }}
-    //                     //                 />
-    //                     //             </PopoverContent>
-    //                     //         </Popover>
-    //                     //     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-    //                     // },
-    //                     // Add document colors
-    //                     ...documentColors.map((color, index) => ({
-    //                         id: `doc-color-${index}`,
-    //                         title: color,
-    //                         icon: (() => (
-    //                             <ColorSwatch
-    //                                 color={color}
-    //                                 onClick={handleSwatchClick}
-    //                             />
-    //                             // <Popover>
-    //                             //     <PopoverTrigger asChild>
-    //                             //         <div
-    //                             //             {...props}
-    //                             //             className={`w-6 h-6 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors ${props.className || ''}`}
-    //                             //             style={{ backgroundColor: color }}
-    //                             //             onClick={(e) => {
-    //                             //                 e.stopPropagation();
-    //                             //                 if (selectedElement) {
-    //                             //                     if (isBackgroundColor && selectedElement.type === "shape") {
-    //                             //                         updateElement(selectedElement.id, { backgroundColor: color });
-    //                             //                     } else if (!isBackgroundColor && selectedElement.type === "text") {
-    //                             //                         updateElement(selectedElement.id, { color: color });
-    //                             //                     }
-    //                             //                 }
-    //                             //             }}
-    //                             //             onContextMenu={(e) => {
-    //                             //                 e.preventDefault();
-    //                             //                 // Right-click will open the popover automatically
-    //                             //             }}
-    //                             //         />
-    //                             //     </PopoverTrigger>
-    //                             //     <PopoverContent className="w-auto p-0" align="start">
-    //                             //         <ColorPicker
-    //                             //             color={color}
-    //                             //             onChange={(newColor) => {
-    //                             //                 if (selectedElement) {
-    //                             //                     if (isBackgroundColor && selectedElement.type === "shape") {
-    //                             //                         updateElement(selectedElement.id, { backgroundColor: newColor });
-    //                             //                     } else if (!isBackgroundColor && selectedElement.type === "text") {
-    //                             //                         updateElement(selectedElement.id, { color: newColor });
-    //                             //                     }
-    //                             //                 }
-    //                             //             }}
-    //                             //         />
-    //                             //     </PopoverContent>
-    //                             // </Popover>
-    //                         )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-    //                     }))
-    //                 ]
-    //             });
-    //         }
-
-    //         // Add Core Colors section second
-    //         sections.push({
-    //             id: "colors",
-    //             title: "Default Colors",
-    //             items: [
-    //                 ...CORE_COLORS.map((color, index) => ({
-    //                     id: `color-${index}`,
-    //                     title: color,
-    //                     icon: (() => (
-    //                         <ColorSwatch
-    //                             color={color}
-    //                             onClick={handleSwatchClick}
-    //                         />
-    //                     )) as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
-    //                 }))
-    //             ]
-    //         });
-
-    //         return sections;
-    //     }
-
-    //     // Original shape panel logic - only if color panel is not open
-    //     if (!activeItem) return [];
-
-    //     const sections: EditorSidebarPanelSection[] = [];
-
-    //     switch (activeItem.id) {
-    //         case "design":
-    //             // Design panel will be handled by custom content rendering
-    //             return [];
-    //         case "shape":
-    //             sections.push({
-    //                 id: "shapes",
-    //                 title: "Shapes",
-    //                 items: [
-    //                     {
-    //                         id: "circle",
-    //                         title: "Circle",
-    //                         icon: Circle,
-    //                         fill: true,
-    //                         onClick: () => addShape("circle")
-    //                     },
-    //                     {
-    //                         id: "square",
-    //                         title: "Square",
-    //                         icon: Square,
-    //                         fill: true,
-    //                         onClick: () => addShape("rect")
-    //                     },
-    //                     {
-    //                         id: "triangle",
-    //                         title: "Triangle",
-    //                         icon: Triangle,
-    //                         fill: true,
-    //                         onClick: () => addShape("triangle")
-    //                     },
-    //                     {
-    //                         id: "line",
-    //                         title: "Line",
-    //                         icon: Minus,
-    //                         onClick: () => addLine()
-    //                     }
-    //                 ]
-    //             });
-    //             break;
-    //         case "assets":
-    //             sections.push({
-    //                 id: "assets",
-    //                 title: "Assets",
-    //                 layout: 'masonry',
-    //                 loading: loadingAssets,
-    //                 emptyMessage: "No images found",
-    //                 items: [], // Empty regular items array since we're using masonryItems
-    //                 onFilesDrop: uploadAssets, // Add drag and drop functionality
-    //                 masonryItems: assets
-    //                     .filter(asset => asset.type === 'image' || asset.mimeType.startsWith('image/'))
-    //                     .filter(asset => asset.metadata?.width && asset.metadata?.height) // Only include assets with dimensions
-    //                     .map((asset) => ({
-    //                         id: asset._id,
-    //                         src: asset.thumbnail || asset.url,
-    //                         alt: asset.name,
-    //                         width: asset.metadata!.width!, // Safe to use ! after filter
-    //                         height: asset.metadata!.height!, // Safe to use ! after filter
-    //                         onClick: () => {
-    //                             addImageAsset(asset);
-    //                         }
-    //                     }))
-    //             })
-    //             break;
-    //         case "export":
-    //             // Export panel will be handled by custom content rendering
-    //             return [];
-    //         default:
-    //             break;
-    //     }
-
-    //     return sections;
-    // }, [activeItem, addShape, addLine, sidebarPanel, assets, loadingAssets, addImageAsset, getDocumentColors, uploadAssets, handleSwatchClick]);
+    }, [activeItem, openSidebar, closeSidebar])
 
     // Effect to fetch assets when assets panel is opened
     useEffect(() => {
@@ -458,12 +341,21 @@ const EditorSidebar = () => {
     }, [activeItem?.id, fetchAssets]);
 
 
+    useLayoutEffect(() => {
+        if (sidebarWrapper.current) {
+            const width = getSidebarWidth();
+            setSidebarWidth(width);
+        }
+    }, [isSidebarOpen, setSidebarWidth]);
+
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
-        {/* <Sidebar
+        <Sidebar
             navigation={EDITOR_NAVIGATION}
             onItemClick={handleItemClick}
             activeItem={sidebar.activeItemId || undefined}
-        />
+        >
+            <> </>
+        </Sidebar>
         {(sidebar.isOpen || sidebarPanel.isOpen) && (
             <EditorSidebarPanel
                 title={sidebarPanel.isOpen ?
@@ -477,10 +369,9 @@ const EditorSidebar = () => {
                     activeItem?.id === "export" ? <ExportPanelContent /> :
                         undefined}
             />
-        )} */}
+        )}
 
     </div >
-
 }
 
 export default EditorSidebar;

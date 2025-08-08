@@ -6,6 +6,7 @@ const BaseElementSchema = new Schema<DesignElement>(
   {
     type: { type: String, required: true, enum: ['text', 'shape', 'image', 'line'] },
     placeholder: { type: String },
+    stackingOrder: { type: Number },
     rect: {
       x: { type: Number, required: true },
       y: { type: Number, required: true },
