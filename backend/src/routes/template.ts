@@ -227,7 +227,6 @@ router.put('/:id', async (req: Request<UpdateDesignTemplateRequest, UpdateDesign
       createdAt: updatedTemplate.createdAt.toISOString(),
       updatedAt: updatedTemplate.updatedAt.toISOString(),
     };
-    console.log('the response body is', responseBody);
 
     return res.json(responseBody);
   } catch (error) {

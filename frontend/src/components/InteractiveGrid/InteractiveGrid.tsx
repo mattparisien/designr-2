@@ -111,7 +111,7 @@ export function InteractiveGrid({
     return <InteractiveCard
       key={item.id}
       id={item.id}
-      image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? item.name ?? "Thumbnail" } : undefined}
+      image={item.image}
       title={item.name ?? item.title ?? "Untitled"}
       disableClick={false}
       subtitleLeft={upperFirst(item.type ?? "")}

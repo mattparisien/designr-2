@@ -35,6 +35,7 @@ export default function InteractiveCard({
     onTitleChange,
     children,
 }: InteractiveCardProps) {
+
     const { isSelected, toggleSelection } = useSelection();
     const [isHovered, setIsHovered] = useState(false);
     const selected = isSelected(id);

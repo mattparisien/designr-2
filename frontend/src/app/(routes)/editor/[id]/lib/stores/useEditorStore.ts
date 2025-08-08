@@ -475,14 +475,40 @@ const useEditorStore = create<EditorState>()(
         // Extract HTML content from the capture element
         const html = captureElement.innerHTML;
 
+        // Collect inline <style> tag CSS (avoid external fetch CORS for now)
+        const styleTags = Array.from(document.querySelectorAll('style'));
+        const inlineCSS = styleTags.map(s => s.textContent || '').join('\n');
+        // Optionally attempt to inline same-origin linked stylesheets
+        const linkTags = Array.from(document.querySelectorAll('link[rel="stylesheet"]')) as HTMLLinkElement[];
+        const linkedCSSChunks: string[] = [];
+        await Promise.all(linkTags.map(async link => {
+          try {
+            const href = link.href;
+            // Only fetch same-origin to avoid CORS issues
+            if (href.startsWith(window.location.origin)) {
+              const resp = await fetch(href);
+              if (resp.ok) {
+                linkedCSSChunks.push(await resp.text());
+              }
+            }
+          } catch {
+            // Ignore failures silently
+          }
+        }));
+        const css = `${inlineCSS}\n${linkedCSSChunks.join('\n')}`;
+
+        // Determine background color from page background state if color
+        let backgroundColor: string | undefined = undefined;
+        const bg: { type?: string; value?: string } | undefined = (currentPage as unknown as { background?: { type?: string; value?: string } }).background;
+        if (bg && bg.type === 'color' && bg.value) backgroundColor = bg.value;
 
         // Get canvas styles
         const canvasStyles = {
           fontFamily: 'Inter, sans-serif',
-          color: '#000000'
-        };
+          color: '#000000',
+          backgroundColor: backgroundColor || '#ffffff'
+        } as Record<string,string>;
 
-        console.log(captureElement)
         // Extract element info for proper stacking
         const elementInfo = Array.from(captureElement.querySelectorAll('[data-element-id]'))
           .map(el => ({
@@ -499,6 +525,7 @@ const useEditorStore = create<EditorState>()(
           },
           body: JSON.stringify({
             html,
+            css,
             canvasStyles,
             elementInfo,
             width: currentPage.canvas.width,
@@ -519,11 +546,37 @@ const useEditorStore = create<EditorState>()(
           return undefined;
         }
 
-        // Convert base64 image to data URL
+        // Convert base64 image to data URL (then upload to Cloudinary)
         const dataURL = `data:image/png;base64,${result.imageData}`;
+        let uploadedUrl: string | undefined = undefined;
+        try {
+          const byteChars = atob(result.imageData);
+          const byteNumbers = new Array(byteChars.length);
+          for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/png' });
+          const file = new File([blob], `canvas-${Date.now()}.png`, { type: 'image/png' });
+          const formData = new FormData();
+          formData.append('asset', file);
+          formData.append('name', 'Design Thumbnail');
+          formData.append('tags', JSON.stringify(['thumbnail','design','auto']));
+          const uploadResp = await fetch('/api/assets/upload', { method: 'POST', body: formData });
+          if (uploadResp.ok) {
+            const json = await uploadResp.json();
+            uploadedUrl = json?.data?.thumbnail || json?.data?.url;
+            if (!uploadedUrl) {
+              console.warn('Upload response missing url/thumbnail, falling back to data URL');
+            }
+          } else {
+            console.warn('Thumbnail upload failed:', uploadResp.status, uploadResp.statusText);
+          }
+        } catch (e) {
+          console.warn('Thumbnail upload exception, falling back to data URL', e);
+        }
 
         console.log('Screenshot captured successfully using Puppeteer');
-        return dataURL;
+        console.log({ uploadedUrl, dataURL })
+        return uploadedUrl || dataURL;
 
       } catch (error) {
         console.error('Error capturing screenshot:', error);

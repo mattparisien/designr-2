@@ -15,7 +15,7 @@ import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -50,11 +50,12 @@ export default function TemplatesPage() {
     return templates?.map(template => ({
       id: template.id,
       title: template.title,
-      image: { src: "", alt: template.title },
+      image: { src: template.thumbnailUrl, alt: template.title },
       updatedAt: template.updatedAt,
       type: template ? "template" : "project",
     })) ?? [];
   }, [templates])
+
 
 
   // Transform DESIGN_FORMATS into a SelectionConfig for the grid

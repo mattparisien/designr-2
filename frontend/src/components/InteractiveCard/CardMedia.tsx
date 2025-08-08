@@ -14,7 +14,6 @@ interface CardMediaProps {
 
 export function CardMedia({ image, selected, children, objectFit = "contain" }: CardMediaProps) {
 
-
     const imgClasses = cn("w-full h-full shadow-md", {
         "object-contain": objectFit === "contain",
         "object-cover": objectFit === "cover",
