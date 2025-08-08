@@ -63,6 +63,7 @@ export class ElementFactory {
       color?: string;
       isEditable?: boolean;
       isLocked?: boolean;
+      stackingOrder?: number;
     } = {}
   ): Omit<TextElement, 'id'> {
     const {
@@ -79,7 +80,8 @@ export class ElementFactory {
       isStrikethrough = false,
       color = DEFAULT_ELEMENT_COLORS.TEXT_COLOR,
       isEditable = false,
-      isLocked = false
+      isLocked = false,
+      stackingOrder = 0
     } = options;
 
     // Calculate text dimensions dynamically based on content and styling
@@ -131,6 +133,7 @@ export class ElementFactory {
       isNew: true,
       isEditable,
       isLocked,
+      stackingOrder,
     };
   }
 
@@ -148,6 +151,7 @@ export class ElementFactory {
       borderColor?: string;
       opacity?: number;
       rotation?: number;
+      stackingOrder?: number;
     } = {
 
     }
@@ -159,7 +163,8 @@ export class ElementFactory {
       borderWidth = 0,
       borderColor = DEFAULT_ELEMENT_COLORS.SHAPE_BORDER,
       opacity = 1,
-      rotation = 0
+      rotation = 0,
+      stackingOrder = 0
     } = options;
 
     const width = canvasSize.width * scale;
@@ -172,19 +177,16 @@ export class ElementFactory {
     };
 
     return {
-      kind: "shape" as const,
-      x: elementPosition.x,
-      y: elementPosition.y,
-      width,
-      height,
-      shapeType,
+      type: "shape" as const,
+      rect: { x: elementPosition.x, y: elementPosition.y, width, height },
       backgroundColor,
       borderWidth,
       borderColor,
-      opacity,
-      rotation,
-      isNew: true
-    };
+      isNew: true,
+      isEditable: false,
+      isLocked: false,
+      stackingOrder,
+    } as any; // ShapeElement structure normalization
   }
 
   /**
@@ -199,6 +201,7 @@ export class ElementFactory {
       backgroundColor?: string;
       opacity?: number;
       rotation?: number;
+      stackingOrder?: number;
     } = {}
   ): Omit<Element, 'id'> {
     const {
@@ -207,7 +210,8 @@ export class ElementFactory {
       rect,
       backgroundColor = DEFAULT_ELEMENT_COLORS.LINE_COLOR,
       opacity = 1,
-      rotation = 0
+      rotation = 0,
+      stackingOrder = 0
     } = options;
 
     // Calculate centered position if not provided
@@ -218,15 +222,13 @@ export class ElementFactory {
 
     return {
       type: "line" as const,
-      x: elementPosition.x,
-      y: elementPosition.y,
-      width: length,
-      height: thickness,
+      rect: { x: elementPosition.x, y: elementPosition.y, width: length, height: thickness },
       backgroundColor,
-      opacity,
-      rotation,
-      isNew: true
-    };
+      isNew: true,
+      isEditable: false,
+      isLocked: false,
+      stackingOrder,
+    } as any;
   }
 
   /**
@@ -244,12 +246,14 @@ export class ElementFactory {
       maxWidth?: number;
       maxHeight?: number;
       rect?: Rect;
+      stackingOrder?: number;
     } = {}
   ): Omit<ImageElement, 'id'> {
     const {
       maxWidth = DEFAULT_ELEMENT_DIMENSIONS.IMAGE_MAX_WIDTH,
       maxHeight = DEFAULT_ELEMENT_DIMENSIONS.IMAGE_MAX_HEIGHT,
       rect,
+      stackingOrder = 0,
     } = options;
 
     const { src, alt = "", originalWidth, originalHeight } = imageData;
@@ -289,6 +293,7 @@ export class ElementFactory {
       isNew: true,
       isEditable: true,
       isLocked: false,
+      stackingOrder,
     };
   }
 

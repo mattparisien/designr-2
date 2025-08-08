@@ -10,6 +10,8 @@ import { ProjectsAPI } from "@/lib/api/projects";
 import { TemplatesAPI } from "@/lib/api/templates";
 import { mapPage } from "../mappers/api";
 
+// Type for pages coming from API (Project or Template)
+type APIDesignPage = Project['pages'][number] | Template['pages'][number];
 
 // Define the store state interface
 export interface EditorState extends Omit<EditorContextType, "currentPage"> {
@@ -202,10 +204,15 @@ const useEditorStore = create<EditorState>()(
       }
     },
     updatePageElements: (pageId: string, elements: Element[]) => {
+      // Normalize stackingOrder if missing: assign based on index
+      const normalized = elements.map((el, idx) => ({
+        ...el,
+        stackingOrder: el.stackingOrder ?? idx
+      }));
       set(state => ({
         pages: state.pages.map(page =>
           page.id === pageId
-            ? { ...page, canvas: { ...page.canvas, elements } }
+            ? { ...page, canvas: { ...page.canvas, elements: normalized } }
             : page
         ),
         isDesignSaved: false
@@ -287,7 +294,7 @@ const useEditorStore = create<EditorState>()(
       } else {
         set({
           designName: design.title || get().designName,
-          pages: design.pages.map(page => mapPage(page)),
+          pages: design.pages.map((page: APIDesignPage) => mapPage(page)),
         })
         return {
           role,
@@ -330,7 +337,7 @@ const useEditorStore = create<EditorState>()(
 
         set({
           designName: design.title || 'Untitled Design',
-          pages: design.pages.map(page => mapPage(page)),
+          pages: design.pages.map((page: APIDesignPage) => mapPage(page)),
           currentPageId: design.pages[0]?.id || '',
           isDesignSaved: true,
           designId: design.id,
@@ -373,7 +380,16 @@ const useEditorStore = create<EditorState>()(
         const updateData: UpdateDesignTemplateRequest = {
           title: state.designName,
           thumbnailUrl: thumbnailImage,
-          pages: state.pages,
+          pages: state.pages.map(p => ({
+            ...p,
+            canvas: {
+              ...p.canvas,
+              elements: p.canvas.elements.map((el, idx) => ({
+                ...el,
+                stackingOrder: el.stackingOrder ?? idx
+              }))
+            }
+          })),
         };
 
 

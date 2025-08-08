@@ -120,6 +120,8 @@ export const generateDescriptionAndTags = async (template: any): Promise<AIGener
       canvasSize: page.canvas?.canvasSize
     }))
   };
+
+  console.log('templateAnalysis:', JSON.stringify(templateAnalysis, null, 2));
   
   const systemPrompt = `You are an AI assistant that analyzes design templates and generates concise, SEO-friendly descriptions and relevant tags. 
 
