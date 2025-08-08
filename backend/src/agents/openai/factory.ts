@@ -1,5 +1,6 @@
 import { Agent, run, StreamedRunResult, AgentInputItem } from '@openai/agents';
 import { paletteTool } from './tools/palette';
+import { templateSuggestTool } from './tools/templateSuggest';
 import { DESIGN_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS, DESIGN_TRIAGE_AGENT_INSTRUCTIONS } from './constants';
 
 export const layoutAgent = new Agent({
@@ -16,7 +17,7 @@ export const layoutAgent = new Agent({
 export const designAgent = new Agent({
   name: 'Design Assistant',
   instructions: DESIGN_AGENT_INSTRUCTIONS,
-  tools: [paletteTool],
+  tools: [paletteTool, templateSuggestTool],
   // inputGuardrails: [domainGuardrail],
   handoffs: [layoutAgent],  // sub-agents for specialization
   modelSettings: { temperature: 0.6 },

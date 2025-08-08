@@ -3,6 +3,7 @@
 import express from 'express';
 import ChatSession from '../models/ChatSession';
 import Message from '../models/Message';
+import Template from '../models/Template';
 
 import { runDesignAgent } from '../agents/openai/factory';
 import {
@@ -91,18 +92,14 @@ async function loadHistory(
 ): Promise<{
   role: 'user' | 'assistant';
   content: string;
-}[]> {
+}[] | null> {
   if (!chatSessionId) return null;
   const session = await ChatSession.findById(chatSessionId).populate('messages');
   if (!session) return null;
-  // Convert to simple lines for context
   return (session.messages as any[])
     .filter((m) => m.role === 'user' || m.role === 'assistant')
     .slice(-20)
-    .map((m) => ({
-      role: m.role,
-      content: m.content
-    }));
+    .map((m) => ({ role: m.role, content: m.content }));
 }
 
 /* ------------------------ POST /ask ------------------------ */
@@ -124,7 +121,7 @@ router.post('/ask', async (req, res, next) => {
     });
   }
 
-  const prevHistory = await loadHistory(chatSessionId);
+  const prevHistory = await loadHistory(chatSessionId) || [];
   const input = [...prevHistory, { role: 'user', content }];
   console.log('Input for agent:', input);
   const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
@@ -138,7 +135,6 @@ router.post('/ask', async (req, res, next) => {
       chatSessionId: chatSessionId || null,
       role: 'assistant',
       content: assistantText,
-      tokenCount: result.usage?.total_tokens,
     });
 
     if (chatSessionId) {
@@ -151,18 +147,15 @@ router.post('/ask', async (req, res, next) => {
     res.status(200).json({
       userMessage,
       assistantMessage,
-      usage: result.usage,
+      usage: null,
     });
 
   } catch (err: any) {
     if (err instanceof InputGuardrailTripwireTriggered) {
       // Extract the generic message from the guardrail output if available
-      const genericMessage = err.state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
+      const genericMessage = (err as any).state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
       const message = genericMessage || 'Sorry, I can only help with design-related tasks.';
-      
-      return res.status(200).json({
-        message: message
-      });
+      return res.status(200).json({ message });
     }
     next(err);
   }
@@ -195,7 +188,7 @@ router.post('/ask/stream', async (req, res, next) => {
     });
   }
 
-  const prevHistory = await loadHistory(chatSessionId);
+  const prevHistory = await loadHistory(chatSessionId) || [];
   const input = [...prevHistory, { role: 'user', content }];
   console.log('Input for agent:', input);
   const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
@@ -220,7 +213,6 @@ router.post('/ask/stream', async (req, res, next) => {
         chatSessionId: chatSessionId || null,
         role: 'assistant',
         content: accumulatedContent || 'No response generated',
-        tokenCount: streamRun.usage?.total_tokens,
       });
 
       if (chatSessionId) {
@@ -233,7 +225,7 @@ router.post('/ask/stream', async (req, res, next) => {
       res.write(JSON.stringify({
         type: 'complete',
         assistantMessage,
-        usage: streamRun.usage
+        usage: null
       }) + '\n');
       res.end();
 
@@ -246,7 +238,7 @@ router.post('/ask/stream', async (req, res, next) => {
   } catch (err: any) {
     if (err instanceof InputGuardrailTripwireTriggered) {
       // Extract the generic message from the guardrail output if available
-      const genericMessage = err.state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
+      const genericMessage = (err as any).state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
       const message = genericMessage || 'Only design‑related requests allowed.';
       
       // Reset headers and return standard JSON response instead of streaming
@@ -262,5 +254,27 @@ router.post('/ask/stream', async (req, res, next) => {
     next(err);
   }
 });
+
+/** Simple template matcher based on token overlap of title/description/tags */
+async function findRelevantTemplate(userPrompt: string) {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const promptTokens = new Set(normalize(userPrompt).split(' ').filter(Boolean));
+  const templates = await Template.find({});
+  if (!templates.length) return null;
+  let best: any = null; let bestScore = -Infinity;
+  for (const t of templates) {
+    const parts: string[] = [];
+    if (t.title) parts.push(t.title);
+    if (t.description) parts.push(t.description);
+    if (Array.isArray(t.tags)) parts.push(t.tags.join(' '));
+    const corpusTokens = normalize(parts.join(' ')).split(' ').filter(Boolean);
+    let overlap = 0;
+    corpusTokens.forEach(tok => { if (promptTokens.has(tok)) overlap++; });
+    const coverage = overlap / Math.max(1, promptTokens.size);
+    const score = overlap + coverage; // simple composite
+    if (score > bestScore) { bestScore = score; best = t; }
+  }
+  return best;
+}
 
 export default router;

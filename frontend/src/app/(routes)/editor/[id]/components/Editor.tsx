@@ -305,10 +305,17 @@ export default function Editor({ designId }: EditorProps) {
 
                 // Call the save function
                 const saveDesign = useEditorStore.getState().saveDesign;
+                const { selectedElement, duplicateElement } = useCanvasStore.getState();
                 if (designId && saveDesign) {
-                    saveDesign().catch((error) => {
+                    saveDesign()
+                      .then(() => {
+                        if (selectedElement) {
+                          duplicateElement(selectedElement.id);
+                        }
+                      })
+                      .catch((error) => {
                         console.error('Error saving design:', error);
-                    });
+                      });
                 }
             }
         };
