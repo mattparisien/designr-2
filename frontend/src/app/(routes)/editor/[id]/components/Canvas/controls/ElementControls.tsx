@@ -484,6 +484,7 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 [styles.borderActive]: shouldShowBorder
             })}
             data-element-id={element.id}
+            data-element-type={element.type}
             style={{
                 position: 'fixed',
                 top: viewportPosition.y,

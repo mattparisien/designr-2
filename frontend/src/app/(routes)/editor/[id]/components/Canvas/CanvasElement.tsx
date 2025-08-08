@@ -162,6 +162,8 @@ export function CanvasElement({
         }}
         onMouseEnter={() => onHover?.(element.id)}
         onMouseLeave={() => onHover?.(null)}
+        data-element-id={element.id}
+        data-element-type={element.type}
       >
         <ElementRenderer
           element={element}

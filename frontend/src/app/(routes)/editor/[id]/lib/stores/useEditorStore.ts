@@ -332,7 +332,7 @@ const useEditorStore = create<EditorState>()(
           throw new Error('Project not found');
         }
 
-        
+
 
 
         set({
@@ -482,11 +482,12 @@ const useEditorStore = create<EditorState>()(
           color: '#000000'
         };
 
+        console.log(captureElement)
         // Extract element info for proper stacking
         const elementInfo = Array.from(captureElement.querySelectorAll('[data-element-id]'))
           .map(el => ({
             id: el.getAttribute('data-element-id') || '',
-            kind: el.getAttribute('data-kind') || 'unknown',
+            kind: el.getAttribute('data-element-type') || 'unknown',
             zIndex: parseInt(window.getComputedStyle(el).zIndex) || 0
           }));
 
