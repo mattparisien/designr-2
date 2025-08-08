@@ -37,7 +37,7 @@ const ElementActionBarComponent: ForwardRefRenderFunction<HTMLDivElement, Elemen
             style={{
                 left: `${position.left}px`,
                 top: `${position.top}px`,
-                transform: 'translateX(50%)',
+                transform: placement === 'top' || placement === 'bottom' ? 'translate(-50%, 0)' : 'translate(0, 0)',
                 zIndex: 1000,
             }}
         >

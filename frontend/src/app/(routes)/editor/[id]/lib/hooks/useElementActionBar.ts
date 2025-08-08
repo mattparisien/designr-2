@@ -48,21 +48,21 @@ const useElementActionBar = (
 
         // Define possible positions in order of preference
         const positions: Array<{ placement: ActionBarPosition; rect: DOMRect }> = [
-            // Top (preferred) - Center the action bar horizontally
+            // Top (preferred) - use element horizontal center; component will translate -50%
             {
                 placement: 'top',
                 rect: new DOMRect(
-                    elementRect.left + (elementRect.width / 2) - (actionBarSize.width / 2), // Center action bar on element
+                    elementRect.left + (elementRect.width / 2) - (actionBarSize.width * 2 - actionBarSize.width / 2),
                     elementRect.top - actionBarSize.height - MARGIN,
                     actionBarSize.width,
                     actionBarSize.height
                 )
             },
-            // Bottom - Center the action bar horizontally
+            // Bottom - use element horizontal center; component will translate -50%
             {
                 placement: 'bottom',
                 rect: new DOMRect(
-                    elementRect.left + (elementRect.width / 2) - (actionBarSize.width / 2), // Center action bar on element
+                    elementRect.left +  (elementRect.width / 2) - (actionBarSize.width * 2 - actionBarSize.width / 2),
                     elementRect.bottom + MARGIN,
                     actionBarSize.width,
                     actionBarSize.height
