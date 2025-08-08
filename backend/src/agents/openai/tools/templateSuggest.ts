@@ -1,24 +1,31 @@
-import { Tool } from '@openai/agents';
+import { tool } from '@openai/agents';
 import Template from '../../../models/Template';
 
-// Simple keyword overlap suggestion tool
-export const templateSuggestTool = new Tool({
+// Simple keyword overlap suggestion tool (matches structure of paletteTool)
+export const templateSuggestTool = tool({
   name: 'template_suggest',
-  description: 'Find the most relevant existing design template for a user request. Returns JSON { templateId, title, tags }. Use when user wants to create/start/make a new design/template/project.',
-  inputSchema: {
+  description: 'Suggest the most relevant existing design template for a user creation request. Returns { templateId, title, tags } or { templateId:null, reason }.',
+  parameters: {
     type: 'object',
     properties: {
-      prompt: { type: 'string', description: 'The raw user request' }
+      prompt: { type: 'string', description: 'Raw user request describing the design they want to create.' }
     },
-    required: ['prompt']
-  },
-  async execute({ prompt }) {
+    required: ['prompt'],
+    additionalProperties: false
+  } as const,
+  async execute(input: any) {
+    const prompt: string = input.prompt;
+    if (!prompt || typeof prompt !== 'string') {
+      return { templateId: null, reason: 'invalid_prompt' };
+    }
+
     const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
     const promptTokens = new Set(normalize(prompt).split(' ').filter(Boolean));
     const templates = await Template.find({});
     if (!templates.length) {
       return { templateId: null, reason: 'no_templates_available' };
     }
+
     let best: any = null; let bestScore = -Infinity;
     for (const t of templates) {
       const parts: string[] = [];
@@ -31,6 +38,7 @@ export const templateSuggestTool = new Tool({
       const score = overlap + coverage;
       if (score > bestScore) { bestScore = score; best = t; }
     }
+
     if (!best?._id) return { templateId: null, reason: 'no_match' };
     return { templateId: best._id.toString(), title: best.title, tags: best.tags };
   }

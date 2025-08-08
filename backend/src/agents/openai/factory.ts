@@ -1,7 +1,7 @@
-import { Agent, run, StreamedRunResult, AgentInputItem } from '@openai/agents';
+import { Agent, AgentInputItem, run } from '@openai/agents';
+import { DESIGN_AGENT_INSTRUCTIONS, DESIGN_TRIAGE_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS } from './constants';
 import { paletteTool } from './tools/palette';
 import { templateSuggestTool } from './tools/templateSuggest';
-import { DESIGN_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS, DESIGN_TRIAGE_AGENT_INSTRUCTIONS } from './constants';
 
 export const layoutAgent = new Agent({
   name: 'Layout Expert',
