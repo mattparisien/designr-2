@@ -10,7 +10,7 @@ import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
 import { createTemplate as createTemplateFactory } from "@/lib/factories";
-import { useInfiniteTemplates } from "@/lib/hooks/useInfiniteTemplates";
+import { useInfiniteBrands } from "@/lib/hooks/useBrands";
 import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
@@ -25,16 +25,16 @@ interface SocialMediaFormat {
   category: string;
 }
 
-export default function TemplatesPage() {
+export default function BrandsPage() {
 
   const {
-    templates,
+    brands,
     refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading
-  } = useInfiniteTemplates({
+  } = useInfiniteBrands({
     limit: 20
   });
 
@@ -47,14 +47,14 @@ export default function TemplatesPage() {
   const router = useRouter()
 
   const gridItems = useMemo(() => {
-    return templates?.map(template => ({
-      id: template.id,
-      title: template.title,
-      image: { src: template.thumbnailUrl, alt: template.title },
-      updatedAt: template.updatedAt,
-      type: template ? "template" : "project",
+    return brands?.map(brand => ({
+      id: brand.id,
+      title: brand.name,
+      image: { src: brand.logoUrl, alt: brand.name },
+      updatedAt: brand.updatedAt,
+      type: brand ? "brand" : "project",
     })) ?? [];
-  }, [templates])
+  }, [brands])
 
 
 

@@ -15,7 +15,7 @@ import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -27,13 +27,13 @@ interface SocialMediaFormat {
 
 export default function TemplatesPage() {
 
-  const { 
-    templates, 
-    refetch, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage, 
-    isLoading 
+  const {
+    templates,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
   } = useInfiniteTemplates({
     limit: 20
   });

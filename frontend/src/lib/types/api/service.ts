@@ -86,7 +86,7 @@ export interface APIService<T> extends APIServiceBase {
      * @param data - The data for creating the new record
      * @returns Promise resolving to the created T object
      */
-    create: (data: Partial<T>) => Promise<T>;
+    create: (data: Partial<T> | unknown) => Promise<T>;
 
     /**
      * Updates an existing record.

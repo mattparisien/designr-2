@@ -4,6 +4,7 @@ import {
     APIService,
     GenerateBrandFromAssetsRequest
 } from "../types/api";
+import { CreateBrandRequest } from "@shared/types";
 import { Brand as BrandType } from "../types/brands";
 import { APIBase } from "./base";
 
@@ -16,9 +17,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
         this.apiClient = apiClient;
     }
 
-    async getAll(): Promise<BrandType[]> {
+    async getAll(): Promise<Brand[]> {
         try {
-            const response = await this.apiClient.get<{ data: BrandType[] }>(
+            const response = await this.apiClient.get<{ data: Brand[] }>(
                 "/brands"
             );
             return response.data.data;
@@ -33,7 +34,7 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
 
     async getById(brandId: string): Promise<BrandType> {
         try {
-            const response = await this.apiClient.get<{ data: BrandType }>(
+            const response = await this.apiClient.get<{ data: Brand }>(
                 `/brands/${brandId}`
             );
             return response.data.data;
@@ -46,9 +47,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
         }
     }
 
-    async create(data: Partial<CreateBrandRequest>): Promise<BrandType> {
+    async create(data: CreateBrandRequest): Promise<Brand> {
         try {
-            const response = await this.apiClient.post<{ data: BrandType }>(
+            const response = await this.apiClient.post<{ data: Brand }>(
                 "/brands",
                 data
             );
@@ -65,9 +66,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
     async update(
         brandId: string,
         data: Partial<CreateBrandRequest>
-    ): Promise<BrandType> {
+    ): Promise<Brand> {
         try {
-            const response = await this.apiClient.put<{ data: BrandType }>(
+            const response = await this.apiClient.put<{ data: Brand }>(
                 `/brands/${brandId}`,
                 data
             );
@@ -95,9 +96,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
 
     async generateFromAssets(
         request: GenerateBrandFromAssetsRequest
-    ): Promise<BrandType> {
+    ): Promise<Brand> {
         try {
-            const response = await this.apiClient.post<{ data: BrandType }>(
+            const response = await this.apiClient.post<{ data: Brand }>(
                 "/brands/generate",
                 request
             );
@@ -111,9 +112,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
         }
     }
 
-    async updateWithAsset(brandId: string, assetId: string): Promise<BrandType> {
+    async updateWithAsset(brandId: string, assetId: string): Promise<Brand> {
         try {
-            const response = await this.apiClient.post<{ data: BrandType }>(
+            const response = await this.apiClient.post<{ data: Brand }>(
                 `/brands/${brandId}/add-asset`,
                 { assetId }
             );
@@ -129,9 +130,9 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
         }
     }
 
-    async share(brandId: string, userEmails: string[]): Promise<BrandType> {
+    async share(brandId: string, userEmails: string[]): Promise<Brand> {
         try {
-            const response = await this.apiClient.post<{ data: BrandType }>(
+            const response = await this.apiClient.post<{ data: Brand }>(
                 `/brands/${brandId}/share`,
                 { userEmails }
             );
@@ -148,7 +149,7 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
     async uploadDocumentsAndGenerate(
         files: File[],
         brandName: string
-    ): Promise<BrandType> {
+    ): Promise<Brand> {
         try {
             const assetIds = await this.uploadFilesAsAssets(files);
             console.log(assetIds, 'the asset ids');
@@ -231,4 +232,50 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
             return null;
         }
     }
+
+      async getPaginated(
+        page: number = 1,
+        limit: number = 10,
+        filters: Record<string, string | number | boolean> = {},
+      ): Promise<{
+        brands: Brand[];
+        totalBrands: number;
+        totalPages: number;
+        currentPage: number;
+      }> {
+        try {
+    
+          const params = new URLSearchParams();
+          params.append("page", page.toString());
+          params.append("limit", limit.toString());
+    
+          // Add any filters to the query params
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              params.append(key, String(value));
+            }
+          });
+    
+          const response = await this.apiClient.get<{
+            brands: Brand[];
+            totalBrands: number;
+            totalPages: number;
+            currentPage: number;
+          }>(`/brands/paginated?${params.toString()}`);
+
+          return {
+            brands: response.data.brands,
+            totalBrands: response.data.totalBrands,
+            totalPages: response.data.totalPages,
+            currentPage: response.data.currentPage,
+          };
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.error(
+            "Error fetching paginated templates:",
+            errorMessage
+          );
+          throw new Error("Failed to fetch paginated templates");
+        }
+      }
 }
