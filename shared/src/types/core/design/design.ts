@@ -1,8 +1,4 @@
-export interface Design {
-    id: string;
+export interface Design extends Object {
     title: string;
     description?: string;
-    createdBy?: string;
-    createdAt: string;
-    updatedAt: string;
 }

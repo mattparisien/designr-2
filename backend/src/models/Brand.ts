@@ -1,13 +1,15 @@
+import { type BrandVibe as CoreBrandVibe, type Brand as CoreBrand } from '@shared/types/core/brand';
+import { OmitCreate } from '@shared/types/utils/omit';
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IBrand extends Document {
+export interface BrandDocument extends Document, OmitCreate<CoreBrand> {
   userId: mongoose.Types.ObjectId;
   name: string;
   logoUrl?: string;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor?: string;
-  vibe: 'playful' | 'elegant' | 'bold' | 'minimal' | 'professional';
+  primaryColor: `#${string}`;
+  secondaryColor: `#${string}`;
+  accentColor?: `#${string}`;
+  vibe: CoreBrandVibe;
   voice: string;
   personality: string;
   targetAudience: string;
@@ -21,9 +23,10 @@ export interface IBrand extends Document {
   avoidedWords?: string[];
   createdAt: Date;
   updatedAt: Date;
+  createdBy?: string;
 }
 
-const brandSchema = new Schema<IBrand>({
+const brandSchema = new Schema<BrandDocument>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
@@ -135,4 +138,4 @@ const brandSchema = new Schema<IBrand>({
 // Create index for efficient querying
 brandSchema.index({ userId: 1, createdAt: -1 });
 
-export const Brand = mongoose.model<IBrand>('Brand', brandSchema);
+export const Brand = mongoose.model<BrandDocument>('Brand', brandSchema);

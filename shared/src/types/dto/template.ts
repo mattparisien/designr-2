@@ -1,15 +1,16 @@
 import { DesignTemplate } from "../core/design";
+import { OmitCreate, OmitUpdate } from "../utils/omit";
 
 /**
  * CREATE DESIGN TEMPLATE REQUEST/RESPONSE TYPES
  */
-export type CreateDesignTemplateRequest = Omit<DesignTemplate, "id" | "createdAt" | "updatedAt" | "createdBy">;
+export type CreateDesignTemplateRequest = OmitCreate<DesignTemplate>;
 export type CreateDesignTemplateResponse = DesignTemplate;
 
 /**
  * UPDATE DESIGN TEMPLATE REQUEST/RESPONSE TYPES
  */
-export type UpdateDesignTemplateRequest = Partial<Omit<DesignTemplate, "id" | "createdAt" | "updatedAt" | "createdBy">>;
+export type UpdateDesignTemplateRequest = Partial<OmitUpdate<DesignTemplate>>;
 export type UpdateDesignTemplateResponse = DesignTemplate;
 
 /**
