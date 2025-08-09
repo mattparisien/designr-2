@@ -1,14 +1,14 @@
+import { Brand } from "@shared/types/core/brand";
 import { Axios } from "axios";
 import {
-    BrandsAPIService,
-    CreateBrandRequest,
-    GenerateBrandFromAssetsRequest,
+    APIService,
+    GenerateBrandFromAssetsRequest
 } from "../types/api";
 import { Brand as BrandType } from "../types/brands";
 import { APIBase } from "./base";
 
-export class BrandsAPI extends APIBase implements BrandsAPIService {
-    API_URL: string = "/brands";
+export class BrandsAPI extends APIBase implements APIService<Brand> {
+    API_URL: string = "/api/brands";
     apiClient: Axios;
 
     constructor(apiClient: Axios) {
