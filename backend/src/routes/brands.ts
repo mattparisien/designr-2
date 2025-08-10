@@ -9,9 +9,9 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
-    
+
     const brands = await Brand.find({ userId }).sort({ createdAt: -1 });
-    
+
     res.json({
       success: true,
       brands
@@ -23,19 +23,57 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
   }
 });
 
+/* ── Get paginated brands ─────────────────────────────────── */
+router.get('/paginated', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const filters: any = {};
+  
+    if (typeof req.query.isPublic === 'string') {
+      filters.isPublic = req.query.isPublic === 'true';
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [brands, totalBrands] = await Promise.all([
+      Brand.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Brand.countDocuments()
+    ]);
+
+    const totalPages = Math.ceil(totalBrands / limit);
+
+    res.json({
+      brands,
+      totalBrands,
+      totalPages,
+      currentPage: page,
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('[GET /templates/paginated] Error:', error);
+    }
+    res.status(500).json({ message: 'Failed to fetch paginated templates' });
+  }
+});
+
 // Get a specific brand
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     const brandId = req.params.id;
-    
+
     const brand = await Brand.findOne({ _id: brandId, userId });
-    
+
     if (!brand) {
       res.status(404).json({ error: 'Brand not found' });
       return;
     }
-    
+
     res.json({
       success: true,
       brand

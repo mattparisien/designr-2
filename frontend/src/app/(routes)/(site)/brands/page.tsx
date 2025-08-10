@@ -3,7 +3,7 @@
 // app/projects/page.tsx
 // Full page using the generic EntityGrid + your Composition union split by role
 
-import { CreateButton } from "@/components/CreateButton";
+import { CreateAction } from "@/components/CreateAction";
 import Heading from "@/components/Heading/Heading";
 import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
@@ -14,8 +14,10 @@ import { useInfiniteBrands } from "@/lib/hooks/useBrands";
 import { useTemplateQuery } from "@/lib/hooks/useTemplates";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
+import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import CreateModalContent from "./components/ModalContent";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -110,12 +112,13 @@ export default function BrandsPage() {
               as={1}
               styleLevel={3}
             >
-              My Templates
+              My Brands
             </Heading>
           </div>
-          <CreateButton
-            config={selectionConfig}
-            onCreate={handleCreate}
+          <CreateAction
+            mode="modal"
+            rightIcon={PlusIcon}
+            content={<CreateModalContent />}
           />
         </div>
         <InteractiveGrid

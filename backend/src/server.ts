@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 
 import assetRoutes from './routes/assets';
 import authRoutes from './routes/auth';
-import brandRoutes from './routes/brands';
+import brandsRoutes from './routes/brands';
 import chatRoutes from "./routes/chat";
 import compositionRoutes from './routes/compositions';
 import exportRoutes from './routes/export';
@@ -45,7 +45,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/design-to
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/brand', brandRoutes);
+app.use('/api/brands', brandsRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/compositions', compositionRoutes);
