@@ -4,7 +4,7 @@ const BASE_API = (process.env.BACKEND_API_URL?.replace(/\/$/, '') || 'http://loc
 
 export const createBrandTool = tool({
   name: 'create_brand',
-  description: 'Creates a brand when the user asks to create a new brand',
+  description: 'Creates a new brand with the provided details. Must ALWAYS be called when the user asks for a new brand.',
   parameters: {
     type: 'object',
     additionalProperties: false,

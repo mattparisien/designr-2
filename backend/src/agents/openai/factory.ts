@@ -28,7 +28,7 @@ export const brandingAgent = new Agent({
 export const designAgent = new Agent({
   name: 'Design Assistant',
   instructions: DESIGN_AGENT_INSTRUCTIONS,
-  tools: [paletteTool, templateSuggestTool],
+  tools: [paletteTool, templateSuggestTool, createBrandTool],
   // inputGuardrails: [domainGuardrail],
   handoffs: [layoutAgent, brandingAgent],  // sub-agents for specialization
   modelSettings: { temperature: 0.6 },
