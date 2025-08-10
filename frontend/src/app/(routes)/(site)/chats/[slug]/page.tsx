@@ -4,6 +4,8 @@ import { useNavigation } from "@/lib/context/navigation-context";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Loading dots component
 const LoadingDots = () => (
@@ -41,9 +43,6 @@ const ChatSessionPage = () => {
         }
     }, [messages]);
 
-
-
-
     return (
         <div ref={scrollContainerRef} className="w-full h-full overflow-y-scroll">
             <div className="w-full flex flex-col flex-1 mt-10 space-y-10 max-w-[var(--thread-max-width)] mx-auto">
@@ -53,7 +52,17 @@ const ChatSessionPage = () => {
                     })}>
                         <div key={message.id} className={cn("", {
                             "bg-neutral-100 px-4 py-2 rounded-4xl": message.role === "user",
-                        })}>{message.content}</div>
+                        })}>
+                            {message.role === 'assistant' ? (
+                              <div className="prose prose-sm max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {message.content}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                              message.content
+                            )}
+                        </div>
                     </div>
                 ))}
                 
