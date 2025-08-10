@@ -25,8 +25,8 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
         }
     }, [deleteSession, currentSessionId, router]);
 
-    const chatNavigation: NavigationSection = useMemo(() => {
-        return {
+    const chatNavigation: NavigationSection | null = useMemo(() => {
+        return chatSessions.length > 0 ? {
             id: "chats",
             label: "Chats",
             items: chatSessions.map(session => ({
@@ -37,7 +37,7 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
                     handleDeleteSession(item.id);
                 }
             }) as NavigationItem)
-        };
+        } : null;
     }, [chatSessions, handleDeleteSession]);
 
 
