@@ -1,19 +1,6 @@
 import { Agent } from '@openai/agents';
-import { DESIGN_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS } from './constants';
+import { DESIGN_AGENT_INSTRUCTIONS, LAYOUT_AGENT_INSTRUCTIONS, BRANDING_AGENT_INSTRUCTIONS } from './constants';
 import { paletteTool } from './tools/palette';
-
-const BRANDING_AGENT_INSTRUCTIONS = SYSTEM_PROMPT;
-
-// export const brandingAgent = new Agent({
-//   name: 'Branding Specialist',
-//   handoffDescription: 'Handles branding-related design tasks like logo, color, tone of voice',
-//   instructions: BRANDING_AGENT_INSTRUCTIONS,
-//   tools: [paletteTool],
-//   model: 'gpt-4o-mini',
-//   modelSettings: { temperature: 0.6 },
-//   // inputGuardrails: [domainGuardrail],
-// });
-
 
 export const layoutAgent = new Agent({
   name: 'Layout Expert',
@@ -22,18 +9,27 @@ export const layoutAgent = new Agent({
   tools: [paletteTool],
   model: 'gpt-4o-mini',
   modelSettings: { temperature: 0.6 },
-  // inputGuardrails: [domainGuardrail],
+});
+
+
+export const brandingAgent = new Agent({
+  name: 'Branding Specialist',
+  handoffDescription: 'Handles branding-related tasks: logo directions, palettes, typography, voice & tone',
+  instructions: BRANDING_AGENT_INSTRUCTIONS,
+  tools: [paletteTool],
+  model: 'gpt-4o-mini',
+  modelSettings: { temperature: 0.6 },
 });
 
 
 export const designAgent = new Agent({
   name: 'Design Assistant',
   handoffs: [
-    layoutAgent
+    layoutAgent,
+    brandingAgent,
   ],
   instructions: DESIGN_AGENT_INSTRUCTIONS,
   tools: [paletteTool],
   model: 'gpt-4o',
   modelSettings: { temperature: 0.7 },
-  // inputGuardrails: [domainGuardrail],
 });

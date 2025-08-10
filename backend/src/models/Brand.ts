@@ -30,7 +30,7 @@ const brandSchema = new Schema<BrandDocument>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false,
     index: true
   },
   name: {

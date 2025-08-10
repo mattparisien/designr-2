@@ -123,7 +123,6 @@ router.post('/ask', async (req, res, next) => {
 
   const prevHistory = await loadHistory(chatSessionId) || [];
   const input = [...prevHistory, { role: 'user', content }];
-  console.log('Input for agent:', input);
   const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
 
 
@@ -190,7 +189,6 @@ router.post('/ask/stream', async (req, res, next) => {
 
   const prevHistory = await loadHistory(chatSessionId) || [];
   const input = [...prevHistory, { role: 'user', content }];
-  console.log('Input for agent:', input);
   const designAgentInput = buildConversationHistory([...prevHistory, { role: 'user', content }]);
 
 

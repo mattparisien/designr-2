@@ -63,7 +63,7 @@ const NavButton = (props: NavButtonProps) => {
     const { onClick, isActive, level, icon, label, href } = props
 
     const buttonClass = cn(
-        "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors truncate",
         "hover:bg-[var(--interactive-bg-secondary-hover)] cursor-pointer gap-1.5",
         isActive
             ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
