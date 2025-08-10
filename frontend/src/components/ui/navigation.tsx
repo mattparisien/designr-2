@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { LucideIcon, Plus } from "lucide-react"
+import { LucideIcon, Plus, Trash } from "lucide-react"
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import { type Navigation, type NavigationItem } from "@/lib/types/navigation"
@@ -12,19 +12,20 @@ import { Button } from "@/components/ui/button"
 interface NavigationComponentProps {
     navigation: Navigation
     onItemClick?: (item: NavigationItem) => void
-    onItemMouseEnter?: (item: NavigationItem) => void
     activeItem?: string
     isCollapsed?: boolean
 }
 
 interface NavButtonProps {
     onClick: () => void
+    onDelete?: (item: NavigationItem) => void
     isActive: boolean | undefined
     level: number
     label: string
     icon?: React.ReactNode
     href?: string
     widthMode?: "full" | "wrap"
+    hasTrailingAction?: boolean
 }
 
 interface NavIconProps {
@@ -37,7 +38,7 @@ interface NavIconProps {
 interface NavigationItemProps {
     item: NavigationItem
     onItemClick?: (item: NavigationItem) => void
-    onItemMouseEnter?: (item: NavigationItem) => void
+    onItemDelete?: (item: NavigationItem) => void
     isActive?: boolean
     level: number
     isCollapsed: boolean
@@ -45,7 +46,7 @@ interface NavigationItemProps {
 }
 
 const NavIcon = (props: NavIconProps) => {
-    const { icon: Icon, width, height, isFill = false } = props
+    const { icon: Icon, width, height, isFill = false} = props
 
     return (
         Icon && <Icon
@@ -60,7 +61,7 @@ const NavIcon = (props: NavIconProps) => {
 }
 
 const NavButton = (props: NavButtonProps) => {
-    const { onClick, isActive, level, icon, label, href } = props
+    const { onClick, isActive, level, icon, label, href, hasTrailingAction } = props
 
     const buttonClass = cn(
         "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors truncate",
@@ -68,7 +69,8 @@ const NavButton = (props: NavButtonProps) => {
         isActive
             ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
             : "text-black",
-        level > 0 && "ml-4"
+        level > 0 && "ml-4",
+        hasTrailingAction && "pr-10" // reserve space for trailing trash button
     )
 
     if (href) {
@@ -89,7 +91,7 @@ const NavButton = (props: NavButtonProps) => {
     return (
         <Button variant="ghost" onClick={onClick} className={buttonClass}>
             <span>{icon}</span>
-            <span>{label}</span>
+            <span className="truncate">{label}</span>
         </Button>
     )
 }
@@ -97,14 +99,14 @@ const NavButton = (props: NavButtonProps) => {
 const NavigationItem: React.FC<NavigationItemProps> = ({
     item,
     onItemClick,
-    onItemMouseEnter,
     isCollapsed,
     isActive,
     level,
     activeItem,
 }) => {
+
+
     const [isExpanded, setIsExpanded] = React.useState(false)
-    const [isHovering, setIsHovering] = React.useState(false)
     const hasChildren = item.children && item.children.length > 0
 
     const handleClick = () => {
@@ -149,14 +151,8 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     }, [item.icon])
 
     return (
-        <li
-            onMouseEnter={() => {
-                onItemMouseEnter?.(item)
-                setIsHovering(true)
-            }}
-            onMouseLeave={() => setIsHovering(false)}
-        >
-            <div>
+        <li>
+            <div className="flex relative group">
                 <NavButton
                     onClick={handleClick}
                     level={level}
@@ -164,9 +160,10 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
                     href={item.href}
                     icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
                     isActive={isActive}
+                    hasTrailingAction={Boolean(item.onDelete)}
                 />
-                {/* Delete button - only show on hover and if onDelete exists */}
-                {item.onDelete && isHovering && (
+                {/* Delete button - show on parent hover when onDelete exists */}
+                {item.onDelete && (
                     <Button
                         variant="ghost"
                         size="sm"
@@ -200,7 +197,6 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
 const NavigationComponent: React.FC<NavigationComponentProps> = ({
     navigation,
     onItemClick,
-    onItemMouseEnter,
     activeItem,
     isCollapsed = false,
 }) => {
@@ -247,13 +243,6 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
         [onItemClick]
     )
 
-    const handleItemMouseEnter = useCallback(
-        (item: NavigationItem) => {
-            onItemMouseEnter?.(item)
-        },
-        [onItemMouseEnter]
-    )
-
     return (
         <div className="p-1 flex flex-col space-y-10">
             {filteredSections.map((section) => (
@@ -272,7 +261,6 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
                                     key={item.id}
                                     item={item}
                                     onItemClick={handleItemClick}
-                                    onItemMouseEnter={handleItemMouseEnter}
                                     isActive={activeItemId === item.id}
                                     level={0}
                                     activeItem={activeItem}
