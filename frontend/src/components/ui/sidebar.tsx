@@ -4,18 +4,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import * as React from "react"
 import { forwardRef, useState } from "react"
-import { type Navigation as NavigationType, type NavigationItem } from "@/lib/types/navigation"
-import { Navigation } from "@/components/ui/navigation"
 
 interface SidebarProps {
     children: React.ReactNode
-    navigation?: NavigationType
     isDefaultCollapsed?: boolean
     className?: string
     searchPlaceholder?: string
-    onItemClick?: (item: NavigationItem) => void
-    onItemMouseEnter?: (item: NavigationItem) => void
-    activeItem?: string
 }
 
 interface SidebarShellProps {
@@ -27,11 +21,7 @@ interface SidebarShellProps {
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     ({
-        navigation,
         className,
-        onItemClick,
-        onItemMouseEnter,
-        activeItem,
         children,
         isDefaultCollapsed = false,
     }, ref) => {

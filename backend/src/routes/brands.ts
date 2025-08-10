@@ -197,7 +197,7 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
 });
 
 // Delete a brand
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     const brandId = req.params.id;

@@ -81,7 +81,7 @@ const NavButton = (props: NavButtonProps) => {
                 {...{ href }} // Pass href as a spread prop to avoid type issues
             >
                 <span>{icon}</span>
-                <span>{label}</span>
+                <span className="truncate">{label}</span>
             </Button>
         )
     }
@@ -149,25 +149,22 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     }, [item.icon])
 
     return (
-        <li 
+        <li
             onMouseEnter={() => {
-            onItemMouseEnter?.(item)
+                onItemMouseEnter?.(item)
                 setIsHovering(true)
             }}
             onMouseLeave={() => setIsHovering(false)}
-            className="relative group"
         >
-            <div className="flex items-center">
-                <div className="flex-1">
-                    <NavButton
-                        onClick={handleClick}
-                        level={level}
-                        label={item.label}
-                        href={item.href}
-                        icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
-                        isActive={isActive}
-                    />
-                </div>
+            <div>
+                <NavButton
+                    onClick={handleClick}
+                    level={level}
+                    label={item.label}
+                    href={item.href}
+                    icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
+                    isActive={isActive}
+                />
                 {/* Delete button - only show on hover and if onDelete exists */}
                 {item.onDelete && isHovering && (
                     <Button
