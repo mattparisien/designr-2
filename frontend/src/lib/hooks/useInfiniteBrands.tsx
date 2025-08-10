@@ -1,18 +1,18 @@
 "use client";
 
-import { templatesAPI } from "@/lib/api/index";
-import { DesignTemplate } from "@shared/types";
+import { brandsAPI } from "@/lib/api/index";
+import { Brand } from "@shared/types/core/brand";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-interface TemplatesPageData {
-  templates: DesignTemplate[],
-  totalTemplates: number;
+interface BrandsPageData {
+  brands: Brand[],
+  totalBrands: number;
   totalPages: number;
   currentPage: number;
 }
 
-export interface UseInfiniteTemplatesOptions {
+export interface UseInfiniteBrandsOptions {
   limit?: number;
   filters?: {
     starred?: boolean;
@@ -24,9 +24,9 @@ export interface UseInfiniteTemplatesOptions {
 }
 
 /**
- * Custom hook for infinite loading of projects with pagination
+ * Custom hook for infinite loading of brands with pagination
  */
-export function useInfiniteTemplates(options: UseInfiniteTemplatesOptions = {}) {
+export function useInfiniteBrands(options: UseInfiniteBrandsOptions = {}) {
   const { limit = 12, filters = {} } = options;
 
   // Use the InfiniteQuery hook to handle pagination
@@ -40,13 +40,13 @@ export function useInfiniteTemplates(options: UseInfiniteTemplatesOptions = {}) 
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['InfiniteTemplates', limit, filters],
+    queryKey: ['InfiniteBrands', limit, filters],
     queryFn: async ({ pageParam = 1 }) => {
       // Call the API with the current page and filters
-      const result = await templatesAPI.getPaginated(pageParam, limit, filters);
+      const result = await brandsAPI.getPaginated(pageParam, limit, filters);
       return result;
     },
-    getNextPageParam: (lastPage: TemplatesPageData) => {
+    getNextPageParam: (lastPage: BrandsPageData) => {
       // If we're on the last page, return undefined to indicate there's no more data
       if (lastPage.currentPage >= lastPage.totalPages) {
         return undefined;
@@ -58,17 +58,17 @@ export function useInfiniteTemplates(options: UseInfiniteTemplatesOptions = {}) 
   });
 
   // Flatten the projects from all pages into a single array for easier consumption
-  const templates = useMemo(() => {
+  const brands = useMemo(() => {
     if (!data) return [];
-    return data.pages.flatMap(page => page.templates);
+    return data.pages.flatMap(page => page.brands);
   }, [data]);
 
   // Calculate total count from the most recent page
-  const totalTemplates = data?.pages[0]?.totalTemplates || 0;
+  const totalBrands = data?.pages[0]?.totalBrands || 0;
 
   return {
-    templates,
-    totalTemplates,
+    brands,
+    totalBrands,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,

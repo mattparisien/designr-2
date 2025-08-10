@@ -10,8 +10,8 @@ import { Section } from "@/components/ui/section";
 import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
 import { createTemplate as createTemplateFactory } from "@/lib/factories";
-import { useInfiniteBrands } from "@/lib/hooks/useBrands";
-import { useTemplateQuery } from "@/lib/hooks/useTemplates";
+import { useBrandQuery } from "@/lib/hooks/useBrands";
+import { useInfiniteBrands } from "@/lib/hooks/useInfiniteBrands";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
 import { PlusIcon } from "lucide-react";
@@ -41,10 +41,10 @@ export default function BrandsPage() {
   });
 
   const {
-    createTemplate,
-    updateTemplate,
-    deleteMultipleTemplates
-  } = useTemplateQuery();
+    createBrand,
+    updateBrand,
+    deleteMultipleBrands
+  } = useBrandQuery();
 
   const router = useRouter()
 
@@ -52,7 +52,7 @@ export default function BrandsPage() {
     return brands?.map(brand => ({
       id: brand.id,
       title: brand.name,
-      image: { src: brand.logoUrl, alt: brand.name },
+      image: { src: brand.logoUrl || "", alt: brand.name },
       updatedAt: brand.updatedAt,
       type: brand ? "brand" : "project",
     })) ?? [];
@@ -72,18 +72,16 @@ export default function BrandsPage() {
         throw new Error("No format key provided");
       }
 
-      const templateData = createTemplateFactory(item.key, item.label);
-      const template = await createTemplate(templateData);
-
-
+      const brandData = createTemplateFactory(item.key, item.label);
+      const brand = await createBrand(brandData);
 
       // Optionally refetch to ensure UI is updated immediately
-      router.push(`/editor/${template.id}`);
+      router.push(`/editor/${brand.id}`);
       refetch();
     } catch (error) {
       console.error('Failed to create template:', error);
     }
-  }, [createTemplate, refetch, router,]);
+  }, [refetch, router,]);
 
   const handleFetchNextPage = useCallback(async () => {
     await fetchNextPage();
@@ -91,17 +89,17 @@ export default function BrandsPage() {
 
   // CRUD handlers for InteractiveGrid
   const handleDeleteItems = useCallback(async (ids: string[]) => {
-    await deleteMultipleTemplates(ids);
+    await deleteMultipleBrands(ids);
     refetch();
-  }, [deleteMultipleTemplates, refetch]);
+  }, [deleteMultipleBrands, refetch]);
 
   const handleUpdateItem = useCallback(async (id: string, updates: { title?: string; name?: string }) => {
     const updateData: { title?: string } = {};
     if (updates.title) updateData.title = updates.title;
     if (updates.name) updateData.title = updates.name; // Map name to title
 
-    await updateTemplate({ id, data: updateData });
-  }, [updateTemplate]);
+    await updateBrand({ id, data: updateData });
+  }, [updateBrand]);
 
   return (
     <SelectionProvider>

@@ -1,80 +1,160 @@
-"use client";
+import { useToast } from '@/lib/hooks/useToast';
+import { DesignTemplate } from '@shared/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { brandsAPI } from '../api/index';
 
-import { brandsAPI } from "@/lib/api/index";
-import { DesignTemplate } from "@shared/types";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+export function useBrandQuery() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-interface BrandsPageData {
-  brands: DesignTemplate[],
-  totalBrands: number;
-  totalPages: number;
-  currentPage: number;
-}
-
-export interface UseInfiniteBrandsOptions {
-  limit?: number;
-  filters?: {
-    starred?: boolean;
-    shared?: boolean;
-    type?: string;
-    category?: string;
-    search?: string;
-  };
-}
-
-/**
- * Custom hook for infinite loading of brands with pagination
- */
-export function useInfiniteBrands(options: UseInfiniteBrandsOptions = {}) {
-  const { limit = 12, filters = {} } = options;
-
-  // Use the InfiniteQuery hook to handle pagination
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    error,
-    refetch
-  } = useInfiniteQuery({
-    queryKey: ['InfiniteBrands', limit, filters],
-    queryFn: async ({ pageParam = 1 }) => {
-      // Call the API with the current page and filters
-      const result = await brandsAPI.getPaginated(pageParam, limit, filters);
-      return result;
-    },
-    getNextPageParam: (lastPage: BrandsPageData) => {
-      // If we're on the last page, return undefined to indicate there's no more data
-      if (lastPage.currentPage >= lastPage.totalPages) {
-        return undefined;
+  // Query for fetching all brands
+  const brandsQuery = useQuery({
+    queryKey: ['brands'],
+    queryFn: async () => {
+      try {
+        const data = await brandsAPI.getAll();
+        return data || []; // Always return an array, never undefined
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        return []; // Return empty array on error
       }
-      // Otherwise, return the next page number
-      return lastPage.currentPage + 1;
     },
-    initialPageParam: 1,
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Flatten the projects from all pages into a single array for easier consumption
-  const brands = useMemo(() => {
-    if (!data) return [];
-    return data.pages.flatMap(page => page.brands);
-  }, [data]);
+  // Handle error with useEffect to prevent render-time state updates
+  useEffect(() => {
+    if (brandsQuery.error) {
+      toast({
+        title: "Error",
+        description: "Failed to load brands. Please try again later.",
+        variant: "destructive"
+      });
+    }
+  }, [brandsQuery.error, toast]);
 
-  // Calculate total count from the most recent page
-  const totalBrands = data?.pages[0]?.totalBrands || 0;
+  // Mutation for creating a new brand
+  const createBrandMutation = useMutation({
+    mutationFn: (newBrand: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">>) => brandsAPI.create(newBrand),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      toast({
+        title: "Success",
+        description: "Brand created successfully!",
+        variant: "default"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create project. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation for updating a project
+  const updateBrandMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">> }) =>
+      brandsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      toast({
+        title: "Success",
+        description: "Brand updated successfully!",
+        variant: "default"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update brand. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation for deleting a brand
+  const deleteBrandMutation = useMutation({
+    mutationFn: (id: string) => brandsAPI.delete(id),
+    onSuccess: () => {
+      // Invalidate both standard brand queries and infinite brand queries
+      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+
+      toast({
+        title: "Success",
+        description: "Brand deleted successfully!",
+        variant: "default"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete brand. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Batch delete for multiple templates
+  const deleteMultipleBrandsMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      // Using allSettled to allow some deletions to fail without failing the whole batch
+      const results = await Promise.allSettled(ids.map(id => brandsAPI.delete(id)));
+
+      // Count successful and failed deletions
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      // If all failed, throw an error
+      if (successful === 0 && failed > 0) {
+        throw new Error('Failed to delete any brands');
+      }
+
+      // Return summary
+      return { successful, failed, total: ids.length };
+    },
+    onSuccess: (result) => {
+      // Invalidate both standard template queries and infinite template queries
+      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+
+      // Show appropriate message based on partial or complete success
+      if (result.failed > 0) {
+        toast({
+          title: "Partial Success",
+          description: `${result.successful} brands deleted. ${result.failed} operations failed.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `${result.successful} ${result.successful === 1 ? 'template' : 'templates'} deleted successfully!`,
+          variant: "default"
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete brands. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
 
   return {
-    brands,
-    totalBrands,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    error,
-    refetch
+    projects: brandsQuery.data || [],
+    isLoading: brandsQuery.isLoading,
+    isError: brandsQuery.isError,
+    createBrand: createBrandMutation.mutateAsync,
+    updateBrand: updateBrandMutation.mutateAsync,
+    deleteBrand: deleteBrandMutation.mutateAsync,
+    deleteMultipleBrands: deleteMultipleBrandsMutation.mutateAsync,
   };
 }
+
