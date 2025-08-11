@@ -10,7 +10,10 @@ import PromptBar from "./components/PromptBar";
 const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     const { send, loading, error, currentSessionId, chatSessions, deleteSession } = useChat();
 
-    const { addNavigationSection, removeNavigationSection } = useNavigation();
+    const { addNavigationSection, removeNavigationSection, setActiveItem, navigation } = useNavigation();
+
+    const chatNav = useMemo(() => navigation?.sections.find(nav => nav.id === "chats"), [navigation]);
+
     const router = useRouter();
 
 
@@ -18,14 +21,21 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     const handleDeleteSession = useCallback(async (sessionId: string) => {
         try {
             await deleteSession(sessionId);
-            // If we deleted the current session, redirect to chats home
-            if (currentSessionId === sessionId) {
-                router.push('/chats');
+            
+            if (chatNav && chatNav.items.length) {
+                router.push(`/chats/${chatNav.items[0].id}`);
+            } else {
+                router.push('/chats/new');
             }
+            // If we deleted the current session, redirect to chats home
+            // console.log(navigation)
+            // if (currentSessionId === sessionId) {
+            //     router.push('/chats');
+            // }
         } catch (error) {
             console.error('Failed to delete session:', error);
         }
-    }, [deleteSession, currentSessionId, router, navigation]);
+    }, [deleteSession, currentSessionId, router]);
 
     const chatNavigation: NavigationSection | null = useMemo(() => {
         return chatSessions.length > 0 ? {
