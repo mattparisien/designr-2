@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import { useChatSessionQuery } from '@/lib/hooks/useChatSession';
 import { type ChatSession } from '@/lib/types/api';
+import { useAI } from '../hooks/useAI';
+import { DEFAULT_CHAT_MODEL, DEFAULT_CHAT_TITLE } from '../constants';
 
 export type ChatMessage = {
   id: string;
@@ -65,7 +67,7 @@ function chatReducer(state: State, action: Action): State {
       const messages = [...state.messages];
       const lastMessageIndex = messages.length - 1;
       const lastMessage = messages[lastMessageIndex];
-      
+
       if (lastMessage && lastMessage.role === 'assistant') {
         // Create a new message object to avoid mutation
         messages[lastMessageIndex] = {
@@ -81,7 +83,7 @@ function chatReducer(state: State, action: Action): State {
           timestamp: Date.now(),
         });
       }
-      
+
       return {
         ...state,
         messages,
@@ -122,6 +124,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   // Use the chat session query hook for managing sessions and AI interactions
   const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages, deleteChatSession } = useChatSessionQuery();
+  const { summarize } = useAI();
 
   const setCurrentSession = useCallback((sessionId?: string) => {
     if (sessionId) {
@@ -135,7 +138,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       dispatch({ type: 'set_session', sessionId });
       const session = await getSessionWithMessages(sessionId);
-      
+
       // Convert backend messages to frontend format
       const messages: ChatMessage[] = (session.messages || []).map((msg: { _id: string; role: string; content: string; createdAt: string }) => ({
         id: msg._id,
@@ -143,7 +146,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         content: msg.content,
         timestamp: new Date(msg.createdAt).getTime(),
       }));
-      
+
       dispatch({ type: 'load_messages', messages });
     } catch (error) {
       console.error('Failed to load session messages:', error);
@@ -154,7 +157,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const deleteSession = useCallback(async (sessionId: string) => {
     try {
       await deleteChatSession(sessionId);
-      
+
       // If the deleted session is the current session, clear it
       if (state.currentSessionId === sessionId) {
         dispatch({ type: 'clear' });
@@ -166,7 +169,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   }, [deleteChatSession, state.currentSessionId]);
 
   const send = useCallback(async (content: string, createNewSession?: boolean) => {
-    console.log("Sending message:", content, "Create new session:", createNewSession);
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -174,16 +176,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       timestamp: Date.now(),
     };
     dispatch({ type: 'send_start', message: userMsg });
-    
+
     try {
       let sessionId = state.currentSessionId;
 
       // Only create a new session if explicitly requested or if no current session exists
       if (createNewSession || !state.currentSessionId) {
         const session = await createChatSession({
-          // userId: 'current-user', // This should come from auth context
-          title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-          aiModel: 'gpt-4o'
+          title: DEFAULT_CHAT_TITLE,
+          aiModel: DEFAULT_CHAT_MODEL
         });
 
         sessionId = session.sessionId || session._id;
@@ -218,16 +219,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const clear = useCallback(() => dispatch({ type: 'clear' }), []);
 
   return (
-    <ChatContext.Provider value={{ 
-      ...state, 
+    <ChatContext.Provider value={{
+      ...state,
       loading: state.loading, // Remove isAskingAI since we're using streaming now
-      send, 
-      clear, 
+      send,
+      clear,
       setCurrentSession,
       loadSessionMessages,
       deleteSession,
-      chatSessions, 
-      isLoading 
+      chatSessions,
+      isLoading
     }}>
       {children}
     </ChatContext.Provider>
