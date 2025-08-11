@@ -7,9 +7,7 @@ type Color = {
 }
 
 interface Palette {
-  primary: Color;
-  secondary: Color;
-  accent: Color;
+  colors: Color[];
 }
 
 export interface BrandDocument extends Document, OmitCreate<CoreBrand> {
@@ -52,21 +50,13 @@ const brandSchema = new Schema<BrandDocument>({
     trim: true
   },
   palettes: [{
-    primary: {
-      type: String,
-      required: true,
-      match: /^#[0-9A-F]{6}$/i
-    },
-    secondary: {
-      type: String,
-      required: true,
-      match: /^#[0-9A-F]{6}$/i
-    },
-    accent: {
-      type: String,
-      required: true,
-      match: /^#[0-9A-F]{6}$/i
-    }
+    colors: [{
+      hex: {
+        type: String,
+        required: true,
+        match: /^#[0-9A-F]{6}$/i
+      }
+    }],
   }],
   vibe: {
     type: String,

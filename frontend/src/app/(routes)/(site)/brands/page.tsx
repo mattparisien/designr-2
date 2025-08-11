@@ -12,17 +12,8 @@ import { useBrandQuery } from "@/lib/hooks/useBrands";
 import { Brand } from "@/lib/types/brands";
 import { useInfiniteBrands } from "@/lib/hooks/useInfiniteBrands";
 import { PlusIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import CreateModalContent from "./components/ModalContent";
-
-// Define the social media format type
-interface SocialMediaFormat {
-  width: number;
-  height: number;
-  name: string;
-  category: string;
-}
 
 export default function BrandsPage() {
 
@@ -38,31 +29,25 @@ export default function BrandsPage() {
   });
 
   const {
-    createBrand,
     updateBrand,
     deleteMultipleBrands
   } = useBrandQuery();
 
-  const router = useRouter()
-
   const gridItems = useMemo(() => {
     return brands?.map(brand => {
-      const palette = Array.isArray(brand.palettes) && brand.palettes.length > 0 ? brand.palettes[0] : { primary: '#cccccc', secondary: '#eeeeee', accent: '#999999' };
+      const first = Array.isArray(brand.palettes) && brand.palettes.length > 0 ? brand.palettes[0] : undefined;
+      const c1 = first?.colors?.[0]?.hex || '#cccccc';
+      const c2 = first?.colors?.[1]?.hex || '#eeeeee';
+      const c3 = first?.colors?.[2]?.hex || '#999999';
       return {
         id: brand._id,
         title: brand.name,
         mediaComponent: (
           <div className="h-full w-full flex items-end absolute left-0 bottom-0">
             <div className="w-full h-3 flex">
-              <div className="flex-1" style={{
-                backgroundColor: palette.primary
-              }}></div>
-              <div className="flex-1" style={{
-                backgroundColor: palette.secondary
-              }}></div>
-              <div className="flex-1" style={{
-                backgroundColor: palette.accent
-              }}></div>
+              <div className="flex-1" style={{ backgroundColor: c1 }}></div>
+              <div className="flex-1" style={{ backgroundColor: c2 }}></div>
+              <div className="flex-1" style={{ backgroundColor: c3 }}></div>
             </div>
           </div>
         ),
@@ -71,9 +56,6 @@ export default function BrandsPage() {
       }
     }) ?? [];
   }, [brands])
-
-
-
 
   const handleFetchNextPage = useCallback(async () => {
     await fetchNextPage();
@@ -113,6 +95,7 @@ export default function BrandsPage() {
         </div>
         <InteractiveGrid
           items={gridItems}
+          collectionSlug="brands"
           onDeleteItems={handleDeleteItems}
           onUpdateItem={handleUpdateItem}
           isLoading={isFetchingNextPage}

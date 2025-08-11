@@ -120,6 +120,7 @@ export default function TemplatesPage() {
         </div>
         <InteractiveGrid
           items={gridItems}
+          collectionSlug="templates"
           onDeleteItems={handleDeleteItems}
           onUpdateItem={handleUpdateItem}
           isLoading={isFetchingNextPage}

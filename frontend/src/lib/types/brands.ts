@@ -9,6 +9,10 @@ export interface ColorPalette {
 
 export type ColorPalettes = ColorPalette[]; // Array of color palette objects
 
+// New color types matching backend
+export type Color = { hex: `#${string}` };
+export interface Palette { colors: Color[] }
+
 /**
  * Typography Schema
  */
@@ -70,13 +74,13 @@ export interface AIInsights {
   confidence?: string;
   generationMethod?: string;
   note?: string;
-  rawResponse?: any;
+  rawResponse?: unknown;
   assetAdditions?: {
     assetId: string;
     date: string;
     impact: string;
   }[];
-  [key: string]: any; // Allow for flexible structure
+  [key: string]: unknown; // Allow for flexible structure
 }
 
 /**
@@ -89,7 +93,7 @@ export interface Brand {
   description?: string;
   tagline?: string;
   industry?: string;
-  palettes: { primary: string; secondary: string; accent: string }[];
+  palettes: Palette[];
   typography: Typography[];
   logos: Logo[];
   brandVoice: BrandVoice;

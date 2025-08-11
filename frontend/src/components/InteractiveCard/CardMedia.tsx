@@ -24,8 +24,9 @@ export function CardMedia({ image, selected, children }: CardMediaProps) {
     })
 
     return (
-        <div className={`relative aspect-video p-4 bg-neutral-100 overflow-hidden rounded-lg group-hover:bg-neutral-200 transition-colors duration-200 border-2 ${selected ? 'border-[var(--border-accent)]' : 'border-transparent'}`}
+        <div className={`relative aspect-video bg-neutral-100 overflow-hidden group-hover:bg-neutral-200 rounded-lg transition-colors duration-200`}
         >
+            <div className={`absolute top-0 left-0 pointer-events-none w-full h-full border-2 z-[99] p-4 rounded-lg ${selected ? 'border-[var(--border-accent)]' : 'border-transparent'}`}></div>
             {image && (
                 <Image
                     src={image.src}
@@ -35,6 +36,7 @@ export function CardMedia({ image, selected, children }: CardMediaProps) {
                 />
             )}
             {children}
+
         </div>
     );
 }

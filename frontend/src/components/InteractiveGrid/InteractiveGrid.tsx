@@ -31,6 +31,7 @@ interface InteractiveGridItem {
 }
 
 interface InteractiveGridProps {
+  collectionSlug: string; // Used for routing
   items: InteractiveGridItem[];
   onDeleteItems?: (ids: string[]) => Promise<void>;
   onDeleteItem?: (id: string) => Promise<void>;
@@ -51,6 +52,7 @@ export function InteractiveGrid({
   onDuplicateItems,
   onMoveItems,
   onFetchNextPage,
+  collectionSlug,
   hasMore = false,
   isLoading = false,
   isInitialLoading = false,
@@ -61,8 +63,8 @@ export function InteractiveGrid({
   const { selectedIds, clearSelection } = useSelection();
 
   const handleOpen = useCallback((id: string) => {
-    router.push(`/editor/${id}`);
-  }, [router]);
+    router.push(`/${collectionSlug}/${id}`);
+  }, [router, collectionSlug]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedIds.length || !onDeleteItems) return;

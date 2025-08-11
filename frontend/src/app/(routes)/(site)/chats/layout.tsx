@@ -25,7 +25,7 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             console.error('Failed to delete session:', error);
         }
-    }, [deleteSession, currentSessionId, router]);
+    }, [deleteSession, currentSessionId, router, navigation]);
 
     const chatNavigation: NavigationSection | null = useMemo(() => {
         return chatSessions.length > 0 ? {

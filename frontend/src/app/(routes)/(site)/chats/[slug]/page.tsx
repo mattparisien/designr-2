@@ -64,7 +64,7 @@ const LoadingDots = () => (
 
 const ChatSessionPage = () => {
   const { slug } = useParams();
-  const { title, messages, loadSessionMessages, setCurrentSession, loading, setTitle } = useChat();
+  const { title, messages, loadSessionMessages, setCurrentSession, loading, setTitle, clear } = useChat();
   const { summarize } = useAI();
   const { setActiveItem } = useNavigation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -78,9 +78,10 @@ const ChatSessionPage = () => {
 
     return () => {
       setActiveItem(null);
+      clear();
       setCurrentSession(undefined);
     }
-  }, [slug, loadSessionMessages, setActiveItem, setCurrentSession]);
+  }, [slug, loadSessionMessages, setActiveItem, setCurrentSession, clear]);
 
   // Auto-scroll to bottom when messages change and auto-title if needed
   useEffect(() => {

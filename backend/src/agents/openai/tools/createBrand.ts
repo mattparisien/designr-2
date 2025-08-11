@@ -48,10 +48,16 @@ export const createBrandTool = tool({
       avoidedWords,
     } = input || {};
 
-    // Compose palettes array from input
-    const palettes = [{ primary: primaryColor, secondary: secondaryColor, accent: accentColor }];
+    // Compose palettes array using new Palette shape: { colors: [{hex}, {hex}, {hex}] }
+    const palettes = [{
+      colors: [
+        { hex: primaryColor },
+        { hex: secondaryColor },
+        { hex: accentColor },
+      ]
+    }];
 
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       name,
       palettes,
       vibe,

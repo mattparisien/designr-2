@@ -49,7 +49,7 @@ export default function InteractiveCard({
             onMouseLeave={() => setIsHovered(false)}
         >
             <CardMedia
-                image={undefined}
+                image={image}
                 selected={selected}
             >
                 {children}
