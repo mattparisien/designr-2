@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
 import { useAI } from "@/lib/hooks/useAI";
+import { DEFAULT_CHAT_TITLE } from "@/lib/constants";
 
 // Custom Markdown renderers + spacing
 type CodeProps = {
@@ -63,10 +64,11 @@ const LoadingDots = () => (
 
 const ChatSessionPage = () => {
   const { slug } = useParams();
-  const { title, messages, loadSessionMessages, setCurrentSession, loading } = useChat();
+  const { title, messages, loadSessionMessages, setCurrentSession, loading, setTitle } = useChat();
   const { summarize } = useAI();
   const { setActiveItem } = useNavigation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasSummarizedRef = useRef(false);
 
   useEffect(() => {
     if (slug && typeof slug === 'string') {
@@ -80,19 +82,33 @@ const ChatSessionPage = () => {
     }
   }, [slug, loadSessionMessages, setActiveItem, setCurrentSession]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change and auto-title if needed
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
 
-    if (messages.length > 1) {
-      summarize({ text: messages.map(m => m.content).join('\n') }).then(summary => console.log(summary));
+    if (
+      title === DEFAULT_CHAT_TITLE &&
+      messages.length > 3 &&
+      messages.some(m => m.role === 'assistant') &&
+      !hasSummarizedRef.current
+    ) {
+      hasSummarizedRef.current = true;
+      const text = messages.map(m => m.content).join('\n');
+      summarize({ text })
+        .then(({ summary }) => {
+          if (summary && title === DEFAULT_CHAT_TITLE) {
+            setTitle(summary);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          // Allow future summarization if title remains New Chat and messages change significantly
+          setTimeout(() => { hasSummarizedRef.current = false; }, 0);
+        });
     }
-
-
-  }, [messages]);
-
+  }, [messages, title, summarize, setTitle]);
 
   return (
     <div ref={scrollContainerRef} className="w-full h-full overflow-y-scroll">

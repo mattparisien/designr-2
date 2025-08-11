@@ -1,5 +1,6 @@
 import { Axios } from 'axios';
 import { APIBase } from './base';
+import { DEFAULT_CHAT_TITLE } from '../constants';
 
 // Utility type for API error handling
 interface APIError {
@@ -29,7 +30,7 @@ export class AIAPI extends APIBase implements IAIAPI {
             const response = await this.apiClient.post('/ai/summarize', {
                 text,
                 model,
-                systemPrompt: "Summarize the following conversation in as few words as possible. This will act as a title for the chat.",
+                systemPrompt: `Summarize the following conversation in as few words as possible. This will act as a title for the chat. If you can't summarize the conversation or if the conversation isn't long enough to summarize, just return '${DEFAULT_CHAT_TITLE}'`,
                 maxTokens: 20,
             });
             if (response.status === 200) {

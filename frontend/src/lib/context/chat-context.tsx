@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import { useChatSessionQuery } from '@/lib/hooks/useChatSession';
 import { type ChatSession } from '@/lib/types/api';
-import { useAI } from '../hooks/useAI';
 import { DEFAULT_CHAT_MODEL, DEFAULT_CHAT_TITLE } from '../constants';
 
 export type ChatMessage = {
@@ -16,6 +15,8 @@ interface State {
   loading: boolean;
   error?: string;
   currentSessionId?: string; // Add current session ID
+  // New: title of the current session (UI only)
+  title?: string;
 }
 
 type Action =
@@ -26,7 +27,9 @@ type Action =
   | { type: 'load_messages'; messages: ChatMessage[] }
   | { type: 'stream_chunk'; content: string }
   | { type: 'stream_complete'; sessionId?: string }
-  | { type: 'clear' };
+  | { type: 'clear' }
+  // New: set the current session title
+  | { type: 'set_title'; title: string };
 
 function chatReducer(state: State, action: Action): State {
   switch (action.type) {
@@ -62,7 +65,7 @@ function chatReducer(state: State, action: Action): State {
         loading: false,
         error: undefined,
       };
-    case 'stream_chunk':
+    case 'stream_chunk': {
       // Update the last message (assistant message) with streaming content
       const messages = [...state.messages];
       const lastMessageIndex = messages.length - 1;
@@ -89,14 +92,20 @@ function chatReducer(state: State, action: Action): State {
         messages,
         loading: false, // Stop loading when streaming starts
       };
+    }
     case 'stream_complete':
       return {
         ...state,
         loading: false,
         currentSessionId: action.sessionId || state.currentSessionId,
       };
+    case 'set_title':
+      return {
+        ...state,
+        title: action.title,
+      };
     case 'clear':
-      return { messages: [], loading: false, error: undefined, currentSessionId: undefined };
+      return { messages: [], loading: false, error: undefined, currentSessionId: undefined, title: DEFAULT_CHAT_TITLE };
     default:
       return state;
   }
@@ -110,9 +119,19 @@ interface ChatContextType extends State {
   setCurrentSession: (sessionId?: string) => void; // Add method to set current session
   loadSessionMessages: (sessionId: string) => Promise<void>; // Add method to load messages
   deleteSession: (sessionId: string) => Promise<void>; // Add method to delete a session
+  // New: setter for title
+  setTitle: (title: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+// Local types for backend results
+type BackendMessage = { _id: string; role: 'user' | 'assistant' | 'system'; content: string; createdAt: string };
+type BackendSession = ChatSession & { messages: BackendMessage[] };
+
+enum ModelId {
+  Gpt4o = 'gpt-4o'
+}
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(chatReducer, {
@@ -120,11 +139,30 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     loading: false,
     error: undefined,
     currentSessionId: undefined,
+    title: DEFAULT_CHAT_TITLE,
   });
 
   // Use the chat session query hook for managing sessions and AI interactions
-  const { createChatSession, chatSessions, isLoading, streamAI, getSessionWithMessages, deleteChatSession } = useChatSessionQuery();
-  const { summarize } = useAI();
+  const {
+    createChatSession,
+    chatSessions: rawChatSessions,
+    isLoading,
+    streamAI,
+    getSessionWithMessages,
+    deleteChatSession,
+    updateChatSession,
+  } = useChatSessionQuery();
+
+  // Persist title to backend if sessionId is available
+  const setTitle = useCallback((title: string) => {
+    dispatch({ type: 'set_title', title });
+    if (state.currentSessionId && title && title !== state.title) {
+      updateChatSession({ id: state.currentSessionId, data: { title } }).catch((err) => {
+        // Optionally handle error (e.g., toast)
+        console.warn('Failed to persist chat title:', err);
+      });
+    }
+  }, [state.currentSessionId, state.title, updateChatSession]);
 
   const setCurrentSession = useCallback((sessionId?: string) => {
     if (sessionId) {
@@ -137,12 +175,19 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const loadSessionMessages = useCallback(async (sessionId: string) => {
     try {
       dispatch({ type: 'set_session', sessionId });
-      const session = await getSessionWithMessages(sessionId);
+      const session = (await getSessionWithMessages(sessionId)) as unknown as BackendSession;
+
+      // Set title from backend if present
+      if (session && session.title) {
+        dispatch({ type: 'set_title', title: session.title });
+      } else {
+        dispatch({ type: 'set_title', title: DEFAULT_CHAT_TITLE });
+      }
 
       // Convert backend messages to frontend format
-      const messages: ChatMessage[] = (session.messages || []).map((msg: { _id: string; role: string; content: string; createdAt: string }) => ({
+      const messages: ChatMessage[] = (session?.messages || []).map((msg: BackendMessage) => ({
         id: msg._id,
-        role: msg.role as 'user' | 'assistant' | 'system',
+        role: msg.role,
         content: msg.content,
         timestamp: new Date(msg.createdAt).getTime(),
       }));
@@ -182,14 +227,17 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       // Only create a new session if explicitly requested or if no current session exists
       if (createNewSession || !state.currentSessionId) {
-        const session = await createChatSession({
+        type CreatedSession = Partial<ChatSession> & { _id?: string; sessionId?: string };
+        const created = (await createChatSession({
           title: DEFAULT_CHAT_TITLE,
           aiModel: DEFAULT_CHAT_MODEL
-        });
+        })) as unknown as CreatedSession;
 
-        sessionId = session.sessionId || session._id;
+        sessionId = created.sessionId || created._id || '';
         console.log("Created new session with ID:", sessionId);
         setCurrentSession(sessionId);
+        // Initialize title from backend response if available
+        dispatch({ type: 'set_title', title: (created && (created as Partial<ChatSession>).title) || DEFAULT_CHAT_TITLE });
       } else {
         console.log("Using existing session ID:", sessionId);
       }
@@ -198,7 +246,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       await streamAI({
         chatSessionId: sessionId,
         content: content,
-        model: 'gpt-4o'
+        model: ModelId.Gpt4o
       }, (chunk) => {
         if (chunk.type === 'chunk' && chunk.content) {
           dispatch({ type: 'stream_chunk', content: chunk.content });
@@ -227,8 +275,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setCurrentSession,
       loadSessionMessages,
       deleteSession,
-      chatSessions,
-      isLoading
+      chatSessions: (rawChatSessions as unknown as ChatSession[]),
+      isLoading,
+      setTitle,
     }}>
       {children}
     </ChatContext.Provider>

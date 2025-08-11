@@ -53,6 +53,19 @@ router.get('/sessions/:id', async (req, res) => {
   }
 });
 
+router.put('/sessions/:id', async (req, res) => {
+  try {
+    const { title, aiModel } = req.body;
+    const session = await ChatSession.findByIdAndUpdate(req.params.id, { title, aiModel }, { new: true });
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    res.json(session);
+  } catch (err) {
+    console.error('[PUT /sessions/:id] Error:', err);
+    res.status(500).json({ message: 'Failed to update session' });
+  }
+});
+
+
 /* Delete a session and its messages */
 router.delete('/sessions/:id', async (req, res) => {
   try {
@@ -81,6 +94,7 @@ router.post('/messages', async (req, res) => {
     res.status(500).json({ message: 'Failed to send message' });
   }
 });
+
 
 /* ── AI RESPONSES VIA DESIGN AGENT ───────────────────────────── */
 

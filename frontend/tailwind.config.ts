@@ -18,6 +18,7 @@ const config: Config = {
 
         // Design system colors - moved to root level for proper bg- class generation
         primary: "var(--bg-primary)",
+        accent: "var(--color-accent)",
         secondary: "var(--bg-secondary)",
         tertiary: "var(--bg-tertiary)",
         scrim: "var(--bg-scrim)",
@@ -154,6 +155,7 @@ const config: Config = {
         primary: "var(--bg-primary)",
         secondary: "var(--bg-secondary)",
         tertiary: "var(--bg-tertiary)",
+        accent: "var(--color-accent)",
         scrim: "var(--bg-scrim)",
         "elevated-primary": "var(--bg-elevated-primary)",
         "elevated-secondary": "var(--bg-elevated-secondary)",
