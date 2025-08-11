@@ -89,7 +89,7 @@ export interface Brand {
   description?: string;
   tagline?: string;
   industry?: string;
-  colorPalettes: ColorPalettes;
+  palettes: { primary: string; secondary: string; accent: string }[];
   typography: Typography[];
   logos: Logo[];
   brandVoice: BrandVoice;

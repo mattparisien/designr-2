@@ -9,6 +9,7 @@ import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
 import { SelectionProvider } from "@/lib/context/selection-context";
 import { useBrandQuery } from "@/lib/hooks/useBrands";
+import { Brand } from "@/lib/types/brands";
 import { useInfiniteBrands } from "@/lib/hooks/useInfiniteBrands";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -45,27 +46,30 @@ export default function BrandsPage() {
   const router = useRouter()
 
   const gridItems = useMemo(() => {
-    return brands?.map(brand => ({
-      id: brand.id,
-      title: brand.name,
-      mediaComponent: (
-        <div className="h-full w-full flex items-end absolute left-0 bottom-0">
-          <div className="w-full h-3 flex">
-            <div className="flex-1" style={{
-              backgroundColor: brand.primaryColor
-            }}></div>
-            <div className="flex-1" style={{
-              backgroundColor: brand.secondaryColor
-            }}></div>
-            <div className="flex-1" style={{
-              backgroundColor: brand.accentColor
-            }}></div>
+    return brands?.map(brand => {
+      const palette = Array.isArray(brand.palettes) && brand.palettes.length > 0 ? brand.palettes[0] : { primary: '#cccccc', secondary: '#eeeeee', accent: '#999999' };
+      return {
+        id: brand._id,
+        title: brand.name,
+        mediaComponent: (
+          <div className="h-full w-full flex items-end absolute left-0 bottom-0">
+            <div className="w-full h-3 flex">
+              <div className="flex-1" style={{
+                backgroundColor: palette.primary
+              }}></div>
+              <div className="flex-1" style={{
+                backgroundColor: palette.secondary
+              }}></div>
+              <div className="flex-1" style={{
+                backgroundColor: palette.accent
+              }}></div>
+            </div>
           </div>
-        </div>
-      ),
-      updatedAt: brand.updatedAt.toString(),
-      type: brand ? "brand" : "project",
-    })) ?? [];
+        ),
+        updatedAt: brand.updatedAt.toString(),
+        type: brand ? "brand" : "project",
+      }
+    }) ?? [];
   }, [brands])
 
 
@@ -82,9 +86,9 @@ export default function BrandsPage() {
   }, [deleteMultipleBrands, refetch]);
 
   const handleUpdateItem = useCallback(async (id: string, updates: { title?: string; name?: string }) => {
-    const updateData: { title?: string } = {};
-    if (updates.title) updateData.title = updates.title;
-    if (updates.name) updateData.title = updates.name; // Map name to title
+    const updateData: Partial<Omit<Brand, '_id' | 'createdAt' | 'updatedAt' | 'userId'>> = {};
+    if (updates.name) updateData.name = updates.name;
+    if (updates.title) updateData.name = updates.title; // Map title to name
 
     await updateBrand({ id, data: updateData });
   }, [updateBrand]);

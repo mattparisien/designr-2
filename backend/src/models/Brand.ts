@@ -2,13 +2,21 @@ import { type BrandVibe as CoreBrandVibe, type Brand as CoreBrand } from '@share
 import { OmitCreate } from '@shared/types/utils/omit';
 import mongoose, { Document, Schema } from 'mongoose';
 
+type Color = {
+  hex: `#${string}`;
+}
+
+interface Palette {
+  primary: Color;
+  secondary: Color;
+  accent: Color;
+}
+
 export interface BrandDocument extends Document, OmitCreate<CoreBrand> {
   userId: mongoose.Types.ObjectId;
   name: string;
   logoUrl?: string;
-  primaryColor: `#${string}`;
-  secondaryColor: `#${string}`;
-  accentColor?: `#${string}`;
+  palettes: Palette[];
   vibe: CoreBrandVibe;
   voice: string;
   personality: string;
@@ -43,20 +51,23 @@ const brandSchema = new Schema<BrandDocument>({
     type: String,
     trim: true
   },
-  primaryColor: {
-    type: String,
-    required: true,
-    match: /^#[0-9A-F]{6}$/i
-  },
-  secondaryColor: {
-    type: String,
-    required: true,
-    match: /^#[0-9A-F]{6}$/i
-  },
-  accentColor: {
-    type: String,
-    match: /^#[0-9A-F]{6}$/i
-  },
+  palettes: [{
+    primary: {
+      type: String,
+      required: true,
+      match: /^#[0-9A-F]{6}$/i
+    },
+    secondary: {
+      type: String,
+      required: true,
+      match: /^#[0-9A-F]{6}$/i
+    },
+    accent: {
+      type: String,
+      required: true,
+      match: /^#[0-9A-F]{6}$/i
+    }
+  }],
   vibe: {
     type: String,
     enum: ['playful', 'elegant', 'bold', 'minimal', 'professional'],

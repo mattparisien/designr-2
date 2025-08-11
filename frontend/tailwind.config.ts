@@ -16,7 +16,7 @@ const config: Config = {
         foreground: "var(--foreground)",
         "interactive-border-accent": "var(--interactive-border-accent)",
 
-        // Design system colors - moved to root level for proper bg- class generation
+        // Design system colors - root level only for utility class generation
         primary: "var(--bg-primary)",
         accent: "var(--color-accent)",
         secondary: "var(--bg-secondary)",
@@ -42,80 +42,6 @@ const config: Config = {
         // Interactive colors at root level
         "interactive-secondary-hover": "var(--interactive-bg-secondary-hover)",
         "interactive-accent": "var(--interactive-bg-accent-default)",
-
-        // Design system colors with namespaces for compatibility
-        bg: {
-          primary: "var(--bg-primary)",
-          secondary: "var(--bg-secondary)",
-          tertiary: "var(--bg-tertiary)",
-          scrim: "var(--bg-scrim)",
-          "elevated-primary": "var(--bg-elevated-primary)",
-          "elevated-secondary": "var(--bg-elevated-secondary)",
-          "status-warning": "var(--bg-status-warning)",
-          "status-error": "var(--bg-status-error)",
-        },
-
-        border: {
-          default: "var(--border-default)",
-          heavy: "var(--border-heavy)",
-          light: "var(--border-light)",
-          "status-warning": "var(--border-status-warning)",
-          "status-error": "var(--border-status-error)",
-        },
-
-        text: {
-          primary: "var(--text-primary)",
-          secondary: "var(--text-secondary)",
-          tertiary: "var(--text-tertiary)",
-          inverted: "var(--text-inverted)",
-          "inverted-static": "var(--text-inverted-static)",
-          accent: "var(--text-accent)",
-          "status-warning": "var(--text-status-warning)",
-          "status-error": "var(--text-status-error)",
-        },
-
-        icon: {
-          primary: "var(--icon-primary)",
-          secondary: "var(--icon-secondary)",
-          tertiary: "var(--icon-tertiary)",
-          inverted: "var(--icon-inverted)",
-          "inverted-static": "var(--icon-inverted-static)",
-          accent: "var(--icon-accent)",
-          "status-warning": "var(--icon-status-warning)",
-          "status-error": "var(--icon-status-error)",
-        },
-
-        interactive: {
-          primary: {
-            DEFAULT: "var(--interactive-bg-primary-default)",
-            hover: "var(--interactive-bg-primary-hover)",
-            press: "var(--interactive-bg-primary-press)",
-            inactive: "var(--interactive-bg-primary-inactive)",
-            selected: "var(--interactive-bg-primary-selected)",
-          },
-          secondary: {
-            DEFAULT: "var(--interactive-bg-secondary-default)",
-            hover: "var(--interactive-bg-secondary-hover)",
-            press: "var(--interactive-bg-secondary-press)",
-            inactive: "var(--interactive-bg-secondary-inactive)",
-            selected: "var(--interactive-bg-secondary-selected)",
-          },
-          tertiary: {
-            DEFAULT: "var(--interactive-bg-tertiary-default)",
-            hover: "var(--interactive-bg-tertiary-hover)",
-            press: "var(--interactive-bg-tertiary-press)",
-            inactive: "var(--interactive-bg-tertiary-inactive)",
-            selected: "var(--interactive-bg-tertiary-selected)",
-          },
-          accent: {
-            DEFAULT: "var(--interactive-bg-accent-default)",
-            hover: "var(--interactive-bg-accent-hover)",
-            "muted-hover": "var(--interactive-bg-accent-muted-hover)",
-            press: "var(--interactive-bg-accent-press)",
-            "muted-press": "var(--interactive-bg-accent-muted-press)",
-            inactive: "var(--interactive-bg-accent-inactive)",
-          },
-        },
       },
 
       // Custom border colors
@@ -155,32 +81,27 @@ const config: Config = {
         primary: "var(--bg-primary)",
         secondary: "var(--bg-secondary)",
         tertiary: "var(--bg-tertiary)",
-        accent: "var(--color-accent)",
         scrim: "var(--bg-scrim)",
         "elevated-primary": "var(--bg-elevated-primary)",
         "elevated-secondary": "var(--bg-elevated-secondary)",
         "status-warning": "var(--bg-status-warning)",
         "status-error": "var(--bg-status-error)",
-
         // Interactive backgrounds
         "interactive-primary": "var(--interactive-bg-primary-default)",
         "interactive-primary-hover": "var(--interactive-bg-primary-hover)",
         "interactive-primary-press": "var(--interactive-bg-primary-press)",
         "interactive-primary-inactive": "var(--interactive-bg-primary-inactive)",
         "interactive-primary-selected": "var(--interactive-bg-primary-selected)",
-
         "interactive-secondary": "var(--interactive-bg-secondary-default)",
         "interactive-secondary-hover": "var(--interactive-bg-secondary-hover)",
         "interactive-secondary-press": "var(--interactive-bg-secondary-press)",
         "interactive-secondary-inactive": "var(--interactive-bg-secondary-inactive)",
         "interactive-secondary-selected": "var(--interactive-bg-secondary-selected)",
-
         "interactive-tertiary": "var(--interactive-bg-tertiary-default)",
         "interactive-tertiary-hover": "var(--interactive-bg-tertiary-hover)",
         "interactive-tertiary-press": "var(--interactive-bg-tertiary-press)",
         "interactive-tertiary-inactive": "var(--interactive-bg-tertiary-inactive)",
         "interactive-tertiary-selected": "var(--interactive-bg-tertiary-selected)",
-
         "interactive-accent": "var(--interactive-bg-accent-default)",
         "interactive-accent-hover": "var(--interactive-bg-accent-hover)",
         "interactive-accent-muted-hover": "var(--interactive-bg-accent-muted-hover)",

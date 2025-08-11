@@ -1,5 +1,5 @@
 import { useToast } from '@/lib/hooks/useToast';
-import { DesignTemplate } from '@shared/types';
+import { Brand } from '../types/brands';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { brandsAPI } from '../api/index';
@@ -36,7 +36,7 @@ export function useBrandQuery() {
 
   // Mutation for creating a new brand
   const createBrandMutation = useMutation({
-    mutationFn: (newBrand: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">>) => brandsAPI.create(newBrand),
+    mutationFn: (newBrand: Partial<Omit<Brand, '_id' | 'createdAt' | 'updatedAt' | 'userId'>>) => brandsAPI.create(newBrand),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
@@ -57,7 +57,7 @@ export function useBrandQuery() {
 
   // Mutation for updating a project
   const updateBrandMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<Omit<DesignTemplate, 'id' | 'createdAt' | 'updatedAt' | "createdBy">> }) =>
+    mutationFn: ({ id, data }: { id: string, data: Partial<Omit<Brand, '_id' | 'createdAt' | 'updatedAt' | 'userId'>> }) =>
       brandsAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });

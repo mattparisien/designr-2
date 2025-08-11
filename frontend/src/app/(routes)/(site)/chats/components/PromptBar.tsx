@@ -77,7 +77,7 @@ const PromptBar = ({ onSubmit, placeholder = "Type your prompt here...", disable
                             onClick={handleButtonClick}
                             disabled={disabled || !inputValue.trim()}
                             className={cn(
-                            "ml-auto bg-accent rounded-full p-1 transition-opacity duration-200",
+                            "ml-auto bg-[var(--color-accent)] rounded-full p-1 transition-opacity duration-200",
                             !inputValue.trim() ? "opacity-0 pointer-events-none" : "opacity-100"
                         )} variant="ghost">
                             <ArrowUp className="text-neutral-600 w-6 h-6" strokeWidth={2}/>

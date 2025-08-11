@@ -23,7 +23,7 @@ const upload = multer({
 // Create brand
 router.post('/', authenticateToken, upload.single('logo'), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, primaryColor, secondaryColor, vibe } = req.body;
+    const { name, palettes, vibe } = req.body;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -39,8 +39,7 @@ router.post('/', authenticateToken, upload.single('logo'), async (req: AuthReque
       userId,
       name,
       logoUrl,
-      primaryColor,
-      secondaryColor,
+      palettes,
       vibe
     });
 
@@ -59,8 +58,7 @@ router.post('/', authenticateToken, upload.single('logo'), async (req: AuthReque
         id: brand._id,
         name: brand.name,
         logoUrl: brand.logoUrl,
-        primaryColor: brand.primaryColor,
-        secondaryColor: brand.secondaryColor,
+        palettes: brand.palettes,
         vibe: brand.vibe
       }
     });

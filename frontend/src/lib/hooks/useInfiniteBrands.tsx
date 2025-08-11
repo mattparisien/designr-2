@@ -1,7 +1,7 @@
 "use client";
 
 import { brandsAPI } from "@/lib/api/index";
-import { Brand } from "@shared/types/core/brand";
+import { Brand } from "../types/brands";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 

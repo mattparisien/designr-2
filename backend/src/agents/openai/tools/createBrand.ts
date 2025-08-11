@@ -8,13 +8,13 @@ export const createBrandTool = tool({
   parameters: {
     type: 'object',
     additionalProperties: false,
-    required: ['name', 'primaryColor', 'secondaryColor', 'vibe', 'accentColor', 'voice', 'personality', 'targetAudience', 'toneGuidelines', 'keyValues', 'communicationStyle', 'industry', 'tagline', 'doNotUse', 'preferredWords', 'avoidedWords'],
+    required: ['name', 'primaryColor', 'secondaryColor', 'accentColor', 'vibe', 'voice', 'personality', 'targetAudience', 'toneGuidelines', 'keyValues', 'communicationStyle', 'industry', 'tagline', 'doNotUse', 'preferredWords', 'avoidedWords'],
     properties: {
       name: { type: 'string', minLength: 1 },
       primaryColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
       secondaryColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
-      vibe: { type: 'string', enum: ['playful','elegant','bold','minimal','professional'] },
       accentColor: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+      vibe: { type: 'string', enum: ['playful','elegant','bold','minimal','professional'] },
       voice: { type: 'string' },
       personality: { type: 'string' },
       targetAudience: { type: 'string' },
@@ -33,8 +33,8 @@ export const createBrandTool = tool({
       name,
       primaryColor,
       secondaryColor,
-      vibe,
       accentColor,
+      vibe,
       voice,
       personality,
       targetAudience,
@@ -48,15 +48,16 @@ export const createBrandTool = tool({
       avoidedWords,
     } = input || {};
 
+    // Compose palettes array from input
+    const palettes = [{ primary: primaryColor, secondary: secondaryColor, accent: accentColor }];
+
     const payload: Record<string, any> = {
       name,
-      primaryColor,
-      secondaryColor,
+      palettes,
       vibe,
     };
 
     // Append optional fields if provided
-    if (accentColor) payload.accentColor = accentColor;
     if (voice) payload.voice = voice;
     if (personality) payload.personality = personality;
     if (targetAudience) payload.targetAudience = targetAudience;

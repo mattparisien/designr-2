@@ -93,9 +93,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const {
       name,
       logoUrl,
-      primaryColor,
-      secondaryColor,
-      accentColor,
+      palettes,
       vibe,
       voice,
       personality,
@@ -111,8 +109,8 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     } = req.body;
 
     // Validation
-    if (!name || !primaryColor || !secondaryColor || !vibe) {
-      res.status(400).json({ error: 'Name, primary color, secondary color, and vibe are required' });
+    if (!name || !palettes || !Array.isArray(palettes) || palettes.length === 0 || !vibe) {
+      res.status(400).json({ error: 'Name, palettes (array), and vibe are required' });
       return;
     }
 
@@ -120,9 +118,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       userId,
       name,
       logoUrl,
-      primaryColor,
-      secondaryColor,
-      accentColor,
+      palettes,
       vibe,
       voice: voice || 'Professional and engaging',
       personality: personality || 'Friendly and approachable',
