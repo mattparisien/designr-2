@@ -10,13 +10,11 @@ import PromptBar from "./components/PromptBar";
 const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     const { send, loading, error, currentSessionId, chatSessions, deleteSession } = useChat();
 
-    const { addNavigationSection, removeNavigationSection, setActiveItem, navigation } = useNavigation();
+    const { addNavigationSection, removeNavigationSection, navigation } = useNavigation();
 
     const chatNav = useMemo(() => navigation?.sections.find(nav => nav.id === "chats"), [navigation]);
 
     const router = useRouter();
-
-
 
     const handleDeleteSession = useCallback(async (sessionId: string) => {
         try {
@@ -27,11 +25,6 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
             } else {
                 router.push('/chats/new');
             }
-            // If we deleted the current session, redirect to chats home
-            // console.log(navigation)
-            // if (currentSessionId === sessionId) {
-            //     router.push('/chats');
-            // }
         } catch (error) {
             console.error('Failed to delete session:', error);
         }
