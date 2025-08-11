@@ -15,6 +15,7 @@ import projectRoutes from './routes/projects';
 import stripeRoutes from './routes/stripe';
 import telemetryRoutes from './routes/telemetry';
 import templateRoutes from './routes/template';
+import aiRoutes from './routes/ai'; 
 
 // Load environment variables
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/fonts', fontRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/ai', aiRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

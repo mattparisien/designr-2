@@ -13,6 +13,8 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
     const { addNavigationSection, removeNavigationSection } = useNavigation();
     const router = useRouter();
 
+
+
     const handleDeleteSession = useCallback(async (sessionId: string) => {
         try {
             await deleteSession(sessionId);
@@ -58,8 +60,6 @@ const ChatsLayout = ({ children }: { children: React.ReactNode }) => {
         router.push("/chats/" + currentSessionId);
 
     }, [currentSessionId, router]);
-
-
     const handleSubmit = useCallback((prompt: string) => {
         return send(prompt);
     }, [send]);

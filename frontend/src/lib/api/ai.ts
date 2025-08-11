@@ -29,6 +29,8 @@ export class AIAPI extends APIBase implements IAIAPI {
             const response = await this.apiClient.post('/ai/summarize', {
                 text,
                 model,
+                systemPrompt: "Summarize the following conversation in as few words as possible. This will act as a title for the chat.",
+                maxTokens: 20,
             });
             if (response.status === 200) {
                 return response.data.summary || response.data; // Assuming the backend returns { summary: '...' }

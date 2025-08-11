@@ -48,13 +48,11 @@ ${ctx?.tagline ? `- Tagline: ${ctx.tagline}` : ""}
 - Brand Voice: ${ctx?.voice ?? "Professional and engaging"}
 - Brand Personality: ${ctx?.personality ?? "Friendly and approachable"}
 - Target Audience: ${ctx?.targetAudience ?? "General audience"}
-- Tone Guidelines: ${
-    ctx?.toneGuidelines ?? "Use clear, concise language that resonates"
-  }
+- Tone Guidelines: ${ctx?.toneGuidelines ?? "Use clear, concise language that resonates"
+    }
 - Key Values: ${ctx?.keyValues ?? "Quality, innovation, customer satisfaction"}
-- Communication Style: ${
-    ctx?.communicationStyle ?? "Direct and informative"
-  }
+- Communication Style: ${ctx?.communicationStyle ?? "Direct and informative"
+    }
 ${ctx?.doNotUse ? `- Content to Avoid: ${ctx.doNotUse}` : ""}
 ${ctx?.preferredWords?.length ? `- Preferred Words: ${ctx.preferredWords.join(", ")}` : ""}
 ${ctx?.avoidedWords?.length ? `- Words to Avoid: ${ctx.avoidedWords.join(", ")}` : ""}
@@ -214,6 +212,69 @@ Return an array of JSON objects with headline and bodyText.\n\n${JSON.stringify(
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "AI variations generation failed" });
+    }
+  }
+);
+
+// ────────────────────────────────────────────────────────────────
+// /summarize – simple text summarization
+// ────────────────────────────────────────────────────────────────
+router.post(
+  "/summarize",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const {
+        text,
+        model = "gpt-4o-mini",
+        systemPrompt,
+        temperature,
+        maxTokens,
+        topP,
+        presencePenalty,
+        frequencyPenalty,
+      } = req.body || {};
+
+      if (!text || typeof text !== "string" || !text.trim()) {
+        return res.status(400).json({ error: "text is required" });
+      }
+
+      const client = getClient();
+      if (!client)
+        return res.status(503).json({ error: "OpenAI key missing on server" });
+
+      const sys = systemPrompt
+        ? `You are a summarization expert.\n${systemPrompt}`
+        : "You are a summarization expert.";
+
+      const response = await client.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: `Summarize the following text:\n\n${text}` },
+        ],
+        ...(typeof temperature === "number"
+          ? { temperature: Math.max(0, Math.min(2, temperature)) }
+          : {}),
+        ...(typeof maxTokens === "number"
+          ? { max_tokens: Math.max(1, Math.floor(maxTokens)) }
+          : {}),
+        ...(typeof topP === "number"
+          ? { top_p: Math.max(0, Math.min(1, topP)) }
+          : {}),
+        ...(typeof presencePenalty === "number"
+          ? { presence_penalty: Math.max(-2, Math.min(2, presencePenalty)) }
+          : {}),
+        ...(typeof frequencyPenalty === "number"
+          ? { frequency_penalty: Math.max(-2, Math.min(2, frequencyPenalty)) }
+          : {}),
+      });
+
+      const summary = response.choices[0]?.message?.content?.trim() || "";
+
+      res.json({ success: true, summary });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "AI summarization failed" });
     }
   }
 );

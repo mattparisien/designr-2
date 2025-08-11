@@ -11,7 +11,7 @@ interface SummarizeRequestBody {
 export async function POST(request: NextRequest) {
   try {
     const body: SummarizeRequestBody = await request.json();
-    const { text, model } = body || {};
+    const { text, model, systemPrompt, temperature, maxTokens } = body || {};
 
     if (!text || typeof text !== 'string' || !text.trim()) {
       return NextResponse.json({ error: 'text is required' }, { status: 400 });
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         ...(authorization ? { Authorization: authorization } : {}),
       },
-      body: JSON.stringify({ text, ...(model ? { model } : {}) }),
+      body: JSON.stringify({ text, ...(model ? { model } : {}), systemPrompt, temperature, maxTokens }),
     });
 
     // Try to return JSON; if backend didn't return JSON, forward text
