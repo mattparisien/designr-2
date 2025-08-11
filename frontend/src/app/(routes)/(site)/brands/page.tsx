@@ -7,13 +7,9 @@ import { CreateAction } from "@/components/CreateAction";
 import Heading from "@/components/Heading/Heading";
 import { InteractiveGrid } from "@/components/InteractiveGrid/InteractiveGrid";
 import { Section } from "@/components/ui/section";
-import { DESIGN_FORMATS } from "@/lib/constants";
 import { SelectionProvider } from "@/lib/context/selection-context";
-import { createTemplate as createTemplateFactory } from "@/lib/factories";
 import { useBrandQuery } from "@/lib/hooks/useBrands";
 import { useInfiniteBrands } from "@/lib/hooks/useInfiniteBrands";
-import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
-import type { SelectionConfig } from "@/lib/types/config";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -52,36 +48,28 @@ export default function BrandsPage() {
     return brands?.map(brand => ({
       id: brand.id,
       title: brand.name,
-      image: { src: brand.logoUrl || "", alt: brand.name },
-      updatedAt: brand.updatedAt,
+      mediaComponent: (
+        <div className="h-full w-full flex items-end absolute left-0 bottom-0">
+          <div className="w-full h-3 flex">
+            <div className="flex-1" style={{
+              backgroundColor: brand.primaryColor
+            }}></div>
+            <div className="flex-1" style={{
+              backgroundColor: brand.secondaryColor
+            }}></div>
+            <div className="flex-1" style={{
+              backgroundColor: brand.accentColor
+            }}></div>
+          </div>
+        </div>
+      ),
+      updatedAt: brand.updatedAt.toString(),
       type: brand ? "brand" : "project",
     })) ?? [];
   }, [brands])
 
 
 
-  // Transform DESIGN_FORMATS into a SelectionConfig for the grid
-  const selectionConfig = useMemo<SelectionConfig>(() => {
-    return mapDesignFormatToSelectionConfig(DESIGN_FORMATS as Record<string, SocialMediaFormat>);
-  }, []);
-
-
-  const handleCreate = useCallback(async (item: { key?: string; label?: string; data?: { files?: FileList } }) => {
-    try {
-      if (!item.key) {
-        throw new Error("No format key provided");
-      }
-
-      const brandData = createTemplateFactory(item.key, item.label);
-      const brand = await createBrand(brandData);
-
-      // Optionally refetch to ensure UI is updated immediately
-      router.push(`/editor/${brand.id}`);
-      refetch();
-    } catch (error) {
-      console.error('Failed to create template:', error);
-    }
-  }, [refetch, router,]);
 
   const handleFetchNextPage = useCallback(async () => {
     await fetchNextPage();

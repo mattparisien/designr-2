@@ -5,15 +5,12 @@ import { CardMedia } from "./CardMedia";
 import { EditableTitle } from "./EditableTitle";
 import { SelectionCheckbox } from "./SelectionCheckbox";
 
-interface InteractiveCardProps {
+interface InteractiveCardProps  {
     id: string;
-    image?: {
-        src: string;
-        alt: string;
-    },
     title: string;
     subtitleLeft?: string;
     subtitleRight?: string;
+    image?: { src: string; alt: string, objectFit?: "none" | "cover" | "contain" | "fill" };
     disableClick?: boolean; // if true, clicking does nothing
     objectFit?: "none" | "cover" | "contain" | "fill";
     onClick: () => void;
@@ -29,7 +26,6 @@ export default function InteractiveCard({
     subtitleLeft,
     subtitleRight,
     disableClick = false,
-    objectFit = "contain",
     onClick,
     onSelect,
     onTitleChange,
@@ -53,9 +49,8 @@ export default function InteractiveCard({
             onMouseLeave={() => setIsHovered(false)}
         >
             <CardMedia
-                image={children ? undefined : image}
+                image={undefined}
                 selected={selected}
-                objectFit={objectFit}
             >
                 {children}
             </CardMedia>

@@ -3,9 +3,51 @@ import { useChat } from "@/lib/context/chat-context";
 import { useNavigation } from "@/lib/context/navigation-context";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import type { Components } from 'react-markdown';
+
+// Custom Markdown renderers + spacing
+type CodeProps = {
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+};
+const mdComponents: Components = {
+  h1: (p) => <h1 className="mt-4 mb-2 text-2xl font-semibold" {...p} />,
+  h2: (p) => <h2 className="mt-4 mb-2 text-xl font-semibold" {...p} />,
+  h3: (p) => <h3 className="mt-4 mb-2 text-lg font-semibold" {...p} />,
+  p: (p) => <p className="my-2 leading-7 whitespace-pre-wrap" {...p} />,
+  ul: (p) => <ul className="my-2 list-disc pl-5 space-y-1" {...p} />,
+  ol: (p) => <ol className="my-2 list-decimal pl-5 space-y-1" {...p} />,
+  li: (p) => <li className="my-1" {...p} />,
+  blockquote: (p) => (
+    <blockquote className="my-3 border-l-2 pl-3 text-neutral-600 italic" {...p} />
+  ),
+  a: ({ href, ...p }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="text-blue-600 underline hover:text-blue-700"
+      {...p}
+    />
+  ),
+  hr: (p) => <hr className="my-6 border-neutral-200" {...p} />,
+  code: (props) => {
+    const { inline, className, children, ...p } = props as CodeProps & ComponentPropsWithoutRef<'code'>;
+    return inline ? (
+      <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-[0.9em]" {...p}>
+        {children}
+      </code>
+    ) : (
+      <pre className="my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-neutral-100">
+        <code className={className}>{children}</code>
+      </pre>
+    );
+  },
+};
 
 // Loading dots component
 const LoadingDots = () => (
@@ -54,8 +96,8 @@ const ChatSessionPage = () => {
                             "bg-neutral-100 px-4 py-2 rounded-4xl": message.role === "user",
                         })}>
                             {message.role === 'assistant' ? (
-                              <div className="prose prose-sm max-w-none">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              <div className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-pre:my-3">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
                                   {message.content}
                                 </ReactMarkdown>
                               </div>

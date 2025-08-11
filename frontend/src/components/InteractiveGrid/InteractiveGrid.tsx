@@ -17,12 +17,12 @@ export const upperFirst = (str: string) => {
 
 interface InteractiveGridItem {
   id: string;
-  image?: { src: string; alt: string };
+  image?: { src: string; alt: string, objectFit: "none" | "cover" | "contain" | "fill" };
+  mediaComponent?: React.ReactNode; // Optional media component for custom rendering
   title?: string;
   name?: string;
   type?: string;
   updatedAt?: string;
-  thumbnailUrl?: string;
   subtitleLeft?: string;
   subtitleRight?: string;
   disableClick?: boolean;
@@ -118,7 +118,7 @@ export function InteractiveGrid({
       subtitleRight={`Last updated ${getRelativeTime(item.updatedAt ?? "")}`}
       onClick={() => handleOpen(item.id)}
       onTitleChange={(newTitle) => handleTitleChange(item.id, newTitle)}
-    />
+    >{item.mediaComponent}</InteractiveCard>
   }, [handleOpen, handleTitleChange]);
 
   const handleFetchNextPage = useCallback(async () => {
