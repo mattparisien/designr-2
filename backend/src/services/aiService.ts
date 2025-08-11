@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { SYSTEM_PROMPT, MODEL } from '../agents/openai/constants';
+import { DESIGN_AGENT_INSTRUCTIONS, MODEL } from '../agents/openai/constants';
 
 // ────────────────────────────────────────────────────────────────
 // AI Service for Design Tool - DESIGN PURPOSES ONLY
@@ -52,7 +52,7 @@ export interface StreamChunk {
 /**
  * Design-focused system prompt for all AI interactions
  */
-const DESIGN_SYSTEM_PROMPT = SYSTEM_PROMPT;
+const DESIGN_SYSTEM_PROMPT = DESIGN_AGENT_INSTRUCTIONS;
 
 /**
  * Ensures messages include design-focused system prompt
@@ -138,7 +138,7 @@ export async function* generateAIResponseStream(
  */
 export async function generateAIResponse(
   messages: ChatMessage[],
-  model: string = model
+  model: string = 'gpt-4o'
 ): Promise<AIResponse> {
   const client = getOpenAIClient();
   
@@ -195,4 +195,33 @@ export async function generateSimpleResponse(
   ];
 
   return generateAIResponse(messages, model);
+}
+
+/**
+ * Summarize a message to a short navigation title
+ */
+export async function summarize(
+  text: string,
+  model: string = 'gpt-4o-mini'
+): Promise<string> {
+  const client = getOpenAIClient();
+  if (!client) throw new Error('OpenAI client not available');
+
+  const completion = await client.chat.completions.create({
+    model,
+    temperature: 0.2,
+    max_tokens: 40,
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Summarize the user message into a short chat title for a sidebar. 5–8 words, Title Case, no emojis, no quotes, no trailing punctuation.'
+      },
+      { role: 'user', content: text }
+    ],
+  });
+
+  const out = completion.choices?.[0]?.message?.content?.trim();
+  if (out) return out.replace(/[\s\u200B\u200C\u200D]+$/g, '');
+  return (text || '').slice(0, 60) || 'New Chat';
 }

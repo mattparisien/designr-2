@@ -7,6 +7,8 @@ export interface ChatSessionDocument extends Document {
   messages: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
+  // New: per-session setting for summarizing AI (e.g., auto title)
+  summarizeAI?: boolean;
 }
 
 const ChatSessionSchema = new Schema<ChatSessionDocument>(
@@ -15,6 +17,8 @@ const ChatSessionSchema = new Schema<ChatSessionDocument>(
     title: { type: String, default: 'New Chat' },
     aiModel: { type: String, default: 'gpt-4' },
     messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
+    // New field with default
+    summarizeAI: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

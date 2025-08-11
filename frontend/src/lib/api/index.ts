@@ -1,5 +1,6 @@
 import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
 import { APIService, Asset, Composition } from "../types/api";
+import { AIAPI } from "./ai";
 import { AuthAPI } from "./auth";
 import { BrandsAPI } from "./brands";
 import { ChatSessionAPI } from "./chat";
@@ -49,6 +50,7 @@ const projectsAPI = createAPIService(ProjectsAPI, apiClient);
 const usersAPI = createAPIService(UsersAPI, apiClient);
 const templatesAPI = createAPIService(TemplatesAPI, apiClient);
 const chatSessionAPI = createAPIService(ChatSessionAPI, apiClient);
+const aiAPI = new AIAPI(apiClient);
 // Backend actually serves them under /api/projects
 // const projectsAPI = new CollectionAPI<
 //   Project,
@@ -84,5 +86,5 @@ const compositionAPI = new CollectionAPI<
 const authAPI = new AuthAPI(apiClient);
 const fontsAPI = new FontsAPI(apiClient);
 
-export { assetsAPI, authAPI, brandsAPI, chatSessionAPI, compositionAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };
+export { aiAPI, assetsAPI, authAPI, brandsAPI, chatSessionAPI, compositionAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };
 

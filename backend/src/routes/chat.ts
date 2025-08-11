@@ -10,6 +10,7 @@ import {
   InputGuardrailTripwireTriggered
 } from '@openai/agents';
 import { buildConversationHistory } from '../utils';
+import { summarize } from '../services/aiService';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const router = express.Router();
 router.post('/sessions', async (req, res) => {
   try {
     const { userId, title, aiModel } = req.body;
-    const session = await ChatSession.create({ userId, title, aiModel });
+    let session = await ChatSession.create({ userId, title, aiModel });
     res.status(201).json({ ...session.toObject(), sessionId: session._id });
   } catch (err) {
     console.error('[POST /sessions] Error:', err);
@@ -49,7 +50,7 @@ router.get('/sessions/:id', async (req, res) => {
   } catch (err) {
     console.error('[GET /sessions/:id] Error:', err);
     res.status(500).json({ message: 'Failed to fetch session' });
-  } 
+  }
 });
 
 /* Delete a session and its messages */
@@ -119,6 +120,17 @@ router.post('/ask', async (req, res, next) => {
       $push: { messages: userMessage._id },
       $set: { updatedAt: new Date() }
     });
+
+    // If summarizeAI is enabled and title is default, generate a nav-friendly summary
+    try {
+      const session = await ChatSession.findById(chatSessionId);
+      if (session && (session as any).summarizeAI && (!session.title || session.title === 'New Chat')) {
+        const summary = await summarize(content);
+        await ChatSession.findByIdAndUpdate(chatSessionId, { $set: { title: summary } });
+      }
+    } catch (e) {
+      console.warn('[POST /ask] summarize failed:', (e as any)?.message || e);
+    }
   }
 
   const prevHistory = await loadHistory(chatSessionId) || [];
@@ -185,6 +197,19 @@ router.post('/ask/stream', async (req, res, next) => {
       $push: { messages: userMessage._id },
       $set: { updatedAt: new Date() }
     });
+
+    // Summarize in background to avoid delaying stream
+    (async () => {
+      try {
+        const session = await ChatSession.findById(chatSessionId);
+        if (session && (session as any).summarizeAI && (!session.title || session.title === 'New Chat')) {
+          const summary = await summarize(content);
+          await ChatSession.findByIdAndUpdate(chatSessionId, { $set: { title: summary } });
+        }
+      } catch (e) {
+        console.warn('[POST /ask/stream] summarize failed:', (e as any)?.message || e);
+      }
+    })();
   }
 
   const prevHistory = await loadHistory(chatSessionId) || [];
@@ -238,13 +263,13 @@ router.post('/ask/stream', async (req, res, next) => {
       // Extract the generic message from the guardrail output if available
       const genericMessage = (err as any).state?.inputGuardrailResults?.[0]?.outputInfo?.genericMessage;
       const message = genericMessage || 'Only design‑related requests allowed.';
-      
+
       // Reset headers and return standard JSON response instead of streaming
       res.writeHead(200, {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       });
-      
+
       return res.end(JSON.stringify({
         message: message
       }));
