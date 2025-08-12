@@ -62,7 +62,7 @@ router.get('/paginated', async (req, res) => {
 });
 
 // Get a specific brand
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     const brandId = req.params.id;

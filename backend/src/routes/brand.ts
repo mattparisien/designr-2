@@ -69,7 +69,7 @@ router.post('/', authenticateToken, upload.single('logo'), async (req: AuthReque
 });
 
 // Get user's brands
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     const brands = await Brand.find({ userId }).sort({ createdAt: -1 });
@@ -82,7 +82,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Prom
 });
 
 // Get specific brand
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = req.user?._id;

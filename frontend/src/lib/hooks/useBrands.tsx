@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { brandsAPI } from '../api/index';
 
-export function useBrandQuery() {
+export function useBrandQuery(brandId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -21,6 +21,24 @@ export function useBrandQuery() {
       }
     },
     gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Query for fetching a single brand by id (enabled only if brandId provided)
+  const brandByIdQuery = useQuery({
+    queryKey: ['brand', brandId],
+    queryFn: async () => {
+      if (!brandId) return null; // explicit null
+      try {
+        const brand = await brandsAPI.getById(brandId);
+        console.log('the brand', brand); 
+        return brand ?? null; // never undefined
+      } catch (e) {
+        console.error('Error fetching brand by id', brandId, e);
+        return null; // fallback to null on error
+      }
+    },
+    enabled: !!brandId,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Handle error with useEffect to prevent render-time state updates
@@ -40,6 +58,7 @@ export function useBrandQuery() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      if (brandId) queryClient.invalidateQueries({ queryKey: ['brand', brandId] });
       toast({
         title: "Success",
         description: "Brand created successfully!",
@@ -62,6 +81,7 @@ export function useBrandQuery() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      if (brandId) queryClient.invalidateQueries({ queryKey: ['brand', brandId] });
       toast({
         title: "Success",
         description: "Brand updated successfully!",
@@ -84,6 +104,7 @@ export function useBrandQuery() {
       // Invalidate both standard brand queries and infinite brand queries
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      if (brandId) queryClient.invalidateQueries({ queryKey: ['brand', brandId] });
 
       toast({
         title: "Success",
@@ -122,6 +143,7 @@ export function useBrandQuery() {
       // Invalidate both standard template queries and infinite template queries
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteBrands'] });
+      if (brandId) queryClient.invalidateQueries({ queryKey: ['brand', brandId] });
 
       // Show appropriate message based on partial or complete success
       if (result.failed > 0) {
@@ -148,7 +170,10 @@ export function useBrandQuery() {
   });
 
   return {
-    projects: brandsQuery.data || [],
+    projects: brandsQuery.data || [], // backward compatibility
+    brands: brandsQuery.data || [],
+    brand: brandByIdQuery.data,
+    isLoadingBrand: brandByIdQuery.isLoading,
     isLoading: brandsQuery.isLoading,
     isError: brandsQuery.isError,
     createBrand: createBrandMutation.mutateAsync,

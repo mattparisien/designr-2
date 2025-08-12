@@ -37,7 +37,7 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
             const response = await this.apiClient.get<{ data: Brand }>(
                 `/brands/${brandId}`
             );
-            return response.data.data;
+            return response.data.brand;
         } catch (error: any) {
             console.error(
                 `Error fetching brand ${brandId}:`,
