@@ -29,8 +29,7 @@ export function useBrandQuery(brandId?: string) {
     queryFn: async () => {
       if (!brandId) return null; // explicit null
       try {
-        const brand = await brandsAPI.getById(brandId);
-        console.log('the brand', brand); 
+        const brand : Brand | null = await brandsAPI.getById(brandId);
         return brand ?? null; // never undefined
       } catch (e) {
         console.error('Error fetching brand by id', brandId, e);

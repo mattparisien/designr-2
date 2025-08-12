@@ -16,6 +16,7 @@ import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import type { SelectionConfig } from "@/lib/types/config";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import PageSkeleton from "@/components/PageSkeleton";
 
 // Define the social media format type
 interface SocialMediaFormat {
@@ -103,21 +104,12 @@ export default function TemplatesPage() {
 
   return (
     <SelectionProvider>
-      <Section>
-        <div className="pt-10 flex items-center justify-between pb-10">
-          <div>
-            <Heading
-              as={1}
-              styleLevel={3}
-            >
-              My Templates
-            </Heading>
-          </div>
-          <CreateButton
-            config={selectionConfig}
-            onCreate={handleCreate}
-          />
-        </div>
+      <PageSkeleton heading="My Templates" createActionProps={{
+        mode: "popover",
+        config: selectionConfig,
+        onSelect: handleCreate
+      }}>
+
         <InteractiveGrid
           items={gridItems}
           collectionSlug="templates"
@@ -128,8 +120,8 @@ export default function TemplatesPage() {
           hasMore={hasNextPage}
           onFetchNextPage={handleFetchNextPage}
         />
-      </Section>
-    </SelectionProvider>
+      </PageSkeleton>
+    </SelectionProvider >
   );
 }
 
