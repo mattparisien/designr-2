@@ -26,7 +26,7 @@ export interface NavigationSection {
 export interface NavigationItem {
   id: string;
   label: string;
-  href: string;
+  href?: string;
   children?: NavigationItem[];
   icon?: string | LucideIcon;
   badge?: string | number;

@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api";
 import { Asset } from "@/lib/types/api";
+import { Navigation } from "@/components/ui/navigation";
 import { NavigationItem } from "@/lib/types/navigation";
 import { Camera, Download, LayoutPanelTop, Palette, Shapes, Type, Circle, Square, Triangle, Minus } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -218,7 +219,7 @@ const EditorSidebar = () => {
             });
             const documentColors = Array.from(docColorSet).slice(0, 30);
 
-            const DEFAULT_TEXT_COLORS = ['#000000','#FFFFFF','#1F2937','#4B5563','#9CA3AF','#EF4444','#F59E0B','#10B981','#3B82F6','#2563EB','#6366F1','#8B5CF6','#EC4899','#D946EF','#F472B6','#0EA5E9','#14B8A6','#22C55E','#65A30D','#CA8A04'];
+            const DEFAULT_TEXT_COLORS = ['#000000', '#FFFFFF', '#1F2937', '#4B5563', '#9CA3AF', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#2563EB', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#0EA5E9', '#14B8A6', '#22C55E', '#65A30D', '#CA8A04'];
 
             const makeColorItem = (color: string, idPrefix: string) => ({
                 id: `${idPrefix}-${color}`,
@@ -255,7 +256,7 @@ const EditorSidebar = () => {
                 if (el.type === 'text' && el.color) docColorSet.add(el.color); // include text colors for convenience
             });
             const documentColors = Array.from(docColorSet).slice(0, 30);
-            const DEFAULT_SHAPE_COLORS = ['#3B82F6','#2563EB','#1D4ED8','#000000','#FFFFFF','#F87171','#EF4444','#DC2626','#F59E0B','#D97706','#10B981','#059669','#14B8A6','#06B6D4','#0EA5E9','#6366F1','#8B5CF6','#EC4899','#D946EF','#F472B6','#475569','#64748B','#94A3B8','#CBD5E1'];
+            const DEFAULT_SHAPE_COLORS = ['#3B82F6', '#2563EB', '#1D4ED8', '#000000', '#FFFFFF', '#F87171', '#EF4444', '#DC2626', '#F59E0B', '#D97706', '#10B981', '#059669', '#14B8A6', '#06B6D4', '#0EA5E9', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#475569', '#64748B', '#94A3B8', '#CBD5E1'];
 
             const makeShapeColorItem = (color: string, idPrefix: string) => ({
                 id: `${idPrefix}-${color}`,
@@ -270,9 +271,9 @@ const EditorSidebar = () => {
                 }
             });
             if (documentColors.length) {
-                sectionsOut.push({ id: 'shape-color-doc', title: 'Document Colors', items: documentColors.map(c => makeShapeColorItem(c,'doc')) });
+                sectionsOut.push({ id: 'shape-color-doc', title: 'Document Colors', items: documentColors.map(c => makeShapeColorItem(c, 'doc')) });
             }
-            sectionsOut.push({ id: 'shape-color-defaults', title: 'Default Colors', items: DEFAULT_SHAPE_COLORS.map(c => makeShapeColorItem(c,'def')) });
+            sectionsOut.push({ id: 'shape-color-defaults', title: 'Default Colors', items: DEFAULT_SHAPE_COLORS.map(c => makeShapeColorItem(c, 'def')) });
         }
 
         // Existing active item driven sections
@@ -349,11 +350,8 @@ const EditorSidebar = () => {
     }, [isSidebarOpen, setSidebarWidth]);
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
-        <Sidebar
-            navigation={EDITOR_NAVIGATION}
-            onItemClick={handleItemClick}
-            activeItem={sidebar.activeItemId || undefined}
-        >
+        <Sidebar>
+            <Navigation navigation={EDITOR_NAVIGATION} onItemClick={handleItemClick} activeItem={sidebar.activeItemId || undefined} />
             <> </>
         </Sidebar>
         {(sidebar.isOpen || sidebarPanel.isOpen) && (

@@ -56,8 +56,6 @@ export default function Editor({ designId }: EditorProps) {
     const deselectElement = useCanvasStore(state => state.deselectElement);
     const selectCanvas = useCanvasStore(state => state.selectCanvas);
     const isCanvasSelected = useCanvasStore(state => state.isCanvasSelected);
-    const isSidebarPanelOpen = useEditorStore(state => state.sidebarPanel.isOpen);
-    const closeSidebarPanel = useEditorStore(state => state.closeSidebarPanel);
 
     // Hooks
     const { position, placement } = useElementActionBar(selectedElement, elementActionBarRef, elementPropertyBarRef);
@@ -344,11 +342,6 @@ export default function Editor({ designId }: EditorProps) {
                 return;
             }
 
-            // Close sidebar panel if open
-            if (isSidebarPanelOpen) {
-                closeSidebarPanel();
-            }
-
             // Clear selections and exit text editing mode
             elementRefs.current.forEach(ref => {
                 deselectElement(ref.id);
@@ -377,7 +370,7 @@ export default function Editor({ designId }: EditorProps) {
 
         window.addEventListener("mousedown", handleOutsideClick);
         return () => window.removeEventListener("mousedown", handleOutsideClick);
-    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, isSidebarPanelOpen, selectElement, selectCanvas, closeSidebarPanel, deselectElement, elements, updateElement, clearSelection]);
+    }, [isEditMode, selectedElementIds, selectedElement, isCanvasSelected, selectElement, selectCanvas, deselectElement, elements, updateElement, clearSelection]);
 
 
     return (
