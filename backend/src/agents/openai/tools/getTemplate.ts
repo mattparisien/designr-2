@@ -2,8 +2,8 @@ import { tool } from '@openai/agents';
 import Template from '../../../models/Template';
 
 // Simple keyword overlap suggestion tool (matches structure of paletteTool)
-export const templateSuggestTool = tool({
-  name: 'template_suggest',
+export const getTemplateTool = tool({
+  name: 'get_template',
   description: 'Suggest the most relevant existing design template for a user creation request. Returns { templateId, title, tags } or { templateId:null, reason }.',
   parameters: {
     type: 'object',

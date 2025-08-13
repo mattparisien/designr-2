@@ -25,7 +25,8 @@ interface NavButtonProps {
     icon?: React.ReactNode
     href?: string
     widthMode?: "full" | "wrap"
-    hasTrailingAction?: boolean
+    className?: string
+    hasTrailingAction?: boolean,
 }
 
 interface NavIconProps {
@@ -61,7 +62,7 @@ const NavIcon = (props: NavIconProps) => {
 }
 
 const NavButton = (props: NavButtonProps) => {
-    const { onClick, isActive, level, icon, label, href, hasTrailingAction } = props
+    const { onClick, isActive, level, icon, label, href, hasTrailingAction, className } = props
 
     const buttonClass = cn(
         "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors truncate",
@@ -70,7 +71,9 @@ const NavButton = (props: NavButtonProps) => {
             ? "bg-[var(--interactive-bg-secondary-selected)] text-black"
             : "text-black",
         level > 0 && "ml-4",
-        hasTrailingAction && "pr-10" // reserve space for trailing trash button
+        hasTrailingAction && "pr-10", // reserve space for trailing trash button
+        className && className
+
     )
 
     if (href) {
