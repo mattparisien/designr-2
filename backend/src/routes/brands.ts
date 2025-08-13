@@ -6,12 +6,10 @@ import { Telemetry } from '../models/Telemetry';
 const router = express.Router();
 
 // Get user's brands
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?._id;
 
-    const brands = await Brand.find({ userId }).sort({ createdAt: -1 });
-
+    const brands = await Brand.find().sort({ createdAt: -1 });
     res.json({
       success: true,
       brands

@@ -22,7 +22,7 @@ export class BrandsAPI extends APIBase implements APIService<Brand> {
             const response = await this.apiClient.get<{ data: Brand[] }>(
                 "/brands"
             );
-            return response.data.data;
+            return response.data.brands;
         } catch (error: any) {
             console.error(
                 "Error fetching brands:",

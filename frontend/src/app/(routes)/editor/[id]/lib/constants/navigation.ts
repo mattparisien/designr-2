@@ -12,7 +12,7 @@ export const EDITOR_NAVIGATION: Navigation = {
                     icon: "lucide:layout-panel-top",
                 },
                 {
-                    id: "brand",
+                    id: "brands",
                     label: "Brands",
                     icon: "lucide:palette",
                 },

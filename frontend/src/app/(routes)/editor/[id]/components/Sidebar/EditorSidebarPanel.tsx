@@ -34,7 +34,7 @@ interface EditorSidebarPanelProps {
     isOverlay?: boolean; // If true, uses absolute positioning
 }
 
-const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }: EditorSidebarPanelProps) => {
+const EditorSidebarPanel = ({ sections, customContent, isOverlay = true }: EditorSidebarPanelProps) => {
 
 
     const rootClasses = cn("h-[calc(100vh-var(--editor-header-height))] rounded-2xl", {
@@ -43,11 +43,12 @@ const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }
     })
 
     return (
-        
+
+        <>
             <SidebarShell className={rootClasses}>
                 <div className="w-full h-full flex flex-col" data-editor-interactive>
                     {/* Fixed header */}
-                        {/* <h2 className="font-bold text-lg">{title}</h2> */}
+                    {/* <h2 className="font-bold text-lg">{title}</h2> */}
 
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto px-4">
@@ -112,7 +113,7 @@ const EditorSidebarPanel = ({ title, sections, customContent, isOverlay = true }
                     </div>
                 </div>
             </SidebarShell>
-        // </div>
+        </>
     )
 }
 

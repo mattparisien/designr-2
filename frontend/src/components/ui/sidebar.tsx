@@ -47,7 +47,7 @@ const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
             ref={ref}
             className={cn(
                 "pt-10 relative inline-flex h-screen flex-col bg-neutral-100 border-r border-t border-b border-neutral-200 transition-width duration-300 ease-in",
-                !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
+                !isCollapsed ? "min-w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
                 className
             )}
         >{children}</aside>

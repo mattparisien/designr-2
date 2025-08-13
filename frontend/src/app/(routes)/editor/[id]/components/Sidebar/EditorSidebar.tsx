@@ -1,63 +1,18 @@
+import { Sidebar } from "@/components/ui";
+import { Navigation } from "@/components/ui/navigation";
 import { apiClient } from "@/lib/api";
 import { Asset } from "@/lib/types/api";
-import { Navigation } from "@/components/ui/navigation";
 import { NavigationItem } from "@/lib/types/navigation";
-import { Camera, Download, LayoutPanelTop, Palette, Shapes, Type, Circle, Square, Triangle, Minus } from "lucide-react";
+import { Circle, Minus, Square, Triangle } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { EDITOR_NAVIGATION } from "../../lib/constants/navigation";
 import { ElementFactory } from "../../lib/factories/elementFactory";
 import useCanvasStore from "../../lib/stores/useCanvasStore";
 import useEditorStore from "../../lib/stores/useEditorStore";
-import { Sidebar } from "@/components/ui";
-import { EDITOR_NAVIGATION } from "../../lib/constants/navigation";
-import EditorSidebarPanel, { type EditorSidebarPanelSection } from "./EditorSidebarPanel";
+import { BrandsPanelContent } from "./BrandsPanelContent";
 import { DesignPanelContent } from "./DesignPanelContent";
+import EditorSidebarPanel, { type EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { ExportPanelContent } from "./ExportPanelContent";
-
-
-const sections = [
-    {
-        title: "General",
-        items: [
-            {
-                id: "design",
-                title: "Design",
-                href: "/editor/brand",
-                icon: LayoutPanelTop,
-            },
-            {
-                id: "brand",
-                title: "Brands",
-                href: "/editor/brand",
-                icon: Palette
-            },
-            {
-                id: "shape",
-                title: "Shapes",
-                href: "/editor/brand",
-                icon: Shapes
-            },
-            {
-                id: "text",
-                title: "Text",
-                href: "/editor/brand",
-                icon: Type
-            },
-            {
-                id: "assets",
-                title: "Assets",
-                href: "/editor/assets",
-                icon: Camera
-            },
-            {
-                id: "export",
-                title: "Export",
-                href: "/editor/export",
-                icon: Download
-            },
-        ],
-    },
-];
-
 
 const EditorSidebar = () => {
 
@@ -197,85 +152,93 @@ const EditorSidebar = () => {
     }, [addElement, pages, currentPageId]);
 
     const activeItem = useMemo(() => {
-        return sidebar.activeItemId ? sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
+        return sidebar.activeItemId ? EDITOR_NAVIGATION.sections.flatMap(section => section.items).find(item => item.id === sidebar.activeItemId) || null : null;
     }, [sidebar.activeItemId]);
+
 
     // Build dynamic panel sections based on active item
     const panelSections = useMemo<EditorSidebarPanelSection[]>(() => {
         const sectionsOut: EditorSidebarPanelSection[] = [];
 
-        // Text color panel
-        if (sidebarPanel.isOpen && sidebarPanel.activeItemId === 'text-color' && selectedElement?.type === 'text') {
-            // Gather document colors from current page text & shape elements
-            const currentPage = pages.find(p => p.id === currentPageId);
-            const docColorSet = new Set<string>();
-            currentPage?.canvas?.elements?.forEach(el => {
-                if (el.type === 'text' && el.color) {
-                    docColorSet.add(el.color);
-                } else if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) {
-                    docColorSet.add(el.backgroundColor);
-                } else if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) {
-                    docColorSet.add(el.backgroundColor);
-                }
-            });
-            const documentColors = Array.from(docColorSet).slice(0, 30);
 
-            const DEFAULT_TEXT_COLORS = ['#000000', '#FFFFFF', '#1F2937', '#4B5563', '#9CA3AF', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#2563EB', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#0EA5E9', '#14B8A6', '#22C55E', '#65A30D', '#CA8A04'];
+        if (sidebarPanel.isOpen) {
 
-            const makeColorItem = (color: string, idPrefix: string) => ({
-                id: `${idPrefix}-${color}`,
-                title: color,
-                icon: (() => <div className="w-8 h-8 rounded-full border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>, // satisfy type expecting an icon component
-                onClick: () => {
-                    if (selectedElement?.type === 'text') {
-                        updateElement(selectedElement.id, { color });
+            // Text color panel
+            if (sidebarPanel.activeItemId === 'text-color' && selectedElement?.type === 'text') {
+                // Gather document colors from current page text & shape elements
+                const currentPage = pages.find(p => p.id === currentPageId);
+                const docColorSet = new Set<string>();
+                currentPage?.canvas?.elements?.forEach(el => {
+                    if (el.type === 'text' && el.color) {
+                        docColorSet.add(el.color);
+                    } else if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) {
+                        docColorSet.add(el.backgroundColor);
+                    } else if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) {
+                        docColorSet.add(el.backgroundColor);
                     }
-                }
-            });
+                });
+                const documentColors = Array.from(docColorSet).slice(0, 30);
 
-            if (documentColors.length) {
+                const DEFAULT_TEXT_COLORS = ['#000000', '#FFFFFF', '#1F2937', '#4B5563', '#9CA3AF', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#2563EB', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#0EA5E9', '#14B8A6', '#22C55E', '#65A30D', '#CA8A04'];
+
+                const makeColorItem = (color: string, idPrefix: string) => ({
+                    id: `${idPrefix}-${color}`,
+                    title: color,
+                    icon: (() => <div className="w-8 h-8 rounded-full border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>, // satisfy type expecting an icon component
+                    onClick: () => {
+                        if (selectedElement?.type === 'text') {
+                            updateElement(selectedElement.id, { color });
+                        }
+                    }
+                });
+
+                if (documentColors.length) {
+                    sectionsOut.push({
+                        id: 'text-color-doc',
+                        title: 'Document Colors',
+                        items: documentColors.map(c => makeColorItem(c, 'doc'))
+                    });
+                }
                 sectionsOut.push({
-                    id: 'text-color-doc',
-                    title: 'Document Colors',
-                    items: documentColors.map(c => makeColorItem(c, 'doc'))
+                    id: 'text-color-defaults',
+                    title: 'Default Colors',
+                    items: DEFAULT_TEXT_COLORS.map(c => makeColorItem(c, 'def'))
                 });
             }
-            sectionsOut.push({
-                id: 'text-color-defaults',
-                title: 'Default Colors',
-                items: DEFAULT_TEXT_COLORS.map(c => makeColorItem(c, 'def'))
-            });
-        }
 
-        // Shape/background color panel
-        if (sidebarPanel.isOpen && sidebarPanel.activeItemId === 'background-color' && selectedElement && (selectedElement.type === 'shape' || selectedElement.type === 'line')) {
-            const currentPage = pages.find(p => p.id === currentPageId);
-            const docColorSet = new Set<string>();
-            currentPage?.canvas?.elements?.forEach(el => {
-                if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
-                if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
-                if (el.type === 'text' && el.color) docColorSet.add(el.color); // include text colors for convenience
-            });
-            const documentColors = Array.from(docColorSet).slice(0, 30);
-            const DEFAULT_SHAPE_COLORS = ['#3B82F6', '#2563EB', '#1D4ED8', '#000000', '#FFFFFF', '#F87171', '#EF4444', '#DC2626', '#F59E0B', '#D97706', '#10B981', '#059669', '#14B8A6', '#06B6D4', '#0EA5E9', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#475569', '#64748B', '#94A3B8', '#CBD5E1'];
+            // Shape/background color panel
+            if (sidebarPanel.activeItemId === 'background-color' && selectedElement && (selectedElement.type === 'shape' || selectedElement.type === 'line')) {
+                const currentPage = pages.find(p => p.id === currentPageId);
+                const docColorSet = new Set<string>();
+                currentPage?.canvas?.elements?.forEach(el => {
+                    if (el.type === 'shape' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
+                    if (el.type === 'line' && 'backgroundColor' in el && el.backgroundColor) docColorSet.add(el.backgroundColor);
+                    if (el.type === 'text' && el.color) docColorSet.add(el.color); // include text colors for convenience
+                });
+                const documentColors = Array.from(docColorSet).slice(0, 30);
+                const DEFAULT_SHAPE_COLORS = ['#3B82F6', '#2563EB', '#1D4ED8', '#000000', '#FFFFFF', '#F87171', '#EF4444', '#DC2626', '#F59E0B', '#D97706', '#10B981', '#059669', '#14B8A6', '#06B6D4', '#0EA5E9', '#6366F1', '#8B5CF6', '#EC4899', '#D946EF', '#F472B6', '#475569', '#64748B', '#94A3B8', '#CBD5E1'];
 
-            const makeShapeColorItem = (color: string, idPrefix: string) => ({
-                id: `${idPrefix}-${color}`,
-                title: color,
-                icon: (() => <div className="w-8 h-8 rounded-md border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>,
-                onClick: () => {
-                    if (selectedElement.type === 'shape') {
-                        updateElement(selectedElement.id, { backgroundColor: color });
-                    } else if (selectedElement.type === 'line') {
-                        updateElement(selectedElement.id, { backgroundColor: color });
+                const makeShapeColorItem = (color: string, idPrefix: string) => ({
+                    id: `${idPrefix}-${color}`,
+                    title: color,
+                    icon: (() => <div className="w-8 h-8 rounded-md border border-gray-300" style={{ backgroundColor: color }} />) as React.ComponentType<React.SVGProps<SVGSVGElement>>,
+                    onClick: () => {
+                        if (selectedElement.type === 'shape') {
+                            updateElement(selectedElement.id, { backgroundColor: color });
+                        } else if (selectedElement.type === 'line') {
+                            updateElement(selectedElement.id, { backgroundColor: color });
+                        }
                     }
+                });
+                if (documentColors.length) {
+                    sectionsOut.push({ id: 'shape-color-doc', title: 'Document Colors', items: documentColors.map(c => makeShapeColorItem(c, 'doc')) });
                 }
-            });
-            if (documentColors.length) {
-                sectionsOut.push({ id: 'shape-color-doc', title: 'Document Colors', items: documentColors.map(c => makeShapeColorItem(c, 'doc')) });
+                sectionsOut.push({ id: 'shape-color-defaults', title: 'Default Colors', items: DEFAULT_SHAPE_COLORS.map(c => makeShapeColorItem(c, 'def')) });
             }
-            sectionsOut.push({ id: 'shape-color-defaults', title: 'Default Colors', items: DEFAULT_SHAPE_COLORS.map(c => makeShapeColorItem(c, 'def')) });
+
         }
+
+
 
         // Existing active item driven sections
         if (activeItem) {
@@ -339,9 +302,9 @@ const EditorSidebar = () => {
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
             if (!sidebarPanel.isOpen) return;
-            
+
             const target = event.target as Element;
-            
+
             // Check if click is outside the sidebar wrapper
             if (sidebarWrapper.current && !sidebarWrapper.current.contains(target)) {
                 // Also check if the click is not on an element with data-editor-interactive
@@ -374,6 +337,20 @@ const EditorSidebar = () => {
         }
     }, [isSidebarOpen, setSidebarWidth]);
 
+    const getCustomContent = () => {
+
+        if (!activeItem) return null;
+
+        switch (activeItem.id) {
+            case "design":
+                return <DesignPanelContent />;
+            case "export":
+                return <ExportPanelContent />;
+            case "brands":
+                return <BrandsPanelContent />;
+        }
+    }
+
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
         <Sidebar>
             <Navigation navigation={EDITOR_NAVIGATION} onItemClick={handleItemClick} activeItem={sidebar.activeItemId || undefined} />
@@ -388,9 +365,7 @@ const EditorSidebar = () => {
                     activeItem?.title
                 }
                 sections={panelSections}
-                customContent={activeItem?.id === "design" ? <DesignPanelContent /> :
-                    activeItem?.id === "export" ? <ExportPanelContent /> :
-                        undefined}
+                customContent={getCustomContent()}
             />
         )}
 

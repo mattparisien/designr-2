@@ -6,7 +6,6 @@ import { DropZoneProvider } from "./dropzone-context"
 import { ChatProvider } from "./chat-context"
 import { NavigationProvider } from "./navigation-context"
 
-// Create a new QueryClient instance
 const queryClient = new QueryClient()
 
 export function GlobalProviders({ children }: { children: React.ReactNode }) {
