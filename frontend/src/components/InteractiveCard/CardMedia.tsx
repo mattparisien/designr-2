@@ -6,14 +6,14 @@ interface CardMediaProps {
     image?: {
         src: string;
         alt: string;
-        objectFit: string;
+        objectFit: "none" | "cover" | "contain" | "fill";
     };
-    objectFit: "cover" | "contain" | "fill" | "none";
     selected: boolean;
     children?: ReactNode;
 }
 
-export function CardMedia({ image, selected, children }: CardMediaProps) {
+export function CardMedia({ selected, children, image }: CardMediaProps) {
+
 
     const imgClasses = cn("w-full h-full shadow-md", {
         "object-contain": image?.objectFit === "contain",

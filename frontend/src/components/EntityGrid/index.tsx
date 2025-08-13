@@ -149,7 +149,7 @@ export function EntityGrid<T extends BaseEntity, F>({ cfg, filters, isClickable 
     return <InteractiveCard
       key={item._id}
       id={item._id}
-      image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? "Thumbnail" } : undefined}
+      image={item.thumbnailUrl ? { src: item.thumbnailUrl, alt: item.title ?? "Thumbnail", objectFit: "cover" } : undefined}
       title={item.name ?? "Untitled"}
       disableClick={!isClickable}
       subtitleLeft={upperFirst(item.type ?? "")}

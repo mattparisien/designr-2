@@ -51,7 +51,7 @@ export default function TemplatesPage() {
     return templates?.map(template => ({
       id: template.id,
       title: template.title,
-      image: { src: template.thumbnailUrl, alt: template.title },
+      image: { src: template.thumbnailUrl, alt: template.title, objectFit: "contain" as const },
       updatedAt: template.updatedAt,
       type: template ? "template" : "project",
     })) ?? [];
@@ -112,7 +112,7 @@ export default function TemplatesPage() {
 
         <InteractiveGrid
           items={gridItems}
-          collectionSlug="templates"
+          collectionSlug="editor"
           onDeleteItems={handleDeleteItems}
           onUpdateItem={handleUpdateItem}
           isLoading={isFetchingNextPage}

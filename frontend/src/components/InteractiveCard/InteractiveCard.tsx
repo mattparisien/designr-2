@@ -10,7 +10,7 @@ interface InteractiveCardProps  {
     title: string;
     subtitleLeft?: string;
     subtitleRight?: string;
-    image?: { src: string; alt: string, objectFit?: "none" | "cover" | "contain" | "fill" };
+    image?: { src: string; alt: string, objectFit: "none" | "cover" | "contain" | "fill" };
     disableClick?: boolean; // if true, clicking does nothing
     objectFit?: "none" | "cover" | "contain" | "fill";
     onClick: () => void;
