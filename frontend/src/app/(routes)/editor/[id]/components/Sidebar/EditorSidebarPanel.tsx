@@ -37,7 +37,7 @@ interface EditorSidebarPanelProps {
 const EditorSidebarPanel = ({ sections, customContent, isOverlay = true }: EditorSidebarPanelProps) => {
 
 
-    const rootClasses = cn("h-[calc(100vh-var(--editor-header-height))] rounded-2xl", {
+    const rootClasses = cn("!w-auto min-w-[var(--sidebar-width)] h-[calc(100vh-var(--editor-header-height))] rounded-2xl", {
         "absolute left-[calc(var(--sidebar-width)+1rem)] overflow-hidden": isOverlay,
         "top-[var(--editor-header-height)] h-[calc(100vh-var(--editor-header-height)-1rem)] overflow-hidden": isOverlay
     })

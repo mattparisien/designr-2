@@ -349,19 +349,6 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
                 ...(element.type === "text" ? { fontSize: newFontSize } : {})
             });
 
-            // Disabled immediate height measurement during resize to prevent flashing
-            // Height will be remeasured after resize completes through other measurement effects
-            /*
-            // If resizing a text element horizontally, measure and update height immediately
-            if (element.type === "text" && widthChanged) {
-                const measuredHeight = measurementHook.measureElementHeight(element);
-
-                if (measuredHeight && measuredHeight !== newHeight) {
-                    updateElementWithRect({ rect: { ...element.rect, height: measuredHeight } });
-                }
-            }
-            */
-
             lastEvent = null;
         };
 

@@ -9,7 +9,6 @@ import { CanvasSize, EditorContextType, Element, Page, TextElement, ShapeElement
 import { ProjectsAPI } from "@/lib/api/projects";
 import { TemplatesAPI } from "@/lib/api/templates";
 import { mapPage } from "../mappers/api";
-import { extractDocumentColors } from "../utils/colorUtils";
 
 // Type for pages coming from API (Project or Template)
 type APIDesignPage = Project['pages'][number] | Template['pages'][number];
@@ -417,6 +416,7 @@ const useEditorStore = create<EditorState>()(
         set({ isSaving: false });
       }
     },
+    // recolorArtwork updated to isolate unique colors from elements and recolor via palette
     recolorArtwork: (palette: { hex: string }[], pageId?: string) => {
       const state = get();
 
@@ -430,57 +430,78 @@ const useEditorStore = create<EditorState>()(
       const elements = targetPage.canvas.elements || [];
       if (!elements.length) return;
 
-      const originalColors = extractDocumentColors(elements).map(c => c.toLowerCase());
-      if (!originalColors.length) return;
+      // 1) Isolate unique colors used across elements (text, background, border)
+      const uniqueSet = new Set<string>();
+      for (const el of elements) {
+        switch (el.type) {
+          case 'text': {
+            const e = el as TextElement;
+            if (e.color) uniqueSet.add(String(e.color).toLowerCase());
+            break;
+          }
+          case 'shape': {
+            const e = el as ShapeElement;
+            if (e.backgroundColor) uniqueSet.add(String(e.backgroundColor).toLowerCase());
+            if (e.borderColor) uniqueSet.add(String(e.borderColor).toLowerCase());
+            break;
+          }
+          case 'line': {
+            const e = el as LineElement;
+            if (e.backgroundColor) uniqueSet.add(String(e.backgroundColor).toLowerCase());
+            break;
+          }
+          default:
+            break;
+        }
+      }
+      const uniqueColors = Array.from(uniqueSet);
+      if (!uniqueColors.length) return;
 
+      // Normalize and validate palette
       const paletteHexes = (palette || [])
         .map(c => c?.hex?.toLowerCase?.())
         .filter((v): v is string => !!v);
       if (!paletteHexes.length) return;
 
-      // Helper to compute luminance for hex color (for ordering source colors)
-      const luminance = (hex: string) => {
-        const c = hex.replace('#','');
-        if (c.length < 6) return 0;
-        const r = parseInt(c.slice(0,2), 16);
-        const g = parseInt(c.slice(2,4), 16);
-        const b = parseInt(c.slice(4,6), 16);
-        return (r * 299 + g * 587 + b * 114) / 1000;
-      };
-
-      const uniqueOriginal = Array.from(new Set(originalColors));
-      const sortedOriginal = [...uniqueOriginal].sort((a,b) => luminance(a) - luminance(b));
-
-      if (sortedOriginal.length === 0) return;
-
-      // Function to build a mapping given a shuffled palette
+      // 2) Build a mapping from each unique color -> a palette color.
+      // We'll shuffle the palette to vary results, and avoid repeating the last mapping signature.
       const buildMapping = (paletteArr: string[]) => {
-        const mapping = new Map<string,string>();
-        sortedOriginal.forEach((color, idx) => {
-          const paletteIdx = Math.floor(idx * paletteArr.length / Math.max(sortedOriginal.length, 1));
-          mapping.set(color, paletteArr[Math.min(paletteIdx, paletteArr.length - 1)]);
-        });
+        const mapping = new Map<string, string>();
+        for (let i = 0; i < uniqueColors.length; i++) {
+          mapping.set(uniqueColors[i], paletteArr[i % paletteArr.length]);
+        }
         return mapping;
       };
 
-      // Create a shuffled palette; ensure mapping differs from last one
       const lastSig = state.recolorState?.lastMappingSignature;
       let attempts = 0;
       let mapping: Map<string,string> | null = null;
       let signature = '';
 
-      // Edge case: if either palette or originals too small to vary
-      if (paletteHexes.length < 2 || sortedOriginal.length < 2) {
-        // Nothing meaningful to shuffle; just return (would duplicate last)
-        if (lastSig) return; // avoid repeating same look
+      if (paletteHexes.length === 1 && uniqueColors.length === 1) {
+        // trivial case, single mapping
         const m = buildMapping(paletteHexes);
-        const sig = sortedOriginal.map(c => `${c}=>${m.get(c)}`).join('|');
+        const sig = uniqueColors.map(c => `${c}=>${m.get(c)}`).join('|');
         const recoloredSingle = elements.map(el => {
           switch (el.type) {
-            case 'text': return { ...el, color: m.get((el as TextElement).color?.toLowerCase?.() || '') || (el as TextElement).color } as Element;
-            case 'shape': return { ...el, backgroundColor: m.get((el as ShapeElement).backgroundColor?.toLowerCase?.() || '') || (el as ShapeElement).backgroundColor } as Element;
-            case 'line': return { ...el, backgroundColor: m.get((el as LineElement).backgroundColor?.toLowerCase?.() || '') || (el as LineElement).backgroundColor } as Element;
-            default: return el;
+            case 'text': {
+              const e = el as TextElement;
+              return { ...e, color: m.get(String(e.color).toLowerCase()) || e.color } as Element;
+            }
+            case 'shape': {
+              const e = el as ShapeElement;
+              return {
+                ...e,
+                backgroundColor: m.get(String(e.backgroundColor).toLowerCase()) || e.backgroundColor,
+                borderColor: m.get(String(e.borderColor).toLowerCase()) || e.borderColor,
+              } as Element;
+            }
+            case 'line': {
+              const e = el as LineElement;
+              return { ...e, backgroundColor: m.get(String(e.backgroundColor).toLowerCase()) || e.backgroundColor } as Element;
+            }
+            default:
+              return el;
           }
         });
         get().updatePageElements(targetPage.id, recoloredSingle);
@@ -488,30 +509,30 @@ const useEditorStore = create<EditorState>()(
         return;
       }
 
-      while (attempts < 12) { // cap attempts
-        // Fisher-Yates shuffle
+      // Try shuffled palettes until mapping differs from last signature
+      while (attempts < 12) {
         const shuffled = [...paletteHexes];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         const m = buildMapping(shuffled);
-        const sig = sortedOriginal.map(c => `${c}=>${m.get(c)}`).join('|');
+        const sig = uniqueColors.map(c => `${c}=>${m.get(c)}`).join('|');
         if (sig !== lastSig) { mapping = m; signature = sig; break; }
         attempts++;
       }
 
       if (!mapping) {
-        // As fallback rotate palette by one to guarantee change
+        // Fallback: rotate palette to force a change
         const rotated = [...paletteHexes.slice(1), paletteHexes[0]];
         mapping = buildMapping(rotated);
-        signature = sortedOriginal.map(c => `${c}=>${mapping!.get(c)}`).join('|');
+        signature = uniqueColors.map(c => `${c}=>${mapping!.get(c)}`).join('|');
         if (signature === lastSig) return; // still same, abort
       }
 
       const mapColor = (value?: string) => {
         if (!value) return value;
-        const key = value.toLowerCase();
+        const key = String(value).toLowerCase();
         return mapping!.get(key) || value;
       };
 
@@ -523,11 +544,15 @@ const useEditorStore = create<EditorState>()(
           }
           case 'shape': {
             const e = el as ShapeElement;
-            return { ...e, backgroundColor: mapColor(e.backgroundColor) ?? e.backgroundColor, borderColor: mapColor(e.borderColor) ?? e.borderColor };
+            return {
+              ...e,
+              backgroundColor: mapColor(e.backgroundColor) ?? e.backgroundColor,
+              borderColor: mapColor(e.borderColor) ?? e.borderColor,
+            };
           }
-            case 'line': {
+          case 'line': {
             const e = el as LineElement;
-            return { ...e, backgroundColor: mapColor(e.backgroundColor as string) ?? e.backgroundColor };
+            return { ...e, backgroundColor: mapColor(e.backgroundColor as string) ?? e.backgroundColor } as Element;
           }
           default:
             return el;
