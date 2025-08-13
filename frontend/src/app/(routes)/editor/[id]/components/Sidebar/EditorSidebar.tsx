@@ -66,6 +66,7 @@ const EditorSidebar = () => {
     const sidebarPanel = useEditorStore((state) => state.sidebarPanel);
     const openSidebar = useEditorStore((state) => state.openSidebar);
     const closeSidebar = useEditorStore((state) => state.closeSidebar);
+    const closeSidebarPanel = useEditorStore((state) => state.closeSidebarPanel);
     const setSidebarWidth = useEditorStore((state) => state.setSidebarWidth);
     const isSidebarOpen = useEditorStore((state) => state.sidebar.isOpen);
     const currentPageId = useEditorStore((state) => state.currentPageId);
@@ -333,6 +334,30 @@ const EditorSidebar = () => {
         }
 
     }, [activeItem, openSidebar, closeSidebar])
+
+    // Handle outside clicks to close sidebar panel
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (!sidebarPanel.isOpen) return;
+            
+            const target = event.target as Element;
+            
+            // Check if click is outside the sidebar wrapper
+            if (sidebarWrapper.current && !sidebarWrapper.current.contains(target)) {
+                // Also check if the click is not on an element with data-editor-interactive
+                // to avoid closing when interacting with other editor elements
+                const isInteractiveElement = target.closest('[data-editor-interactive]');
+                if (!isInteractiveElement) {
+                    closeSidebarPanel();
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, [sidebarPanel.isOpen, closeSidebarPanel]);
 
     // Effect to fetch assets when assets panel is opened
     useEffect(() => {
