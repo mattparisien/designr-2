@@ -10,12 +10,26 @@ export type BrandVibe =
   | 'minimal'
   | 'professional';
 
+/**
+ * Color Palettes - object structure with name and colors
+ * Each palette is an object: { name: "Palette Name", colors: ["#FF0000", "#00FF00", "#0000FF"] }
+ */
+export interface ColorPalette {
+  name: string;
+  colors: string[]; // Array of hex color codes
+}
+
+export type ColorPalettes = ColorPalette[]; // Array of color palette objects
+
+// New color types matching backend
+export type Color = { hex: HexColor };
+export interface Palette { colors: Color[] }
+
+
 export interface Brand extends Object {
   name: string;
   logoUrl?: string;
-  primaryColor: HexColor;
-  secondaryColor: HexColor;
-  accentColor?: HexColor;
+  palettes: Palette[];
   vibe: BrandVibe;
   voice: string;
   personality: string;

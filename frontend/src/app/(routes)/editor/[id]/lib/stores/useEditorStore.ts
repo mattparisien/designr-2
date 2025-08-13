@@ -5,10 +5,11 @@ import { nanoid } from "nanoid";
 import React from "react";
 import { create } from "zustand";
 import { DEFAULT_CANVAS_SIZE } from "../constants";
-import { CanvasSize, EditorContextType, Element, Page } from "../types/canvas";
+import { CanvasSize, EditorContextType, Element, Page, TextElement, ShapeElement, LineElement } from "../types/canvas";
 import { ProjectsAPI } from "@/lib/api/projects";
 import { TemplatesAPI } from "@/lib/api/templates";
 import { mapPage } from "../mappers/api";
+import { extractDocumentColors } from "../utils/colorUtils";
 
 // Type for pages coming from API (Project or Template)
 type APIDesignPage = Project['pages'][number] | Template['pages'][number];
@@ -23,6 +24,8 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template", design: Project | Template }>;
   getAPIClient: () => Promise<ProjectsAPI | TemplatesAPI | undefined>;
   saveDesign: () => Promise<void>;
+  recolorArtwork: (palette: { hex: string }[], pageId?: string) => void;
+  recolorState: { lastMappingSignature: string | null };
 
   sidebar: {
     width: number | null;
@@ -83,6 +86,8 @@ const useEditorStore = create<EditorState>()(
       activeItemId: null,
       content: null,
     },
+
+    recolorState: { lastMappingSignature: null },
 
     toggleEditMode: () => set(state => ({ isEditMode: !state.isEditMode })),
     renameDesign: (name: string) => set({ designName: name, isDesignSaved: false }),
@@ -411,6 +416,126 @@ const useEditorStore = create<EditorState>()(
         // Set saving indicator back to false
         set({ isSaving: false });
       }
+    },
+    recolorArtwork: (palette: { hex: string }[], pageId?: string) => {
+      const state = get();
+
+      const targetPageId = pageId || state.currentPageId || state.pages[0]?.id;
+      const targetPage = state.pages.find(p => p.id === targetPageId);
+      if (!targetPage) {
+        console.warn('recolorArtwork: target page not found');
+        return;
+      }
+
+      const elements = targetPage.canvas.elements || [];
+      if (!elements.length) return;
+
+      const originalColors = extractDocumentColors(elements).map(c => c.toLowerCase());
+      if (!originalColors.length) return;
+
+      const paletteHexes = (palette || [])
+        .map(c => c?.hex?.toLowerCase?.())
+        .filter((v): v is string => !!v);
+      if (!paletteHexes.length) return;
+
+      // Helper to compute luminance for hex color (for ordering source colors)
+      const luminance = (hex: string) => {
+        const c = hex.replace('#','');
+        if (c.length < 6) return 0;
+        const r = parseInt(c.slice(0,2), 16);
+        const g = parseInt(c.slice(2,4), 16);
+        const b = parseInt(c.slice(4,6), 16);
+        return (r * 299 + g * 587 + b * 114) / 1000;
+      };
+
+      const uniqueOriginal = Array.from(new Set(originalColors));
+      const sortedOriginal = [...uniqueOriginal].sort((a,b) => luminance(a) - luminance(b));
+
+      if (sortedOriginal.length === 0) return;
+
+      // Function to build a mapping given a shuffled palette
+      const buildMapping = (paletteArr: string[]) => {
+        const mapping = new Map<string,string>();
+        sortedOriginal.forEach((color, idx) => {
+          const paletteIdx = Math.floor(idx * paletteArr.length / Math.max(sortedOriginal.length, 1));
+          mapping.set(color, paletteArr[Math.min(paletteIdx, paletteArr.length - 1)]);
+        });
+        return mapping;
+      };
+
+      // Create a shuffled palette; ensure mapping differs from last one
+      const lastSig = state.recolorState?.lastMappingSignature;
+      let attempts = 0;
+      let mapping: Map<string,string> | null = null;
+      let signature = '';
+
+      // Edge case: if either palette or originals too small to vary
+      if (paletteHexes.length < 2 || sortedOriginal.length < 2) {
+        // Nothing meaningful to shuffle; just return (would duplicate last)
+        if (lastSig) return; // avoid repeating same look
+        const m = buildMapping(paletteHexes);
+        const sig = sortedOriginal.map(c => `${c}=>${m.get(c)}`).join('|');
+        const recoloredSingle = elements.map(el => {
+          switch (el.type) {
+            case 'text': return { ...el, color: m.get((el as TextElement).color?.toLowerCase?.() || '') || (el as TextElement).color } as Element;
+            case 'shape': return { ...el, backgroundColor: m.get((el as ShapeElement).backgroundColor?.toLowerCase?.() || '') || (el as ShapeElement).backgroundColor } as Element;
+            case 'line': return { ...el, backgroundColor: m.get((el as LineElement).backgroundColor?.toLowerCase?.() || '') || (el as LineElement).backgroundColor } as Element;
+            default: return el;
+          }
+        });
+        get().updatePageElements(targetPage.id, recoloredSingle);
+        set({ recolorState: { lastMappingSignature: sig } });
+        return;
+      }
+
+      while (attempts < 12) { // cap attempts
+        // Fisher-Yates shuffle
+        const shuffled = [...paletteHexes];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        const m = buildMapping(shuffled);
+        const sig = sortedOriginal.map(c => `${c}=>${m.get(c)}`).join('|');
+        if (sig !== lastSig) { mapping = m; signature = sig; break; }
+        attempts++;
+      }
+
+      if (!mapping) {
+        // As fallback rotate palette by one to guarantee change
+        const rotated = [...paletteHexes.slice(1), paletteHexes[0]];
+        mapping = buildMapping(rotated);
+        signature = sortedOriginal.map(c => `${c}=>${mapping!.get(c)}`).join('|');
+        if (signature === lastSig) return; // still same, abort
+      }
+
+      const mapColor = (value?: string) => {
+        if (!value) return value;
+        const key = value.toLowerCase();
+        return mapping!.get(key) || value;
+      };
+
+      const recolored: Element[] = elements.map((el): Element => {
+        switch (el.type) {
+          case 'text': {
+            const e = el as TextElement;
+            return { ...e, color: mapColor(e.color) ?? e.color };
+          }
+          case 'shape': {
+            const e = el as ShapeElement;
+            return { ...e, backgroundColor: mapColor(e.backgroundColor) ?? e.backgroundColor, borderColor: mapColor(e.borderColor) ?? e.borderColor };
+          }
+            case 'line': {
+            const e = el as LineElement;
+            return { ...e, backgroundColor: mapColor(e.backgroundColor as string) ?? e.backgroundColor };
+          }
+          default:
+            return el;
+        }
+      });
+
+      get().updatePageElements(targetPage.id, recolored);
+      set({ recolorState: { lastMappingSignature: signature } });
     },
     openSidebarPanel: (itemId: string) =>
       set(state => ({

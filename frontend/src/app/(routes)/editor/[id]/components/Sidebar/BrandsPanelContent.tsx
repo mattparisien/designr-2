@@ -1,19 +1,26 @@
 import Heading from "@/components/Heading/Heading";
 import { useBrandQuery } from "@/lib/hooks/useBrands";
 import { Shuffle } from "lucide-react";
+import { Palette } from "@shared/types/core/brand";
+import useEditorStore from "../../lib/stores/useEditorStore";
 
 export const BrandsPanelContent = () => {
 
     const { brands } = useBrandQuery();
+    const recolorArtwork = useEditorStore(state => state.recolorArtwork);
+
+    const handlePaletteClick = (palette: Palette) => {
+        recolorArtwork(palette.colors.map(color => ({ hex: color.hex })));
+    }
 
     return (
         <div>
             <Heading as={3} className="mb-10">Brands</Heading>
             <div className="flex flex-col space-y-4">
                 {brands.map(brand => (
-                    <div key={brand._id} className="w-60">
+                    <div key={brand.id} className="w-60">
                         {brand.palettes.map((palette, index) => (
-                            <div key={index} className="flex w-full rounded-md overflow-hidden cursor-pointer relative group">
+                            <div key={index} className="flex w-full rounded-md overflow-hidden cursor-pointer relative group" onClick={() => handlePaletteClick(palette)}>
                                 {palette.colors.map((color, colorIndex) => (
                                     <div
                                         key={colorIndex}

@@ -1,9 +1,8 @@
 import { useToast } from '@/lib/hooks/useToast';
-import { Brand } from '../types/brands';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { brandsAPI } from '../api/index';
-import { P } from 'vitest/dist/chunks/environment.d.cL3nLXbE.js';
+import { Brand } from '@shared/types/core/brand';
 
 export function useBrandQuery(brandId?: string) {
   const queryClient = useQueryClient();
@@ -12,9 +11,9 @@ export function useBrandQuery(brandId?: string) {
   // Query for fetching all brands
   const brandsQuery = useQuery({
     queryKey: ['brands'],
-    queryFn: async () : Promise<Brand[]> => {
+    queryFn: async (): Promise<Brand[]> => {
       try {
-        const data : Brand[] = await brandsAPI.getAll();
+        const data: Brand[] = await brandsAPI.getAll();
         return data || []; // Always return an array, never undefined
       } catch (error) {
         console.error("Error fetching brands:", error);
@@ -30,7 +29,7 @@ export function useBrandQuery(brandId?: string) {
     queryFn: async () => {
       if (!brandId) return null; // explicit null
       try {
-        const brand : Brand | null = await brandsAPI.getById(brandId);
+        const brand: Brand | null = await brandsAPI.getById(brandId);
         return brand ?? null; // never undefined
       } catch (e) {
         console.error('Error fetching brand by id', brandId, e);
