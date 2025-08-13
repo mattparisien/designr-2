@@ -423,10 +423,10 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
             return { width: (element?.rect?.width || 0) * scale, height: (element?.rect?.height || 0) * scale };
         }
 
-        // Find the text element in the DOM by looking for the text-element class
-        const textElementDOM = document.querySelector(`[data-element-id="${element.id}"] .text-element`);
-        if (textElementDOM) {
-            const rect = textElementDOM.getBoundingClientRect();
+        // Find the innermost text content node for reliable measurement
+        const textContent = document.querySelector(`[data-element-id="${element.id}"] [data-text-content]`) as HTMLElement | null;
+        if (textContent) {
+            const rect = textContent.getBoundingClientRect();
             return { width: rect.width, height: rect.height };
         }
 
@@ -434,17 +434,19 @@ const ElementControls = memo(forwardRef<HTMLDivElement, ElementControlsProps>(({
         return { width: (element?.rect?.width || 0) * scale, height: (element?.rect?.height || 0) * scale };
     }, [element, scale, isResizing]);
 
-    // Force recalculation of dimensions when text content or editable state changes
+    // Force recalculation of dimensions when text content or style changes
     useEffect(() => {
         if (element?.type === "text") {
             // Small delay to ensure DOM has updated after content/state change
             const timer = setTimeout(() => {
-                // This effect will cause the component to re-render with updated dimensions
-            }, 10);
+                const dims = getActualDimensions();
+                // If actual height differs significantly from stored, update selection proxy size by forcing rerender
+                // This component already reads actual height via getActualDimensions() each render, so no state write here
+            }, 16);
             return () => clearTimeout(timer);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [element?.type, element.type === "text" && element.fontSize]);
+    }, [element?.type, element.type === "text" && element.fontSize, element.type === "text" && element.lineHeight, element.type === "text" && element.letterSpacing, element.type === "text" && element.content]);
 
     // Calculate viewport position for proper ElementControls positioning
     const getViewportPosition = useCallback(() => {

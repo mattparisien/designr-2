@@ -11,7 +11,7 @@ import {
   type TextAlignment
 } from "../lib/constants";
 import type React from "react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ------------------------------------------------------------------
    Types
@@ -75,6 +75,12 @@ export function TextEditor({
   
   // Debounced callbacks for performance
   const debouncedOnChange = useRef<NodeJS.Timeout | null>(null);
+  // Keep a stable ref to the height callback and last reported height to prevent loops
+  const onHeightChangeRef = useRef<typeof onHeightChange>(onHeightChange);
+  const lastHeightRef = useRef<number | null>(null);
+  useEffect(() => {
+    onHeightChangeRef.current = onHeightChange;
+  }, [onHeightChange]);
 
   /* ----------------------------------------------------------------
      Preload font when fontFamily changes
@@ -109,8 +115,6 @@ export function TextEditor({
     }
   }, [content, isEditable]);
 
-  // Remove commented out code
-  
   /* ----------------------------------------------------------------
      Debounced functions for performance
      ---------------------------------------------------------------- */
@@ -137,11 +141,15 @@ export function TextEditor({
     updateContentDebounced(newValue);
     
     // Update height immediately to prevent text wrapping
-    if (onHeightChange) {
+    if (onHeightChangeRef.current && editorRef.current) {
       const newHeight = editorRef.current.scrollHeight;
-      onHeightChange(newHeight);
+      // Guard to avoid redundant updates causing loops
+      if (lastHeightRef.current == null || Math.abs(lastHeightRef.current - newHeight) > 0.5) {
+        lastHeightRef.current = newHeight;
+        onHeightChangeRef.current(newHeight);
+      }
     }
-  }, [updateContentDebounced, onHeightChange]);
+  }, [updateContentDebounced]);
 
   /* ----------------------------------------------------------------
      Reset focus flag when element becomes non-editable
@@ -196,15 +204,16 @@ export function TextEditor({
   }, [isEditable, localContent]);
 
   /* ----------------------------------------------------------------
-     Recalculate and report height on style changes (not during editing)
+     Recalculate and report height on style/content changes (guarded)
      ---------------------------------------------------------------- */
-  useLayoutEffect(() => {
-    // Skip height calculation during editing to avoid performance issues
-    if (isEditable || !editorRef.current || !onHeightChange) return;
-    
+  useEffect(() => {
+    if (!editorRef.current || !onHeightChangeRef.current) return;
     const newHeight = editorRef.current.scrollHeight;
-    onHeightChange(newHeight);
-  }, [fontSize, fontFamily, lineHeight, letterSpacing, textAlign, isBold, isItalic, isUnderlined, isStrikethrough, textColor, isEditable, onHeightChange]);
+    if (lastHeightRef.current == null || Math.abs(lastHeightRef.current - newHeight) > 0.5) {
+      lastHeightRef.current = newHeight;
+      onHeightChangeRef.current(newHeight);
+    }
+  }, [fontSize, fontFamily, lineHeight, letterSpacing, textAlign, isBold, isItalic, isUnderlined, isStrikethrough, textColor, localContent]);
 
   /* ----------------------------------------------------------------
      Common style object shared by read-only and edit states
@@ -212,7 +221,7 @@ export function TextEditor({
   const baseStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
     fontFamily,
-    whiteSpace: "normal",
+    whiteSpace: "pre-wrap", // match editor for consistent wrapping/measurement
     lineHeight: lineHeight, // Use dynamic line height
     letterSpacing: `${letterSpacing}em`, // Use dynamic letter spacing
     overflow: "hidden",
@@ -301,11 +310,14 @@ export function TextEditor({
           onInput={handleInput}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          data-text-content
         />
       ) : (
         <div
+          ref={editorRef}
           className="select-none outline-none"
           style={baseStyle}
+          data-text-content
         >
           {localContent}
         </div>

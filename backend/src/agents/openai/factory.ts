@@ -16,7 +16,7 @@ export const brandingAgent = new Agent({
 
 export const projectAgent = new Agent({
   name: 'Project Specialist',
-  handoffDescription: 'Handles creationg of design projects.',
+  handoffDescription: 'Handles creationg of design projects such as presentations, social posts, and more.',
   instructions: PROJECT_AGENT_INSTRUCTIONS,
   tools: [createProjectTool, getTemplateTool],
   model: 'gpt-4o-mini',
