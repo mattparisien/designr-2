@@ -13,7 +13,6 @@ import { createProject as createProjectFactory } from "@/lib/factories";
 import { useInfiniteProjects } from "@/lib/hooks/useInfiniteProjects";
 import { useProjectQuery } from "@/lib/hooks/useProjects";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
-import { Project } from "@/lib/types/api";
 import type { SelectionConfig } from "@/lib/types/config";
 import { DesignProject } from "@shared/types";
 import { useRouter } from "next/navigation";
