@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
     const projectData = req.body;
     const project = new Project(projectData);
     await project.save();
-    res.status(201).json(project);
+    res.status(201).json(project.toJSON());
   } catch (error) {
     console.error('[POST /projects] Error:', error);
     res.status(500).json({ message: 'Failed to create project', error });

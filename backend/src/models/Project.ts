@@ -25,4 +25,15 @@ const ProjectSchema = new Schema<ProjectDocument>(
   { timestamps: true }
 );
 
+ProjectSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_doc, ret) => {
+    // Mutate only what's necessary
+    if (ret._id) ret.id = ret._id.toString();
+    delete ret._id;
+    return ret;
+  }
+});
+
 export default mongoose.model<ProjectDocument>('Project', ProjectSchema);

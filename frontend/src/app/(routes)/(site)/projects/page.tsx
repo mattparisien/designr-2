@@ -67,6 +67,7 @@ export default function ProjectsPage() {
 
       const projectData = createProjectFactory(item.key, item.label);
       const project: DesignProject = await createProject(projectData);
+      console.log('the project', project);
       router.push(`/editor/${project.id}`);
       refetch();
     } catch (error) {

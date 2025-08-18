@@ -1,14 +1,14 @@
 // import { projectsAPI } from "@/lib/api";
+import { ProjectsAPI } from "@/lib/api/projects";
+import { TemplatesAPI } from "@/lib/api/templates";
 import { DesignProject as Project, DesignTemplate as Template, UpdateDesignTemplateRequest } from "@shared/types";
-import { devtools } from "zustand/middleware";
 import { nanoid } from "nanoid";
 import React from "react";
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { DEFAULT_CANVAS_SIZE } from "../constants";
-import { CanvasSize, EditorContextType, Element, Page, TextElement, ShapeElement, LineElement } from "../types/canvas";
-import { ProjectsAPI } from "@/lib/api/projects";
-import { TemplatesAPI } from "@/lib/api/templates";
 import { mapPage } from "../mappers/api";
+import { CanvasSize, EditorContextType, Element, LineElement, Page, ShapeElement, TextElement } from "../types/canvas";
 
 // Type for pages coming from API (Project or Template)
 type APIDesignPage = Project['pages'][number] | Template['pages'][number];
@@ -286,25 +286,7 @@ const useEditorStore = create<EditorState>()(
       let design: Project | Template | null = null;
 
       // Import the API client
-      const { projectsAPI, templatesAPI } = await import('@/lib/api/index');
-
-      // Get the composition data
-      role = "template";
-      design = await templatesAPI.getById(designId);
-
-
-      if (!design) {
-        console.warn('Template not found. Searching for project...');
-      } else {
-        set({
-          designName: design.title || get().designName,
-          pages: design.pages.map((page: APIDesignPage) => mapPage(page)),
-        })
-        return {
-          role,
-          design
-        }
-      }
+      const { projectsAPI } = await import('@/lib/api/index');
 
       role = "project";
       design = await projectsAPI.getById(designId);
@@ -475,7 +457,7 @@ const useEditorStore = create<EditorState>()(
 
       const lastSig = state.recolorState?.lastMappingSignature;
       let attempts = 0;
-      let mapping: Map<string,string> | null = null;
+      let mapping: Map<string, string> | null = null;
       let signature = '';
 
       if (paletteHexes.length === 1 && uniqueColors.length === 1) {
@@ -657,7 +639,7 @@ const useEditorStore = create<EditorState>()(
           fontFamily: 'Inter, sans-serif',
           color: '#000000',
           backgroundColor: backgroundColor || '#ffffff'
-        } as Record<string,string>;
+        } as Record<string, string>;
 
         // Extract element info for proper stacking
         const elementInfo = Array.from(captureElement.querySelectorAll('[data-element-id]'))
@@ -709,7 +691,7 @@ const useEditorStore = create<EditorState>()(
           const formData = new FormData();
           formData.append('asset', file);
           formData.append('name', 'Design Thumbnail');
-          formData.append('tags', JSON.stringify(['thumbnail','design','auto']));
+          formData.append('tags', JSON.stringify(['thumbnail', 'design', 'auto']));
           const uploadResp = await fetch('/api/assets/upload', { method: 'POST', body: formData });
           if (uploadResp.ok) {
             const json = await uploadResp.json();

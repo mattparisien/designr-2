@@ -1,16 +1,17 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+import { type Navigation, type NavigationItem } from "@/lib/types/navigation"
 import { cn } from "@/lib/utils"
-import { LucideIcon, Plus, Trash } from "lucide-react"
+import * as LucideIcons from "lucide-react"
+import { LucideIcon, Plus } from "lucide-react"
+import { usePathname } from "next/navigation"
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
-import { type Navigation, type NavigationItem } from "@/lib/types/navigation"
-import * as LucideIcons from "lucide-react"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
 
 interface NavigationComponentProps {
     navigation: Navigation
+    itemLayout?: "vertical" | "horizontal"
     onItemClick?: (item: NavigationItem) => void
     activeItem?: string
     isCollapsed?: boolean
@@ -19,6 +20,7 @@ interface NavigationComponentProps {
 interface NavButtonProps {
     onClick: () => void
     onDelete?: (item: NavigationItem) => void
+    layout: "vertical" | "horizontal",
     isActive: boolean | undefined
     level: number
     label: string
@@ -38,6 +40,7 @@ interface NavIconProps {
 
 interface NavigationItemProps {
     item: NavigationItem
+    layout: "vertical" | "horizontal"
     onItemClick?: (item: NavigationItem) => void
     onItemDelete?: (item: NavigationItem) => void
     isActive?: boolean
@@ -47,7 +50,7 @@ interface NavigationItemProps {
 }
 
 const NavIcon = (props: NavIconProps) => {
-    const { icon: Icon, width, height, isFill = false} = props
+    const { icon: Icon, width, height, isFill = false } = props
 
     return (
         Icon && <Icon
@@ -62,7 +65,7 @@ const NavIcon = (props: NavIconProps) => {
 }
 
 const NavButton = (props: NavButtonProps) => {
-    const { onClick, isActive, level, icon, label, href, hasTrailingAction, className } = props
+    const { onClick, isActive, level, icon, label, href, hasTrailingAction, className, layout } = props
 
     const buttonClass = cn(
         "flex items-center justify-start w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors truncate",
@@ -72,7 +75,8 @@ const NavButton = (props: NavButtonProps) => {
             : "text-black",
         level > 0 && "ml-4",
         hasTrailingAction && "pr-10", // reserve space for trailing trash button
-        className && className
+        className && className,
+        layout === "vertical" && "flex-col"
 
     )
 
@@ -106,6 +110,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     isActive,
     level,
     activeItem,
+    layout = "horizontal"
 }) => {
 
 
@@ -161,6 +166,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
                     level={level}
                     label={item.label}
                     href={item.href}
+                    layout={layout}
                     icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
                     isActive={isActive}
                     hasTrailingAction={Boolean(item.onDelete)}
@@ -183,6 +189,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
                     {item.children!.map((child) => (
                         <NavigationItem
                             key={child.id}
+                            layout={layout}
                             item={child}
                             onItemClick={onItemClick}
                             isActive={activeItem === child.id}
@@ -202,6 +209,7 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
     onItemClick,
     activeItem,
     isCollapsed = false,
+    itemLayout = "horizontal"
 }) => {
     const pathname = usePathname()
     const [searchQuery] = useState<string>("")
@@ -260,6 +268,7 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
                         <ul className="space-y-1">
                             {section.items.map((item) => (
                                 <NavigationItem
+                                    layout={itemLayout}
                                     isCollapsed={isCollapsed}
                                     key={item.id}
                                     item={item}
@@ -277,5 +286,6 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
     )
 }
 
-export { NavigationItem, NavigationComponent as Navigation }
+export { NavigationComponent as Navigation, NavigationItem }
 export type { NavigationComponentProps, NavigationItemProps }
+

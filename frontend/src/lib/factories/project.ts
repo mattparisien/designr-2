@@ -1,7 +1,8 @@
-import { CreateProjectPayload } from "../types/api";
+import { CreateDesignProjectRequest } from "@shared/types";
 import { DESIGN_FORMATS } from "../constants";
+import { nanoid } from "nanoid";
 
-export const createProject = (formatKey: string, customTitle?: string): CreateProjectPayload => {
+export const createProject = (formatKey: string, customTitle?: string): CreateDesignProjectRequest => {
     const format = DESIGN_FORMATS[formatKey as keyof typeof DESIGN_FORMATS];
 
     if (!format) {
@@ -13,9 +14,13 @@ export const createProject = (formatKey: string, customTitle?: string): CreatePr
         description: `A ${format.name.toLowerCase()} project`,
         pages: [
             {
-                templatePageIndex: 0,
-                elements: [], // Start with no elements - user will add them
-            }
+                id: nanoid(),
+                canvas: {
+                    width: format.width,
+                    height: format.height,
+                    elements: [],
+                },
+            },
         ],
-    };
+    } as CreateDesignProjectRequest;
 };
