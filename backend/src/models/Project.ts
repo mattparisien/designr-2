@@ -5,7 +5,7 @@ import { PageSchema } from 'src/schemas';
 export interface ProjectDocument extends Document, Omit<DesignProject, "id" | "createdAt" | "updatedAt" | "createdBy" | "templateId"> {
   title: string;
   description?: string;
-  templateId: mongoose.Types.ObjectId;
+  templateId?: mongoose.Types.ObjectId;
   pages: DesignPage[];
   createdAt: Date;
   updatedAt: Date;

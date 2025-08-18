@@ -2,7 +2,6 @@ import express, { Response } from 'express';
 import multer from 'multer';
 import { Brand } from '../models/Brand';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { Telemetry } from '../models/Telemetry';
 
 const router = express.Router();
 
@@ -44,13 +43,6 @@ router.post('/', authenticateToken, upload.single('logo'), async (req: AuthReque
     });
 
     await brand.save();
-
-    // Log telemetry
-    await new Telemetry({
-      userId,
-      event: 'newBrandCreated',
-      data: { brandId: brand._id, vibe }
-    }).save();
 
     res.status(201).json({
       message: 'Brand created successfully',

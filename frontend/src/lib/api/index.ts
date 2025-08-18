@@ -1,5 +1,5 @@
-import axios, { Axios, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { APIService, Asset, Composition } from "../types/api";
+import axios, { AxiosError, InternalAxiosRequestConfig, AxiosInstance, AxiosRequestHeaders } from "axios";
+import { Asset } from "@/lib/types/api/asset";
 import { AIAPI } from "./ai";
 import { AuthAPI } from "./auth";
 import { BrandsAPI } from "./brands";
@@ -10,23 +10,19 @@ import { ProjectsAPI } from "./projects";
 import { TemplatesAPI } from "./templates";
 import { UsersAPI } from "./user";
 
-function createAPIService<T, S extends APIService<T>>(
-  ctor: new (client: Axios) => S,
-  client: Axios
-): S {
-  return new ctor(client);
+// If you eventually add a composition type, import it here. For now create a minimal placeholder to keep existing code compiling.
+export interface Composition {
+  _id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Helper to get the auth token from localStorage
-const getAuthToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("token");
-  }
-  return null;
-};
+const getAuthToken = () => (typeof window !== "undefined" ? localStorage.getItem("token") : null);
 
 // Create an Axios instance with default headers
-export const apiClient = axios.create({
+export const apiClient: AxiosInstance = axios.create({
   baseURL: "/api",
 });
 
@@ -35,56 +31,58 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAuthToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Ensure headers is a mutable object of AxiosRequestHeaders
+      const headers: AxiosRequestHeaders = (config.headers || {}) as AxiosRequestHeaders;
+      headers.Authorization = `Bearer ${token}`;
+      config.headers = headers;
     }
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (error: AxiosError) => Promise.reject(error)
 );
 
-// const assetsAPI = createAPIService(AssetsAPI, apiClient);
-const brandsAPI = createAPIService(BrandsAPI, apiClient);
-const projectsAPI = createAPIService(ProjectsAPI, apiClient);
-const usersAPI = createAPIService(UsersAPI, apiClient);
-const templatesAPI = createAPIService(TemplatesAPI, apiClient);
-const chatSessionAPI = createAPIService(ChatSessionAPI, apiClient);
-const aiAPI = new AIAPI(apiClient);
-// Backend actually serves them under /api/projects
-// const projectsAPI = new CollectionAPI<
-//   Project,
-//   "projects",
-//   "totalProjects",
-//   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
-// >(apiClient, "/projects", { list: "projects", total: "totalProjects" });
+// Helper to coerce AxiosInstance to legacy Axios type expected by existing service classes
+// (Their files import { Axios } from 'axios'). This preserves strictness without any.
+// When services are refactored to accept AxiosInstance, remove this.
+const asAxios = (client: AxiosInstance) => client as unknown as import('axios').Axios;
 
+// Instantiate concrete service classes directly (simpler than generic factory, avoids constructor mismatch typing issues)
+const brandsAPI = new BrandsAPI(asAxios(apiClient));
+const projectsAPI = new ProjectsAPI(asAxios(apiClient));
+const usersAPI = new UsersAPI(asAxios(apiClient));
+const templatesAPI = new TemplatesAPI(asAxios(apiClient));
+const chatSessionAPI = new ChatSessionAPI(asAxios(apiClient));
+const aiAPI = new AIAPI(asAxios(apiClient));
 
+// Collections (keep strong typing for keys / filters)
 const assetsAPI = new CollectionAPI<
   Asset,
   "assets",
   "totalAssets",
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
->(apiClient, "/assets", { list: "assets", total: "totalAssets" });
+>(asAxios(apiClient), "/assets", { list: "assets", total: "totalAssets" });
 
+// Placeholder composition collection until a real type is added
 const compositionAPI = new CollectionAPI<
   Composition,
   "compositions",
   "totalCompositions",
   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
->(apiClient, "/compositions", { list: "compositions", total: "totalCompositions" });
+>(asAxios(apiClient), "/compositions", { list: "compositions", total: "totalCompositions" });
 
+const authAPI = new AuthAPI(asAxios(apiClient));
+const fontsAPI = new FontsAPI(asAxios(apiClient));
 
-// const assetsAPI = new CollectionAPI<
-//   Asset,
-//   "assets",
-//   "totalAssets",
-//   { starred?: boolean; shared?: boolean; search?: string; type?: string; category?: string }
-// >(apiClient, "/assets", { list: "assets", total: "totalAssets" });
-
-
-const authAPI = new AuthAPI(apiClient);
-const fontsAPI = new FontsAPI(apiClient);
-
-export { aiAPI, assetsAPI, authAPI, brandsAPI, chatSessionAPI, compositionAPI, fontsAPI, projectsAPI, templatesAPI, usersAPI };
+export {
+  aiAPI,
+  assetsAPI,
+  authAPI,
+  brandsAPI,
+  chatSessionAPI,
+  compositionAPI,
+  fontsAPI,
+  projectsAPI,
+  templatesAPI,
+  usersAPI,
+};
 

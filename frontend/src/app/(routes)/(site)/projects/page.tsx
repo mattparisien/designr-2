@@ -15,6 +15,7 @@ import { useProjectQuery } from "@/lib/hooks/useProjects";
 import { mapDesignFormatToSelectionConfig } from "@/lib/mappers";
 import { Project } from "@/lib/types/api";
 import type { SelectionConfig } from "@/lib/types/config";
+import { DesignProject } from "@shared/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
@@ -43,7 +44,7 @@ export default function ProjectsPage() {
 
   const gridItems = useMemo(() => {
     return projects?.map(project => ({
-      _id: project._id,
+      id: project._id,
       title: project.title,
       image: { src: "", alt: project.title },
       updatedAt: project.updatedAt,
@@ -65,8 +66,8 @@ export default function ProjectsPage() {
       }
 
       const projectData = createProjectFactory(item.key, item.label);
-      const project: Project = await createProject(projectData);
-      router.push(`/editor/${project._id}`);
+      const project: DesignProject = await createProject(projectData);
+      router.push(`/editor/${project.id}`);
       refetch();
     } catch (error) {
       console.error('Failed to create project:', error);

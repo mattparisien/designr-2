@@ -3,6 +3,7 @@ import { projectsAPI } from '../api/index';
 import { type Project } from '@/lib/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { DesignProject } from '@shared/types';
 
 export function useProjectQuery() {
   const queryClient = useQueryClient();
@@ -36,7 +37,7 @@ export function useProjectQuery() {
 
   // Mutation for creating a new project
   const createProjectMutation = useMutation({
-    mutationFn: (newProject: Partial<Project>) => projectsAPI.create(newProject),
+    mutationFn: (newProject: Partial<DesignProject>) => projectsAPI.create(newProject),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteProjects'] });

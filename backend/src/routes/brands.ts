@@ -1,7 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { Brand } from '../models/Brand';
-import { Telemetry } from '../models/Telemetry';
 
 const router = express.Router();
 
@@ -133,12 +132,6 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
     await brand.save();
 
-    // Log telemetry
-    await new Telemetry({
-      userId,
-      event: 'brandCreated',
-      data: { brandId: brand._id, vibe }
-    }).save();
 
     res.status(201).json({
       success: true,
@@ -172,12 +165,6 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response): P
       return;
     }
 
-    // Log telemetry
-    await new Telemetry({
-      userId,
-      event: 'brandUpdated',
-      data: { brandId: brand._id }
-    }).save();
 
     res.json({
       success: true,
@@ -202,13 +189,6 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
       res.status(404).json({ error: 'Brand not found' });
       return;
     }
-
-    // Log telemetry
-    await new Telemetry({
-      userId,
-      event: 'brandDeleted',
-      data: { brandId }
-    }).save();
 
     res.json({
       success: true,

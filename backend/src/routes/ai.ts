@@ -1,7 +1,6 @@
 import express, { Response } from "express";
 import OpenAI from "openai";
 import { authenticateToken, AuthRequest } from "../middleware/auth";
-import { Telemetry } from "../models/Telemetry";
 
 const router = express.Router();
 
@@ -147,14 +146,6 @@ router.post(
         }
       }
 
-      // telemetry
-      if (userId) {
-        await new Telemetry({
-          userId,
-          event: "aiSuggestUsed",
-          data: { prompt, vibe, hasResult: true },
-        }).save();
-      }
 
       res.json({ success: true, content, usage: response.usage });
     } catch (err) {
@@ -198,14 +189,6 @@ Return an array of JSON objects with headline and bodyText.\n\n${JSON.stringify(
         variations = JSON.parse(extractText(response));
       } catch {
         variations = [baseContent]; // fallback
-      }
-
-      if (userId) {
-        await new Telemetry({
-          userId,
-          event: "aiVariationsGenerated",
-          data: { count: variations.length, vibe },
-        }).save();
       }
 
       res.json({ success: true, variations, usage: response.usage });

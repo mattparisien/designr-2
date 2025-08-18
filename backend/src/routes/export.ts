@@ -1,7 +1,6 @@
 import express, { Response } from 'express';
 import sharp from 'sharp';
 import { authenticateToken, AuthRequest, requireProUser } from '../middleware/auth';
-import { Telemetry } from '../models/Telemetry';
 import { toNumber, escapeHtml } from '../utils';
 
 const router = express.Router();
@@ -32,18 +31,6 @@ router.post('/resize', authenticateToken, async (req: AuthRequest, res: Response
         y: (element.y * targetHeight) / templateData.height,
       }))
     };
-
-    // Log telemetry
-    if (userId) {
-      await new Telemetry({
-        userId,
-        event: 'templateResized',
-        data: { 
-          originalSize: `${templateData.width}x${templateData.height}`,
-          targetSize: `${targetWidth}x${targetHeight}`
-        }
-      }).save();
-    }
 
     res.json({
       success: true,
@@ -253,18 +240,6 @@ router.post('/png-pro', authenticateToken, requireProUser, async (req: AuthReque
     });
 
     const pngBuffer = await image.png().toBuffer();
-
-    // Log telemetry
-    if (userId) {
-      await new Telemetry({
-        userId,
-        event: 'proExportClicked',
-        data: { 
-          format: 'png',
-          size: `${width}x${height}`
-        }
-      }).save();
-    }
 
     res.set({
       'Content-Type': 'image/png',
