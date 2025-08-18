@@ -13,6 +13,7 @@ import Canvas from "./Canvas/Canvas";
 import ElementControls from "./Canvas/controls/ElementControls";
 import { ElementActionBar } from "./Canvas/ElementActionBar";
 import { ElementPropertyBar } from "./ElementPropertyBar";
+import { useProjectQuery } from "@/lib/hooks/useProjects";
 
 interface EditorProps {
     designId: string;
@@ -23,6 +24,18 @@ interface EditorProps {
  * It focuses exclusively on the canvas area and related editing functionality.
  */
 export default function Editor({ designId }: EditorProps) {
+
+    // Fetch project data using the designId
+    const { project } = useProjectQuery(designId);
+    const loadDesign = useEditorStore(state => state.loadDesign);
+    const loadedDesignId = useEditorStore(state => state.designId);
+
+    useEffect(() => {
+        if (project && project.id !== loadedDesignId) {
+            loadDesign(project);
+        }
+    }, [project, loadedDesignId, loadDesign]);
+
     // Reference for the editor container
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -285,14 +298,6 @@ export default function Editor({ designId }: EditorProps) {
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [canvasSize.width, canvasSize.height]);
-
-    // Initialize template ID and load template data when component mounts
-    useEffect(() => {
-        if (designId) {
-            const initDesign = useEditorStore.getState().initDesign;
-            initDesign(designId);
-        }
-    }, [designId]);
 
     // Add keyboard shortcut for saving template with Cmd+S
     useEffect(() => {

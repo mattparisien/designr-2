@@ -1,12 +1,12 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { projectsAPI } from "@/lib/api/index";
-import { type Project } from "@/lib/types/api";
+import { DesignProject } from "@shared/types";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface ProjectsPageData {
-  projects: Project[];
+  projects: DesignProject[];
   totalProjects: number;
   totalPages: number;
   currentPage: number;

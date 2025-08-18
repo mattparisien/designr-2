@@ -1,11 +1,10 @@
 import { useToast } from '@/lib/hooks/useToast';
 import { projectsAPI } from '../api/index';
-import { type Project } from '@/lib/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { DesignProject } from '@shared/types';
 
-export function useProjectQuery() {
+export function useProjectQuery(projectId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -24,6 +23,33 @@ export function useProjectQuery() {
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Single project query (auto when projectId provided)
+  const projectQuery = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: async () => {
+      if (!projectId) throw new Error('No project id');
+      return projectsAPI.getById(projectId);
+    },
+    enabled: !!projectId,
+    initialData: () => {
+      if (!projectId) return undefined;
+      const list = queryClient.getQueryData<DesignProject[]>(['projects']);
+      return list?.find(p => p.id === projectId);
+    },
+    staleTime: 60_000,
+  });
+
+  // Error toast for single project
+  useEffect(() => {
+    if (projectQuery.error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load project.',
+        variant: 'destructive'
+      });
+    }
+  }, [projectQuery.error, toast]);
+
   // Handle error with useEffect to prevent render-time state updates
   useEffect(() => {
     if (projectsQuery.error) {
@@ -38,7 +64,7 @@ export function useProjectQuery() {
   // Mutation for creating a new project
   const createProjectMutation = useMutation({
     mutationFn: (newProject: Partial<DesignProject>) => projectsAPI.create(newProject),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteProjects'] });
       toast({
@@ -47,7 +73,7 @@ export function useProjectQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to create project. Please try again.",
@@ -58,8 +84,7 @@ export function useProjectQuery() {
 
   // Mutation for updating a project
   const updateProjectMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<Project> }) =>
-      projectsAPI.update(id, data),
+    mutationFn: ({ id, data }: { id: string, data: Partial<DesignProject> }) => projectsAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['infiniteProjects'] });
@@ -69,7 +94,7 @@ export function useProjectQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to update project. Please try again.",
@@ -92,7 +117,7 @@ export function useProjectQuery() {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete project. Please try again.",
@@ -140,7 +165,7 @@ export function useProjectQuery() {
         });
       }
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete projects. Please try again.",
@@ -149,13 +174,37 @@ export function useProjectQuery() {
     }
   });
 
+  // Single project fetch helper (cache-aware)
+  const getProjectById = async (id: string): Promise<DesignProject | undefined> => {
+    // Try existing cached list first
+    const list = queryClient.getQueryData<DesignProject[]>(['projects']);
+    const inList = list?.find(p => p.id === id);
+    if (inList) return inList;
+    // Use / populate individual cache entry
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: ['project', id],
+        queryFn: () => projectsAPI.getById(id),
+        staleTime: 60_000, // 1 min
+      });
+    } catch (e) {
+      console.error('Error fetching project by id', e);
+      toast({ title: 'Error', description: 'Unable to load project.', variant: 'destructive' });
+      return undefined;
+    }
+  };
+
   return {
     projects: projectsQuery.data || [],
     isLoading: projectsQuery.isLoading,
     isError: projectsQuery.isError,
+    project: projectQuery.data,
+    isProjectLoading: projectQuery.isLoading,
+    isProjectError: projectQuery.isError,
     createProject: createProjectMutation.mutateAsync,
     updateProject: updateProjectMutation.mutateAsync,
     deleteProject: deleteProjectMutation.mutateAsync,
     deleteMultipleProjects: deleteMultipleProjectsMutation.mutateAsync,
+    getProjectById,
   };
 }

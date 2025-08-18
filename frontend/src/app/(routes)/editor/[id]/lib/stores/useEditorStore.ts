@@ -18,9 +18,8 @@ export interface EditorState extends Omit<EditorContextType, "currentPage"> {
   designId: string | null;
   roleId: "project" | "template" | null;
   captureCanvasScreenshot: () => Promise<string | undefined>;
-  loadDesign: (designId: string) => Promise<void>;
-  initDesign: (designId: string) => void;
-  loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template", design: Project | Template }>;
+  loadDesignFromAPI: (designId: string) => Promise<{ role: "project" | "template"; design: Project | Template }>;
+  loadDesign: (design: Project | string) => Promise<void>;
   getAPIClient: () => Promise<ProjectsAPI | TemplatesAPI | undefined>;
   saveDesign: () => Promise<void>;
   recolorArtwork: (palette: { hex: string }[], pageId?: string) => void;
@@ -261,24 +260,6 @@ const useEditorStore = create<EditorState>()(
       }
 
     },
-    initDesign: (designId: string) => {
-
-      if (!designId) {
-        console.error('No design ID provided to initDesign');
-        return;
-      }
-
-      const loadDesign = get().loadDesign;
-      // Load the composition data
-      loadDesign(designId).then(() => {
-        set({
-          designId,
-        })
-      }).catch((error) => {
-        console.error('Failed to load design in initDesign:', error);
-      });
-
-    },
     loadDesignFromAPI: async (designId: string) => {
 
       let role: "project" | "template" | null = null;
@@ -301,28 +282,40 @@ const useEditorStore = create<EditorState>()(
         design
       }
     },
-    loadDesign: async (designId: string) => {
+    loadDesign: async (designOrId: Project | string) => {
 
       try {
-        // Set loading indicator
+        // Prevent concurrent load/save confusion
         set({ isSaving: true });
 
-        const {
-          design,
-          role
-        } = await get().loadDesignFromAPI(designId);
-
-        console.log('Design loaded:', design);
-
-        if (!design) {
-          throw new Error('Project not found');
+        // If already loaded same design, skip
+        const currentId = get().designId;
+        if (typeof designOrId !== 'string' && currentId === designOrId.id) {
+          set({ isSaving: false });
+          return;
+        }
+        if (typeof designOrId === 'string' && currentId === designOrId) {
+          set({ isSaving: false });
+          return;
         }
 
+        let role: "project" | "template" | null = null;
+        let design: Project | Template | null = null;
 
+        if (typeof designOrId === 'string') {
+          const result = await get().loadDesignFromAPI(designOrId);
+          role = result.role;
+          design = result.design as Project | Template;
+        } else {
+          // Already have the project object
+          design = designOrId;
+          role = 'project';
+        }
 
+        if (!design) throw new Error('Project not found');
 
         set({
-          designName: design.title || 'Untitled Design',
+          designName: (design as Project).title || 'Untitled Design',
           pages: design.pages.map((page: APIDesignPage) => mapPage(page)),
           currentPageId: design.pages[0]?.id || '',
           isDesignSaved: true,
@@ -333,8 +326,6 @@ const useEditorStore = create<EditorState>()(
         console.log('Design loaded successfully');
       } catch (error) {
         console.error('Error loading design:', error);
-
-        console.log('Composition loaded successfully');
       } finally {
         set({ isSaving: false });
       }

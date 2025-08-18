@@ -43,9 +43,9 @@ export default function ProjectsPage() {
 
   const gridItems = useMemo(() => {
     return projects?.map(project => ({
-      id: project._id,
+      id: project.id,
       title: project.title,
-      image: { src: "", alt: project.title },
+      image: { src: "", alt: project.title, objectFit: "contain" as const },
       updatedAt: project.updatedAt,
       type: "project",
     })) ?? [];
@@ -66,7 +66,6 @@ export default function ProjectsPage() {
 
       const projectData = createProjectFactory(item.key, item.label);
       const project: DesignProject = await createProject(projectData);
-      console.log('the project', project);
       router.push(`/editor/${project.id}`);
       refetch();
     } catch (error) {
