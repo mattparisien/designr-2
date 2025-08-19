@@ -348,6 +348,7 @@ const useEditorStore = create<EditorState>()(
 
         // Import the API client
         const client = await get().getAPIClient();
+        console.log('client', client);
 
         if (!client) {
           throw new Error('API client is not available.');

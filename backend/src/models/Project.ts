@@ -6,6 +6,7 @@ export interface ProjectDocument extends Document, Omit<DesignProject, "id" | "c
   title: string;
   description?: string;
   templateId?: mongoose.Types.ObjectId;
+  thumbnailUrl?: string;
   pages: DesignPage[];
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +18,7 @@ const ProjectSchema = new Schema<ProjectDocument>(
     title: { type: String, required: true },
     description: String,
     templateId: { type: Schema.Types.ObjectId, ref: 'Template', required: false },
+    thumbnailUrl: { type: String, required: false },
     pages: { type: [PageSchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     updatedAt: { type: Date, default: Date.now },

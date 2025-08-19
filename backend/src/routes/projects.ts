@@ -107,6 +107,8 @@ router.put('/:id', async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
+
+    console.log('the updated project', updatedProject);
     if (!updatedProject) return res.status(404).json({ message: 'Project not found' });
     res.json(updatedProject);
   } catch (error) {

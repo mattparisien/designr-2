@@ -3,5 +3,6 @@ import { DesignPage } from "./page";
 
 export interface DesignProject extends Design {
     templateId?: string;
+    thumbnailUrl?: string;
     pages: DesignPage[];
 }
