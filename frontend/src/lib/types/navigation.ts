@@ -25,7 +25,7 @@ export interface NavigationSection {
  */
 export interface NavigationItem {
   id: string;
-  label: string;
+  label?: string;
   href?: string;
   children?: NavigationItem[];
   icon?: string | LucideIcon;

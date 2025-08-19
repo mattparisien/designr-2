@@ -1,10 +1,8 @@
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants"
 import { Maximize, Minus, Plus } from "lucide-react"
+import { MAX_ZOOM, MIN_ZOOM } from "../lib/constants"
 import { Page } from "../lib/types/canvas"
-import { useEffect } from "react"
 
 interface BottomBarProps {
     zoom: number
@@ -30,7 +28,7 @@ export default function BottomBar({
     return (
 
 
-        <div className="h-[var(--editor-bottomBar-height)] flex items-center justify-between px-4 shadow-sm z-editor-popover bottom-bar" data-bottom-bar>
+        <div className="h-10 flex items-center justify-between px-4 shadow-sm z-editor-popover bottom-bar" data-bottom-bar>
             <div></div>
 
             {/* Right side - Zoom controls and page info */}
@@ -70,16 +68,6 @@ export default function BottomBar({
                         {zoom}%
                     </div>
                 </div>
-
-                {/* Pages info with badge */}
-                <Badge variant="outline" className="px-3 py-1.5 h-7 gap-1.5 text-neutral-700 font-medium text-xs flex items-center">
-                    <svg className="h-4 w-4 text-neutral-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                        <path d="M8 10H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        <path d="M8 14H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                    <span>{currentPageIndex + 1} / {pages.length}</span>
-                </Badge>
 
                 {/* Control buttons with consistent styling */}
                 <div className="flex items-center gap-1.5">

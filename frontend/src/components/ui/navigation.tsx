@@ -23,7 +23,7 @@ interface NavButtonProps {
     layout: "vertical" | "horizontal",
     isActive: boolean | undefined
     level: number
-    label: string
+    label?: string
     icon?: React.ReactNode
     href?: string
     widthMode?: "full" | "wrap"
@@ -241,7 +241,7 @@ const NavigationComponent: React.FC<NavigationComponentProps> = ({
             .map((section) => ({
                 ...section,
                 items: section.items.filter((item) =>
-                    item.label.toLowerCase().includes(searchQuery.toLowerCase())
+                    item.label?.toLowerCase().includes(searchQuery.toLowerCase())
                 ),
             }))
             .filter((section) => section.items.length > 0)

@@ -106,6 +106,7 @@ export default function ProjectsPage() {
         </div>
         <InteractiveGrid
           items={gridItems}
+          collectionSlug="editor"
           onDeleteItems={handleDeleteItems}
           onUpdateItem={handleUpdateItem}
         />

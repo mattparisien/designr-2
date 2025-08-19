@@ -13,6 +13,7 @@ import { BrandsPanelContent } from "./BrandsPanelContent";
 import { DesignPanelContent } from "./DesignPanelContent";
 import EditorSidebarPanel, { type EditorSidebarPanelSection } from "./EditorSidebarPanel";
 import { ExportPanelContent } from "./ExportPanelContent";
+import { omit } from "lodash";
 
 const EditorSidebar = () => {
 
@@ -351,9 +352,24 @@ const EditorSidebar = () => {
         }
     }
 
+    const navigation = useMemo(() => {
+        return {
+            ...EDITOR_NAVIGATION,
+            sections: EDITOR_NAVIGATION.sections.map(section => ({
+                ...section,
+                items: section.items.map(item => omit(item, ["label"]))
+            }))
+        }
+    }, [])
+
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
-        <Sidebar width="var(--editor-sidebar-width)">
-            <Navigation itemLayout="vertical" navigation={EDITOR_NAVIGATION} onItemClick={handleItemClick} activeItem={sidebar.activeItemId || undefined} />
+        <Sidebar width="var(--editor-sidebar-width)" naked>
+            <Navigation
+                itemLayout="vertical"
+                navigation={navigation}
+                onItemClick={handleItemClick}
+                activeItem={sidebar.activeItemId || undefined}
+            />
             <> </>
         </Sidebar>
         {(sidebar.isOpen || sidebarPanel.isOpen) && (

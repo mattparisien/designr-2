@@ -9,6 +9,7 @@ interface SidebarProps {
     children: React.ReactNode
     className?: string
     width?: string
+    naked?: boolean
     searchPlaceholder?: string
 }
 
@@ -17,18 +18,20 @@ interface SidebarShellProps {
     className?: string
     width?: string
     ref?: React.Ref<HTMLDivElement>
+    naked?: boolean
 }
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     ({
         className,
         children,
+        naked,
         width = "var(--sidebar-width)",
     }, ref) => {
 
 
         return (
-            <SidebarShell ref={ref} className={className} width={width}>
+            <SidebarShell ref={ref} className={className} width={width} naked={naked}>
                 <ScrollArea className="flex-1">
                     {children}
                 </ScrollArea>
@@ -40,13 +43,14 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
     (props: SidebarShellProps, ref) => {
 
-        const { children, className, width } = props;
+        const { children, className, width, naked } = props;
 
         return <aside
             ref={ref}
             className={cn(
-                "pt-10 relative inline-flex h-screen flex-col bg-neutral-100 border-r border-t border-b border-neutral-200 transition-width duration-300 ease-in",
-                className
+                "pt-10 relative inline-flex h-screen flex-col",
+                className,
+                !naked && " bg-neutral-100 border-r border-t border-b border-neutral-200"
             )}
             style={{ width: width || "var(--sidebar-width)" }}
         >{children}</aside>
