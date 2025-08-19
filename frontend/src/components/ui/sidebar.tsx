@@ -3,19 +3,19 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import * as React from "react"
-import { forwardRef, useState } from "react"
+import { forwardRef } from "react"
 
 interface SidebarProps {
     children: React.ReactNode
-    isDefaultCollapsed?: boolean
     className?: string
+    width?: string
     searchPlaceholder?: string
 }
 
 interface SidebarShellProps {
     children: React.ReactNode
     className?: string
-    isCollapsed?: boolean
+    width?: string
     ref?: React.Ref<HTMLDivElement>
 }
 
@@ -23,13 +23,12 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     ({
         className,
         children,
-        isDefaultCollapsed = false,
+        width = "var(--sidebar-width)",
     }, ref) => {
 
-        const [isCollapsed] = useState<boolean>(isDefaultCollapsed);
 
         return (
-            <SidebarShell ref={ref} isCollapsed={isCollapsed} className={className}>
+            <SidebarShell ref={ref} className={className} width={width}>
                 <ScrollArea className="flex-1">
                     {children}
                 </ScrollArea>
@@ -41,15 +40,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 const SidebarShell = React.forwardRef<HTMLDivElement, SidebarShellProps>(
     (props: SidebarShellProps, ref) => {
 
-        const { children, className, isCollapsed } = props;
+        const { children, className, width } = props;
 
         return <aside
             ref={ref}
             className={cn(
                 "pt-10 relative inline-flex h-screen flex-col bg-neutral-100 border-r border-t border-b border-neutral-200 transition-width duration-300 ease-in",
-                !isCollapsed ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
                 className
             )}
+            style={{ width: width || "var(--sidebar-width)" }}
         >{children}</aside>
     });
 

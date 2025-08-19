@@ -352,7 +352,7 @@ const EditorSidebar = () => {
     }
 
     return <div className="inline-flex relative z-[var(--z-editor-sidebar)]" ref={sidebarWrapper}>
-        <Sidebar>
+        <Sidebar width="var(--editor-sidebar-width)">
             <Navigation itemLayout="vertical" navigation={EDITOR_NAVIGATION} onItemClick={handleItemClick} activeItem={sidebar.activeItemId || undefined} />
             <> </>
         </Sidebar>

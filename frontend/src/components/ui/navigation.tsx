@@ -98,7 +98,7 @@ const NavButton = (props: NavButtonProps) => {
     return (
         <Button variant="ghost" onClick={onClick} className={buttonClass}>
             <span>{icon}</span>
-            <span className="truncate">{label}</span>
+            <span className="truncate text-xs">{label}</span>
         </Button>
     )
 }
@@ -167,7 +167,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
                     label={item.label}
                     href={item.href}
                     layout={layout}
-                    icon={<NavIcon icon={icon} width="1.2rem" height="1.2rem" />}
+                    icon={<NavIcon icon={icon} width={layout === "horizontal" ? "1.2rem" : "1.7rem"} height={layout === "horizontal" ? "1.2rem" : "1.7rem"} />}
                     isActive={isActive}
                     hasTrailingAction={Boolean(item.onDelete)}
                 />
